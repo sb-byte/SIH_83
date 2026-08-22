@@ -93,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderRumors();
   renderDamageTable();
   renderCorrectiveActions();
+  renderAarMutualAidSummary();
   renderVolunteerSquads();
   renderShelterMatrix();
   renderMutualAid();
@@ -557,6 +558,29 @@ document.querySelectorAll('.asset-filter-bar .chip').forEach(chip => {
   });
 });
 
+function renderAarMutualAidSummary() {
+  const tbody = getEl('aar-mutual-aid-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  state.mutualAidData.forEach(req => {
+    let statusClass = 'badge-gold';
+    if (req.status === 'APPROVED' || req.status === 'SCHEDULED') statusClass = 'badge-emerald';
+    if (req.status === 'DENIED') statusClass = 'badge-alert';
+    if (req.status === 'PENDING') statusClass = 'badge-navy';
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><strong>${req.agency}</strong><br><span class="mono text-xs text-muted">${req.id} • ${req.requestedAt}</span></td>
+      <td>${req.resource} <span class="mono text-xs text-muted">×${req.qty}</span></td>
+      <td><span class="badge ${req.priority === 'CRITICAL' ? 'badge-alert' : 'badge-gold'}">${req.priority}</span></td>
+      <td><span class="badge ${statusClass}">${req.status}</span></td>
+      <td class="mono text-xs">${req.approvedBy || '—'}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
 // =========================================================================
 // SHELTER CAPACITY MATRIX (Full Logistics View)
 // =========================================================================
@@ -671,6 +695,7 @@ function renderMutualAid() {
       req.status = 'APPROVED';
       req.approvedBy = 'State EOC Duty Officer';
       renderMutualAid();
+      renderAarMutualAidSummary();
       showToast(`✅ Mutual aid request approved: ${req.resource} → ${req.agency}`);
     });
   });
@@ -683,6 +708,7 @@ function renderMutualAid() {
       req.status = 'DENIED';
       req.approvedBy = 'State EOC Duty Officer';
       renderMutualAid();
+      renderAarMutualAidSummary();
       showToast(`❌ Mutual aid request denied: ${req.resource} → ${req.agency}`);
     });
   });
@@ -708,6 +734,7 @@ if (addMutualAidBtn) {
       approvedBy: null
     });
     renderMutualAid();
+    renderAarMutualAidSummary();
     showToast(`🤝 Mutual aid request logged: ${agency}`);
   });
 }
@@ -2476,4 +2503,3 @@ function depRunFuzz() {
     `;
   }
 }
-
