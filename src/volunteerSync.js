@@ -46,6 +46,52 @@ export const VOLUNTEER_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e
 
 const AUTO_SYNC_INTERVAL_MS = 30_000; // 30s — adjust as needed
 
+// =========================================================================
+// REMOVED VOLUNTEERS (persisted locally so deletions stick)
+// =========================================================================
+//
+// Deletions need to survive two things that would otherwise undo them:
+//   - a page reload (which reseeds the pool from the hardcoded data.js list)
+//   - the next auto-sync (which would re-pull a still-present Sheet row)
+// So removals are tracked by ID in localStorage and filtered out of both
+// the initial seed list and every future sync, regardless of whether the
+// volunteer originally came from data.js or the Google Form.
+const REMOVED_IDS_KEY = 'unity-eoc-removed-volunteer-ids';
+
+function getRemovedIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(REMOVED_IDS_KEY) || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveRemovedIds(idSet) {
+  try {
+    localStorage.setItem(REMOVED_IDS_KEY, JSON.stringify([...idSet]));
+  } catch (err) {
+    console.warn('Could not persist removed volunteer IDs.', err);
+  }
+}
+
+/** Filters a volunteer array against the removed-IDs list. Call this on
+ * the initial hardcoded seed list before first render. */
+export function filterRemovedVolunteers(volunteers) {
+  const removed = getRemovedIds();
+  return volunteers.filter(v => !removed.has(v.id));
+}
+
+/** Permanently removes a volunteer from the site (persists across reloads
+ * and future syncs). Mutates state.volunteerPoolData in place. */
+export function removeVolunteer(state, volunteerId) {
+  const removed = getRemovedIds();
+  removed.add(volunteerId);
+  saveRemovedIds(removed);
+
+  const idx = state.volunteerPoolData.findIndex(v => v.id === volunteerId);
+  if (idx !== -1) state.volunteerPoolData.splice(idx, 1);
+}
+
 /**
  * Minimal RFC4180-ish CSV parser: handles quoted fields, embedded commas,
  * and escaped quotes ("") inside quoted fields. Good enough for Google
@@ -158,11 +204,13 @@ export async function syncVolunteerRegistrations(state) {
 
   const existingById = {};
   state.volunteerPoolData.forEach(v => { existingById[v.id] = v; });
+  const removedIds = getRemovedIds();
 
   let addedCount = 0;
   for (const cells of rows.slice(1)) {
     const parsed = rowToVolunteer(headerMap, cells, existingById);
     if (!parsed) continue;
+    if (removedIds.has(parsed.id)) continue; // deleted on the site — stay gone
 
     const idx = state.volunteerPoolData.findIndex(v => v.id === parsed.id);
     if (idx === -1) {

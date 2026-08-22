@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import { sound } from './audio.js';
-import { openRegistrationForm, startAutoSync } from './volunteerSync.js';
+import { openRegistrationForm, startAutoSync, filterRemovedVolunteers, removeVolunteer } from './volunteerSync.js';
 import {
   liveIncidentData,
   citizenSosQueue,
@@ -33,7 +33,7 @@ const state = {
   damageData: [...damageAssessments],
   volunteerSquads: [...volunteerSquads],
   mutualAidData: [...mutualAidRequests],
-  volunteerPoolData: [...volunteerPool],
+  volunteerPoolData: filterRemovedVolunteers([...volunteerPool]),
   activeVolunteerFilter: 'ALL',
   correctiveActions: [
     { def: "Staging area delay for Sector 9 backup fuel tanker.", action: "Pre-position auxiliary diesel tanker directly at Bhadrak Transit Depot.", lead: "Logistics / Civil Supplies", status: "IN PROGRESS" },
@@ -777,7 +777,10 @@ function renderVolunteerPool() {
         <span class="badge ${statusClass} text-xs">${v.status.replace('_', ' ')}</span>
       </div>
       <div style="color:var(--text-muted); font-size:0.65rem;">📍 ${v.location} | Skill: ${v.skill}${v.squad ? ` | Squad: ${v.squad}` : ''}</div>
-      ${v.status !== 'ASSIGNED' ? `<button class="btn btn-xs btn-outline assign-volunteer-btn mt-1" data-id="${v.id}">➡️ ASSIGN TO SQUAD</button>` : ''}
+      <div style="display:flex; gap:0.4rem;">
+        ${v.status !== 'ASSIGNED' ? `<button class="btn btn-xs btn-outline assign-volunteer-btn mt-1" data-id="${v.id}">➡️ ASSIGN TO SQUAD</button>` : ''}
+        <button class="btn btn-xs btn-outline remove-volunteer-btn mt-1" data-id="${v.id}" title="Remove volunteer">🗑 REMOVE</button>
+      </div>
     `;
     container.appendChild(item);
   });
@@ -787,6 +790,19 @@ function renderVolunteerPool() {
       sound.playClick();
       const volId = e.currentTarget.dataset.id;
       openAssignSquadModal(volId);
+    });
+  });
+
+  document.querySelectorAll('.remove-volunteer-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      sound.playClick();
+      const volId = e.currentTarget.dataset.id;
+      const vol = state.volunteerPoolData.find(v => v.id === volId);
+      if (!vol) return;
+      if (!confirm(`Remove ${vol.name} from the volunteer pool? This can't be undone from here — if they registered via the Google Form, also delete their row in the response Sheet to keep things tidy.`)) return;
+      removeVolunteer(state, volId);
+      renderVolunteerPool();
+      showToast(`🗑 ${vol.name} removed from the pool`);
     });
   });
 }
