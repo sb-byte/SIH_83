@@ -799,10 +799,21 @@ function renderVolunteerPool() {
       const volId = e.currentTarget.dataset.id;
       const vol = state.volunteerPoolData.find(v => v.id === volId);
       if (!vol) return;
-      if (!confirm(`Remove ${vol.name} from the volunteer pool? This can't be undone from here — if they registered via the Google Form, also delete their row in the response Sheet to keep things tidy.`)) return;
+
+      const isFormSynced = volId.startsWith('AM-VOL-GF-');
+      const confirmMsg = isFormSynced
+        ? `Remove ${vol.name} from this browser's view?\n\nTheir row is still in the Google Sheet, so on another device or browser they'll still show up. To remove them everywhere, delete their row in the response Sheet — that's the permanent fix.`
+        : `Remove ${vol.name} from the volunteer pool? This can't be undone from here.`;
+      if (!confirm(confirmMsg)) return;
+
       removeVolunteer(state, volId);
       renderVolunteerPool();
-      showToast(`🗑 ${vol.name} removed from the pool`);
+
+      if (isFormSynced) {
+        showToast(`🗑 ${vol.name} hidden here — delete their Sheet row to remove them everywhere`, 'alert');
+      } else {
+        showToast(`🗑 ${vol.name} removed from the pool`);
+      }
     });
   });
 }
