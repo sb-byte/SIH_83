@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import { sound } from './audio.js';
+import { openRegistrationForm, startAutoSync } from './volunteerSync.js';
 import {
   liveIncidentData,
   citizenSosQueue,
@@ -106,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDroneFeeds();
   initRadioConsole();
   initModals();
+  initAssignSquadModal();
   initSachetAlerting();
   initTelemetryTicker();
 });
@@ -784,18 +786,63 @@ function renderVolunteerPool() {
     btn.addEventListener('click', (e) => {
       sound.playClick();
       const volId = e.currentTarget.dataset.id;
-      const vol = state.volunteerPoolData.find(v => v.id === volId);
-      if (vol) {
-        const squad = prompt(`Assign ${vol.name} to which squad?`, state.volunteerSquads[0]?.name || 'Dhamra Coastal Aapda Mitra Squad');
-        if (squad) {
-          vol.status = 'ASSIGNED';
-          vol.squad = squad;
-          renderVolunteerPool();
-          showToast(`➡️ ${vol.name} assigned to ${squad}`);
-        }
-      }
+      openAssignSquadModal(volId);
     });
   });
+}
+
+// =========================================================================
+// ASSIGN VOLUNTEER TO SQUAD MODAL
+// =========================================================================
+function openAssignSquadModal(volId) {
+  const vol = state.volunteerPoolData.find(v => v.id === volId);
+  if (!vol) return;
+
+  const modal = getEl('modal-assign-squad');
+  const nameField = getEl('assign-squad-volunteer-name');
+  const squadSelect = getEl('assign-squad-select');
+  if (!modal || !nameField || !squadSelect) return;
+
+  nameField.value = vol.name;
+
+  // Populate with the real, currently-existing squads — no free text entry.
+  squadSelect.innerHTML = state.volunteerSquads
+    .map(sq => `<option value="${sq.name}">${sq.name} (${sq.members} vol. — ${sq.skills})</option>`)
+    .join('');
+
+  // Pre-select the volunteer's current squad if they already have one.
+  if (vol.squad) squadSelect.value = vol.squad;
+
+  modal.dataset.volId = volId;
+  modal.classList.remove('hidden');
+}
+
+function initAssignSquadModal() {
+  const modal = getEl('modal-assign-squad');
+  const closeBtn = getEl('close-assign-squad-modal');
+  const cancelBtn = getEl('cancel-assign-squad-btn');
+  const confirmBtn = getEl('confirm-assign-squad-btn');
+  if (!modal) return;
+
+  const close = () => modal.classList.add('hidden');
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  if (cancelBtn) cancelBtn.addEventListener('click', close);
+
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', () => {
+      sound.playClick();
+      const volId = modal.dataset.volId;
+      const squadSelect = getEl('assign-squad-select');
+      const vol = state.volunteerPoolData.find(v => v.id === volId);
+      if (vol && squadSelect && squadSelect.value) {
+        vol.status = 'ASSIGNED';
+        vol.squad = squadSelect.value;
+        renderVolunteerPool();
+        showToast(`➡️ ${vol.name} assigned to ${squadSelect.value}`);
+      }
+      close();
+    });
+  }
 }
 
 document.querySelectorAll('.volunteer-pool-filter-bar .chip').forEach(chip => {
@@ -812,22 +859,17 @@ const addVolunteerBtn = getEl('add-volunteer-btn');
 if (addVolunteerBtn) {
   addVolunteerBtn.addEventListener('click', () => {
     sound.playClick();
-    const name = prompt('Volunteer Name:', 'New Aapda Mitra Volunteer');
-    if (!name) return;
-    const skill = prompt('Primary Skill:', 'First Aid');
-    const location = prompt('Location / Block:', 'Bhubaneswar');
-    state.volunteerPoolData.unshift({
-      id: `AM-VOL-${Math.floor(100 + Math.random() * 900)}`,
-      name,
-      skill: skill || 'General Support',
-      location: location || 'Unassigned Sector',
-      status: 'REGISTERED',
-      squad: null
-    });
-    renderVolunteerPool();
-    showToast(`🙋 Volunteer registered: ${name}`);
+    openRegistrationForm();
   });
 }
+
+// Auto-sync volunteer registrations from the Google Form's response Sheet.
+startAutoSync(state, (addedCount) => {
+  if (addedCount > 0) {
+    renderVolunteerPool();
+    showToast(`🙋 ${addedCount} new volunteer${addedCount > 1 ? 's' : ''} synced from registration form`);
+  }
+});
 
 // =========================================================================
 // TACTICAL RADIO CONSOLE & PTT

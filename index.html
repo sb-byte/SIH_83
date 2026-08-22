@@ -821,7 +821,7 @@
               <span class="head-icon">🙋</span>
               <h2 class="head-text">AAPDA MITRA VOLUNTEER POOL</h2>
             </div>
-            <button id="add-volunteer-btn" class="btn btn-xs btn-saffron font-bold">+ REGISTER VOLUNTEER</button>
+            <button id="add-volunteer-btn" class="btn btn-xs btn-saffron font-bold">🔗 REGISTER VOLUNTEER (GOOGLE FORM)</button>
           </div>
 
           <div class="volunteer-pool-stats">
@@ -1264,6 +1264,32 @@
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancel-assign-btn">CANCEL</button>
         <button class="btn btn-saffron font-bold" id="confirm-assign-btn">CONFIRM APPOINTMENT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ASSIGN VOLUNTEER TO SQUAD -->
+  <div id="modal-assign-squad" class="modal-backdrop hidden">
+    <div class="modal-card shadow-brutal">
+      <div class="modal-head">
+        <h3 class="modal-title font-bold">ASSIGN VOLUNTEER TO SQUAD</h3>
+        <button class="modal-x-btn" id="close-assign-squad-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-field">
+          <label class="field-lbl">VOLUNTEER</label>
+          <input type="text" id="assign-squad-volunteer-name" class="field-input" readonly />
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">SELECT SQUAD</label>
+          <select id="assign-squad-select" class="field-input mono text-xs">
+            <!-- Populated dynamically from volunteerSquads -->
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancel-assign-squad-btn">CANCEL</button>
+        <button class="btn btn-saffron font-bold" id="confirm-assign-squad-btn">CONFIRM ASSIGNMENT</button>
       </div>
     </div>
   </div>
