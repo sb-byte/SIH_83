@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unity EOC India — Virtual Disaster Command Center (SIH 2026)</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Main Stylesheet -->
+  <script type="module" crossorigin src="/assets/index-Drx5m0aJ.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-D_F7NZ5R.css">
+</head>
+<body class="neo-brutal antialiased">
+
+  <!-- ========================================================================= -->
+  <!-- MASTER COMMAND HEADER                                                     -->
+  <!-- ========================================================================= -->
+  <header id="global-header" class="master-header">
+    
+    <!-- Top Row: Identity, Status, Mode Switcher & Utilities -->
+    <div class="header-top-row">
+      
+      <!-- Brand & Activation Badge -->
+      <div class="brand-group" id="nav-brand-btn" role="button" title="Go to Portal Home">
+        <div class="emblem-square">🇮🇳</div>
+        <div class="brand-info">
+          <div class="brand-row">
+            <span class="brand-title">UNITY EOC INDIA</span>
+            <span class="sih-tag">SIH 2026</span>
+          </div>
+          <span class="brand-sub">राष्ट्रीय आपदा वर्चुअल कमांड नेटवर्क | NDMA</span>
+        </div>
+      </div>
+
+      <div class="activation-pill">
+        <span class="pulse-beacon-dot"></span>
+        <span class="activation-text">NDMA LEVEL 1 NATIONAL ACTIVATION</span>
+      </div>
+
+      <!-- Precision Dual-Mode Toggle Switch -->
+      <div class="dual-mode-switch shadow-brutal-sm">
+        <button id="mode-live-btn" class="mode-toggle-btn active" data-mode="LIVE" title="Active Real-World Disaster Feeds">
+          <span class="mode-dot live-dot"></span>
+          <span class="mode-text">LIVE CRISIS</span>
+          <span class="mode-badge live-badge">ARMED</span>
+        </button>
+        <button id="mode-exercise-btn" class="mode-toggle-btn" data-mode="EXERCISE" title="Sandboxed Simulation & Training Drills">
+          <span class="mode-dot exercise-dot">⚠️</span>
+          <span class="mode-text">EXERCISE DRILL</span>
+          <span class="mode-badge exercise-badge">SANDBOX</span>
+        </button>
+      </div>
+
+      <!-- Quick Telemetry & Utility Controls -->
+      <div class="header-tools">
+        <div class="time-telemetry mono">
+          <span id="clock-display" class="font-bold">14:30:15 IST</span>
+          <span class="status-chip online">● 64 ON-STATION</span>
+        </div>
+
+        <div class="tool-buttons">
+          <button id="audio-toggle-btn" class="btn btn-icon btn-sm" title="Toggle Sound Feedback">🔊</button>
+          <button id="theme-toggle-btn" class="btn btn-icon btn-sm" title="Toggle Light/Dark Theme">🌓</button>
+          <button id="quick-alert-btn" class="btn btn-saffron btn-sm font-bold shadow-brutal-sm">
+            🚨 SACHET ALERT
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="header-nav-bar">
+      <div class="nav-tabs-group">
+        <button class="nav-tab active" data-view="landing">
+          <span class="tab-icon">🏠</span> PORTAL HOME
+        </button>
+        <button class="nav-tab" data-view="command">
+          <span class="tab-icon">🗺️</span> SITUATIONAL GIS
+        </button>
+        <button class="nav-tab" data-view="ics">
+          <span class="tab-icon">📋</span> ICS & IAP HUB
+        </button>
+        <button class="nav-tab" data-view="logistics">
+          <span class="tab-icon">🚛</span> FLEET & SACHET ALERT
+        </button>
+        <button class="nav-tab" data-view="simulation">
+          <span class="tab-icon">⏱️</span> SIMULATION LAB
+        </button>
+        <button class="nav-tab" data-view="reports">
+          <span class="tab-icon">📊</span> AAR REPORTS
+        </button>
+      </div>
+
+      <!-- Active Incident Breadcrumb -->
+      <div class="active-incident-crumb mono" id="active-incident-crumb">
+        <span class="crumb-lbl">INCIDENT:</span>
+        <span class="crumb-val text-saffron font-bold" id="header-incident-title">SEVERE CYCLONE DANA (BAY OF BENGAL) | T+05:18:22</span>
+      </div>
+    </nav>
+  </header>
+
+  <!-- EXERCISE SIMULATION HAZARD BANNER (Shown in Exercise Mode) -->
+  <div id="exercise-hazard-banner" class="exercise-hazard-banner hidden">
+    <div class="banner-inner">
+      <span class="hazard-tag">⚠️ EXERCISE SIMULATION SANDBOX ACTIVE</span>
+      <span>ALL TELEMETRY, INCIDENTS, AND SACHET ALERTS ARE ISOLATED TO TRAINING TERMINALS</span>
+      <span class="mono font-bold" id="exercise-sim-time">SIM TIME: H+01:45:20 | SPEED: 1X</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN APPLICATION CONTENT CONTAINER                                        -->
+  <!-- ========================================================================= -->
+  <main id="app-container" class="app-main-viewport">
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 1: GRAND LANDING PAGE (INDIA / SIH 2026)                             -->
+    <!-- ========================================================================= -->
+    <section id="view-landing" class="view-section active">
+      <div class="landing-page-wrap">
+        
+        <!-- Hero Header Block -->
+        <div class="landing-hero-block">
+          <div class="sih-meta-tag">
+            <span>🇮🇳</span>
+            <span class="font-bold">SMART INDIA HACKATHON 2026</span>
+            <span class="sep">•</span>
+            <span>MINISTRY OF HOME AFFAIRS / NDMA TRACK</span>
+          </div>
+
+          <h1 class="landing-hero-title">
+            ONE INTERFACE. TWO MODES.<br>
+            <span class="text-saffron">TOTAL DISASTER RESILIENCE.</span>
+          </h1>
+
+          <p class="landing-hero-subtitle">
+            India's unified national disaster command and high-stakes simulation architecture. First responders, District Magistrates, and NDRF teams train in the exact operational system they deploy during live national emergencies.
+          </p>
+
+          <!-- Interactive Scenario Switcher Bar -->
+          <div class="scenario-selector-strip">
+            <span class="scenario-lbl font-bold text-xs">⚡ SELECT OPERATIONAL SCENARIO:</span>
+            <button class="scenario-btn active" data-scenario="dana">🌀 Cyclone Dana (Odisha Coast)</button>
+            <button class="scenario-btn" data-scenario="assam">🌊 Assam Brahmaputra Floods</button>
+            <button class="scenario-btn" data-scenario="chamoli">🏔️ Chamoli GLOF Glacial Burst</button>
+            <button class="scenario-btn" data-scenario="wayanad">⛰️ Wayanad Landslide Rescue</button>
+          </div>
+
+          <!-- Interactive Mode Entry Cards -->
+          <div class="hero-mode-cards-grid">
+            
+            <!-- Live Mode Card -->
+            <div class="hero-mode-card live-mode-card shadow-brutal">
+              <div class="mode-card-header">
+                <div class="mode-card-icon">🔴</div>
+                <div class="mode-card-heading">
+                  <h3>LIVE DISASTER RESPONSE</h3>
+                  <span class="mono text-xs text-saffron">REAL-WORLD DATA INTEGRATION</span>
+                </div>
+              </div>
+              <p class="mode-card-desc">
+                Real-time geospatial tactical GIS, live IMD Doppler storm tracking, chronological incident streams, and authorized CAP-SACHET multi-lingual Cell Broadcasts.
+              </p>
+              <div class="mode-card-features">
+                <span>✓ ISRO Bhuvan GIS Layers</span>
+                <span>✓ 0.38s Cell Broadcast Siren</span>
+                <span>✓ 16 NDRF Battalions Synced</span>
+              </div>
+              <button class="btn btn-saffron btn-block launch-view-btn font-bold" data-view="command">
+                ENTER LIVE EOC CONSOLE →
+              </button>
+            </div>
+
+            <!-- Exercise Simulation Card -->
+            <div class="hero-mode-card exercise-mode-card shadow-brutal">
+              <div class="mode-card-header">
+                <div class="mode-card-icon">🟡</div>
+                <div class="mode-card-heading">
+                  <h3>EXERCISE & TRAINING LAB</h3>
+                  <span class="mono text-xs text-gold">SANDBOXED VIRTUAL TIME MACHINE</span>
+                </div>
+              </div>
+              <p class="mode-card-desc">
+                Scrubbable timeline (H+0:00 to H+6:00) with 1x, 2x, 4x, 8x speed controls. Inject branching emergencies with automated Position Task Book (PTB) trainee scoring.
+              </p>
+              <div class="mode-card-features">
+                <span>✓ Scrubbable MSEL Timeline</span>
+                <span>✓ Automated Trainee Scoring</span>
+                <span>✓ Zero-Risk Sandboxed Alerting</span>
+              </div>
+              <button class="btn btn-gold btn-block launch-view-btn font-bold" data-view="simulation">
+                LAUNCH SIMULATION DRILL →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- National Telemetry Strip -->
+        <div class="national-stat-strip shadow-brutal">
+          <div class="stat-cell">
+            <span class="stat-num text-saffron">28 + 8</span>
+            <span class="stat-lbl">STATES & UTS CONNECTED</span>
+          </div>
+          <div class="stat-sep"></div>
+          <div class="stat-cell">
+            <span class="stat-num text-navy">16</span>
+            <span class="stat-lbl">NDRF BATTALIONS SYNCED</span>
+          </div>
+          <div class="stat-sep"></div>
+          <div class="stat-cell">
+            <span class="stat-num text-emerald">120,000+</span>
+            <span class="stat-lbl">AAPDA MITRA VOLUNTEERS</span>
+          </div>
+          <div class="stat-sep"></div>
+          <div class="stat-cell">
+            <span class="stat-num text-alert">0.38s</span>
+            <span class="stat-lbl">CAP-SACHET ALERT LATENCY</span>
+          </div>
+          <div class="stat-sep"></div>
+          <div class="stat-cell">
+            <span class="stat-num text-emerald">ONLINE</span>
+            <span class="stat-lbl">IMD DOPPLER & CWC RADAR</span>
+          </div>
+        </div>
+
+        <!-- Core Architectural Bento Grid -->
+        <div class="landing-bento-section">
+          <h2 class="bento-section-title">CORE PLATFORM PILLARS (SIH 2026)</h2>
+
+          <div class="bento-layout">
+            <!-- Pillar 1 -->
+            <div class="bento-box bento-dark shadow-brutal">
+              <div class="bento-top">
+                <span class="bento-pill tag-cyan">SITUATIONAL GIS</span>
+                <span class="bento-idx mono">01</span>
+              </div>
+              <h4>High-Fidelity GIS & Drone Reconnaissance</h4>
+              <p>Multi-layered mapping fusing ISRO Bhuvan satellite bases, IMD Doppler sweeps, CWC river basin heights, and live WebRTC drone streams from NDRF teams.</p>
+            </div>
+
+            <!-- Pillar 2 -->
+            <div class="bento-box bento-light shadow-brutal">
+              <div class="bento-top">
+                <span class="bento-pill tag-saffron">DUAL PARITY</span>
+                <span class="bento-idx mono">02</span>
+              </div>
+              <h4>Zero-Context-Switching Dual Mode</h4>
+              <p>Responders drill in the identical GIS mapping, IAP forms, and communication tools they use during real disasters. No secondary training apps needed.</p>
+            </div>
+
+            <!-- Pillar 3 -->
+            <div class="bento-box bento-light shadow-brutal">
+              <div class="bento-top">
+                <span class="bento-pill tag-navy">INCIDENT COMMAND</span>
+                <span class="bento-idx mono">03</span>
+              </div>
+              <h4>NDMA & ICS Standardized IAP Forms</h4>
+              <p>Automated Incident Action Plans with digital sign-offs for ICS-202, 203, 204, and 214 with automatic vacancy flags for unassigned operational roles.</p>
+            </div>
+
+            <!-- Pillar 4 -->
+            <div class="bento-box bento-dark shadow-brutal">
+              <div class="bento-top">
+                <span class="bento-pill tag-alert">PUBLIC WARNING</span>
+                <span class="bento-idx mono">04</span>
+              </div>
+              <h4>CAP-SACHET Emergency Cell Broadcast</h4>
+              <p>National Emergency Alert System integration for sub-second geo-targeted Cell Broadcast sirens, multi-lingual SMS, TV/Radio crawls, and siren towers.</p>
+            </div>
+
+            <!-- Pillar 5 -->
+            <div class="bento-box bento-light shadow-brutal">
+              <div class="bento-top">
+                <span class="bento-pill tag-emerald">LOGISTICS</span>
+                <span class="bento-idx mono">05</span>
+              </div>
+              <h4>Resource Lifecycle & Shelter Matrix</h4>
+              <p>Lifecycle tracking (Available ↔ Deployed ↔ Out of Service) for rescue boats, high-water trucks, and Multipurpose Cyclone Shelters (MCS).</p>
+            </div>
+
+            <!-- Pillar 6 -->
+            <div class="bento-box bento-dark shadow-brutal">
+              <div class="bento-top">
+                <span class="bento-pill tag-gold">SIMULATION LAB</span>
+                <span class="bento-idx mono">06</span>
+              </div>
+              <h4>Master Time-Machine & Inject Studio</h4>
+              <p>Scrubbable simulation clock (H+0:00 to H+6:00) with 1x, 2x, 4x, 8x speed controls. Inject branching scenarios with automated trainee scoring.</p>
+            </div>
+          </div>
+        </div>
+
+        <footer class="landing-footer">
+          <div><strong>UNITY EOC INDIA</strong> — Built for Smart India Hackathon 2026</div>
+          <div class="mono text-xs text-muted">NDMA / MHA COMPLIANT DISASTER COMMAND ARCHITECTURE</div>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 2: SITUATIONAL AWARENESS & GIS COMMAND HUB                           -->
+    <!-- ========================================================================= -->
+    <section id="view-command" class="view-section">
+      <div class="command-grid-layout">
+        
+        <!-- LEFT COLUMN: CHRONO INCIDENT STREAM & CITIZEN SOS (26% Width) -->
+        <aside class="panel incident-panel shadow-brutal">
+          <div class="panel-head">
+            <div class="head-title-wrap">
+              <span class="head-icon">📋</span>
+              <h2 class="head-text">INCIDENT & SOS STREAM</h2>
+            </div>
+            <button id="add-incident-btn" class="btn btn-xs btn-saffron font-bold">+ LOG EVENT</button>
+          </div>
+
+          <!-- Filter Strip & Search Input -->
+          <div class="incident-search-box">
+            <input type="text" id="incident-search-input" class="search-input" placeholder="🔍 Search incidents & SOS by keyword..." />
+          </div>
+
+          <div class="filter-strip">
+            <button class="chip active" data-filter="ALL">ALL (98)</button>
+            <button class="chip" data-filter="OPS">OPS</button>
+            <button class="chip" data-filter="LOGISTICS">LOGISTICS</button>
+            <button class="chip" data-filter="IMD">IMD</button>
+            <button class="chip" data-filter="CRITICAL">CRITICAL</button>
+            <button class="chip" data-filter="SOS">🆘 SOS QUEUE</button>
+          </div>
+
+          <!-- Incidents Feed -->
+          <div id="incident-feed-list" class="incident-scroll-feed">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <!-- Ground Intel Banner -->
+          <div class="ground-intel-card">
+            <div class="intel-head">
+              <span class="pulse-beacon-dot"></span>
+              <span class="font-bold text-xs">AAPDA MITRA GROUND INTEL</span>
+            </div>
+            <p class="intel-body mono text-xs" id="ground-intel-text">
+              <span class="text-alert font-bold">[VERIFIED SOS]:</span> Satbhaya creek breached. 14 families relocated to Kendrapara MCS. High-water dinghies requested.
+            </p>
+          </div>
+        </aside>
+
+        <!-- CENTER COLUMN: TACTICAL GIS VIEWPORT & DRONE FEEDS (48% Width) -->
+        <main class="panel map-panel shadow-brutal">
+          <div class="panel-head">
+            <div class="head-title-wrap">
+              <span class="head-icon">🛰️</span>
+              <h2 class="head-text">TACTICAL GIS SITUATIONAL VIEWPORT</h2>
+            </div>
+            <!-- Map Layers & Tool Palette -->
+            <div class="map-layers-group">
+              <button id="drop-pin-tool-btn" class="chip" title="Click on map to drop tactical hotspot pin">📍 DROP PIN</button>
+              <button id="toggle-radar-btn" class="chip chip-active">DOPPLER RADAR</button>
+              <button id="toggle-evac-btn" class="chip chip-active">EVAC ZONES</button>
+              <button id="toggle-assets-btn" class="chip chip-active">NDRF FLEET</button>
+              <button id="toggle-shelters-btn" class="chip chip-active">SHELTERS</button>
+            </div>
+          </div>
+
+          <!-- Map & Drone Feeds Viewport -->
+          <div class="map-container-rel">
+            <div id="gis-map" class="gis-map-canvas"></div>
+
+            <!-- Floating Map HUD -->
+            <div class="map-hud-box shadow-brutal-sm">
+              <div class="hud-stat">
+                <span class="hud-lbl">EST. LANDFALL</span>
+                <span class="hud-data text-alert font-bold" id="hud-landfall">T-02:45:00</span>
+              </div>
+              <div class="hud-divider"></div>
+              <div class="hud-stat">
+                <span class="hud-lbl">CORE WIND</span>
+                <span class="hud-data text-saffron font-bold" id="hud-wind">125 KM/H</span>
+              </div>
+              <div class="hud-divider"></div>
+              <div class="hud-stat">
+                <span class="hud-lbl">EVAC PROGRESS</span>
+                <span class="hud-data text-emerald font-bold" id="hud-evac">86.4% (276K)</span>
+              </div>
+            </div>
+
+            <!-- Drone Feeds Dock -->
+            <div class="drone-dock-wrap">
+              <div class="drone-dock-header">
+                <span class="font-bold text-xs">📹 LIVE RECON FEEDS (WEBRTC 0.12s)</span>
+                <span class="mono text-xs text-saffron">3 FEEDS ACTIVE • CLICK TO INSPECT FLIR</span>
+              </div>
+              <div class="drone-cards-row">
+                <div class="drone-card active" data-cam="1">
+                  <div class="drone-card-top">
+                    <span>CAM 01 | PURI SEAFRONT</span>
+                    <span class="rec-indicator">● REC</span>
+                  </div>
+                  <div class="drone-sim-window video-puri">
+                    <div class="scanlines"></div>
+                    <span class="cam-data">GALE SURGE 3.2M</span>
+                  </div>
+                </div>
+                <div class="drone-card" data-cam="2">
+                  <div class="drone-card-top">
+                    <span>CAM 02 | NDRF DRONE ALPHA</span>
+                    <span class="rec-indicator">● REC</span>
+                  </div>
+                  <div class="drone-sim-window video-drone">
+                    <div class="scanlines"></div>
+                    <span class="cam-data">DHAMRA JETTY | ALT 120M</span>
+                  </div>
+                </div>
+                <div class="drone-card" data-cam="3">
+                  <div class="drone-card-top">
+                    <span>CAM 03 | KENDRAPARA MCS</span>
+                    <span class="rec-indicator">● REC</span>
+                  </div>
+                  <div class="drone-sim-window video-shelter">
+                    <div class="scanlines"></div>
+                    <span class="cam-data">QUEUE: 42 PERSONS</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- RIGHT COLUMN: IMD TELEMETRY, SHELTERS & NDRF READINESS (26% Width) -->
+        <aside class="panel readiness-panel shadow-brutal">
+          
+          <!-- IMD Weather Telemetry Card -->
+          <div class="readiness-card">
+            <div class="card-head-compact">
+              <span class="font-bold">IMD METEOROLOGICAL TELEMETRY</span>
+              <span class="badge badge-alert">RED ALERT</span>
+            </div>
+            <div class="gauge-grid-2x2">
+              <div class="gauge-card">
+                <span class="gauge-lbl">SUSTAINED WIND</span>
+                <span class="gauge-digit text-saffron" id="gauge-wind-val">125 <small class="text-xs">km/h</small></span>
+                <div class="gauge-progress"><div class="gauge-bar bg-saffron" id="gauge-wind-bar" style="width: 82%;"></div></div>
+              </div>
+              <div class="gauge-card">
+                <span class="gauge-lbl">24H RAINFALL</span>
+                <span class="gauge-digit text-navy" id="gauge-rain-val">210 <small class="text-xs">mm</small></span>
+                <div class="gauge-progress"><div class="gauge-bar bg-navy" id="gauge-rain-bar" style="width: 70%;"></div></div>
+              </div>
+              <div class="gauge-card">
+                <span class="gauge-lbl">TIDAL SURGE</span>
+                <span class="gauge-digit text-alert" id="gauge-surge-val">+3.8 <small class="text-xs">m</small></span>
+                <div class="gauge-progress"><div class="gauge-bar bg-alert" id="gauge-surge-bar" style="width: 90%;"></div></div>
+              </div>
+              <div class="gauge-card">
+                <span class="gauge-lbl">POWER GRID RISK</span>
+                <span class="gauge-digit text-alert">CRITICAL</span>
+                <div class="gauge-progress"><div class="gauge-bar bg-alert" style="width: 95%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cyclone Shelter Capacity Card with Adjuster -->
+          <div class="readiness-card">
+            <div class="card-head-compact">
+              <span class="font-bold">CYCLONE SHELTER (MCS) CAPACITY</span>
+              <span class="mono text-xs font-bold text-muted">AVG: 88%</span>
+            </div>
+            <div id="shelter-list" class="shelters-compact-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- NDRF Readiness Summary -->
+          <div class="readiness-card">
+            <div class="card-head-compact">
+              <span class="font-bold">NDRF & RESCUE ASSETS</span>
+              <button class="btn btn-xs btn-outline launch-view-btn" data-view="logistics">FLEET HUB →</button>
+            </div>
+            <div class="fleet-grid-2x2">
+              <div class="fleet-box">
+                <span class="f-num text-emerald font-bold">18</span>
+                <span class="f-lbl">NDRF TEAMS DEPLOYED</span>
+              </div>
+              <div class="fleet-box">
+                <span class="f-num text-saffron font-bold">06</span>
+                <span class="f-lbl">TEAMS IN RESERVE</span>
+              </div>
+              <div class="fleet-box">
+                <span class="f-num text-navy font-bold">52</span>
+                <span class="f-lbl">RESCUE BOATS (IRB)</span>
+              </div>
+              <div class="fleet-box">
+                <span class="f-num text-alert font-bold">04</span>
+                <span class="f-lbl">ALH HELICOPTERS</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Bottom Evacuation Alert Ticker -->
+      <div class="bottom-marquee-ticker">
+        <div class="marquee-tag font-bold">🚨 URGENT EOC BROADCAST</div>
+        <div class="marquee-track">
+          <div class="marquee-content" id="live-broadcast-text">
+            RED ALERT: Coastal sectors of Balasore, Kendrapara, Bhadrak, and Jagatsinghpur under Mandatory Evacuation. Move to designated Cyclone Shelters immediately. Call State Helpline 1070 for emergency rescue.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 3: INCIDENT COMMAND SYSTEM (ICS/NIMS/NDMA) HUB                       -->
+    <!-- ========================================================================= -->
+    <section id="view-ics" class="view-section">
+      <div class="ics-page-wrap">
+        
+        <!-- Header Bar -->
+        <div class="ics-head-bar shadow-brutal">
+          <div>
+            <h2 class="ics-title">INCIDENT COMMAND SYSTEM (ICS / NIMS / NDMA)</h2>
+            <span class="mono text-xs">OPERATIONAL PERIOD #02 (18:00 - 06:00 IST) | INCIDENT ACTION PLAN (IAP)</span>
+          </div>
+          <div class="ics-head-actions">
+            <button id="sign-iap-btn" class="btn btn-emerald font-bold shadow-brutal-sm">
+              ✍️ DIGITAL SIGN-OFF IAP
+            </button>
+            <button id="export-iap-btn" class="btn btn-outline font-bold shadow-brutal-sm">
+              📄 EXPORT NIMS IAP (PDF)
+            </button>
+          </div>
+        </div>
+
+        <div class="ics-grid-layout">
+          
+          <!-- Command Organization Tree -->
+          <div class="panel ics-tree-panel shadow-brutal">
+            <div class="panel-head">
+              <h3 class="head-text">COMMAND ORGANIZATION ROSTER</h3>
+              <span class="badge badge-alert" id="vacancy-count-badge">⚠️ 2 UNASSIGNED ROLES</span>
+            </div>
+
+            <div class="tree-content-flow" id="ics-roster-container">
+              <!-- Dynamically populated via main.js -->
+            </div>
+          </div>
+
+          <!-- IAP Forms Viewer & Section Tasks -->
+          <div class="panel ics-forms-panel shadow-brutal">
+            <div class="forms-nav-tabs">
+              <button class="iap-tab active" data-form="202">ICS 202 (OBJECTIVES)</button>
+              <button class="iap-tab" data-form="203">ICS 203 (STAFFING)</button>
+              <button class="iap-tab" data-form="204">ICS 204 (ASSIGNMENTS)</button>
+              <button class="iap-tab" data-form="214">ICS 214 (ACTIVITY LOG)</button>
+            </div>
+
+            <div class="iap-form-render-box" id="iap-form-container">
+              <!-- Rendered dynamically -->
+            </div>
+
+            <!-- Task Tracker Footer -->
+            <div class="task-tracker-footer">
+              <div class="task-tracker-meta">
+                <span class="font-bold text-xs" id="task-progress-txt">SECTION TASKS COMPLETION (5/7 COMPLETED - 71.4%)</span>
+                <span class="mono text-xs text-saffron">NEXT BRIEFING: 01:29:45</span>
+              </div>
+              <div class="brutal-progress-bar">
+                <div class="brutal-progress-fill" id="task-progress-bar" style="width: 71.4%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 4: FLEET LOGISTICS, MUTUAL AID & CAP-SACHET ALERTING                 -->
+    <!-- ========================================================================= -->
+    <section id="view-logistics" class="view-section">
+      <div class="logistics-layout-grid">
+        
+        <!-- Left Column: NDRF Asset Table & Tactical Radio Net -->
+        <div class="panel fleet-panel shadow-brutal">
+          <div class="panel-head">
+            <div class="head-title-wrap">
+              <span class="head-icon">🚛</span>
+              <h2 class="head-text">NDRF & RESCUE ASSETS LIFECYCLE</h2>
+            </div>
+            <button id="add-asset-btn" class="btn btn-xs btn-saffron font-bold">+ REGISTER ASSET</button>
+          </div>
+
+          <div class="asset-search-row">
+            <input type="text" id="asset-search-input" class="search-input" placeholder="🔍 Search asset by name or ID..." />
+          </div>
+
+          <div class="asset-filter-bar">
+            <button class="chip active" data-asset-filter="ALL">ALL ASSETS</button>
+            <button class="chip" data-asset-filter="Water Rescue">BOATS (IRB)</button>
+            <button class="chip" data-asset-filter="Heavy Vehicle">HIGH-WATER TRUCKS</button>
+            <button class="chip" data-asset-filter="UAV Drone">DRONES & AIR</button>
+          </div>
+
+          <div class="table-wrap">
+            <table class="brutal-table">
+              <thead>
+                <tr>
+                  <th>ASSET / ID</th>
+                  <th>TYPE</th>
+                  <th>UNIT</th>
+                  <th>STATUS</th>
+                  <th>LOCATION</th>
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="asset-table-body">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Tactical Radio Dispatcher & PTT Audio Studio -->
+          <div class="radio-dispatcher-card">
+            <div class="radio-head">
+              <div class="radio-title-group">
+                <span class="pulse-beacon-dot"></span>
+                <span class="font-bold text-xs">📻 TACTICAL INTEROP RADIO CONSOLE (VHF / UHF)</span>
+              </div>
+              <span class="mono text-xs text-emerald" id="radio-signal-badge">SIGNAL: 99% HIGH-GAIN</span>
+            </div>
+            
+            <div class="radio-controls-grid">
+              <div class="radio-chan-selector">
+                <label class="field-lbl">CHANNEL TUNER</label>
+                <select id="radio-channel-select" class="field-input mono text-xs">
+                  <option value="CH-01">CH-01: Command Net (155.475 MHz)</option>
+                  <option value="CH-02">CH-02: NDRF Tactical Ops Net (154.280 MHz)</option>
+                  <option value="CH-03">CH-03: Logistics & Relief Net (153.860 MHz)</option>
+                  <option value="CH-04">CH-04: Coast Guard Maritime Net (156.800 MHz)</option>
+                  <option value="CH-05">CH-05: Aapda Mitra Volunteer Net (148.550 MHz)</option>
+                </select>
+              </div>
+
+              <div class="radio-speaker-status mono text-xs">
+                <span class="text-muted">ACTIVE SPEAKER:</span>
+                <strong class="text-saffron" id="radio-active-speaker">State IC Mohanty (OSDMA)</strong>
+              </div>
+
+              <div class="ptt-wrap">
+                <button id="ptt-broadcast-btn" class="btn btn-alert btn-block font-black shadow-brutal-sm">
+                  🎙️ PUSH TO TALK (PTT)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mutual Aid & Aapda Mitra Volunteer Squads -->
+          <div class="mutual-aid-strip">
+            <div class="font-bold text-xs">🤝 AAPDA MITRA COMMUNITY MOBILIZATION SQUADS</div>
+            <div class="mutual-aid-chips mono text-xs" id="volunteer-squads-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: CAP-SACHET Emergency Alert Studio & Rumor Debunking -->
+        <div class="panel sachet-panel shadow-brutal">
+          <div class="panel-head">
+            <div class="head-title-wrap">
+              <span class="head-icon">📡</span>
+              <h2 class="head-text">CAP-SACHET PUBLIC ALERT STUDIO</h2>
+            </div>
+            <div class="sachet-top-tools">
+              <button id="preview-alert-btn" class="btn btn-xs btn-outline font-bold">📱 PHONE PREVIEW</button>
+              <span class="badge badge-alert">CAP V1.2</span>
+            </div>
+          </div>
+
+          <div class="sachet-form-wrap">
+            <div id="sachet-mode-guard" class="sachet-guard-pill live-guard">
+              ⚠️ LIVE DISPATCH ARMED — Transmits instant Cell Broadcast to mobile towers in target geometry!
+            </div>
+
+            <div class="form-row-3">
+              <div class="form-field">
+                <label class="field-lbl">EVENT TYPE</label>
+                <select id="sachet-event" class="field-input">
+                  <option value="Cyclone Emergency">Severe Cyclone / Inundation</option>
+                  <option value="Flash Flood Warning">Flash Flood Warning</option>
+                  <option value="Dam Release Alert">CWC Dam Spillway Discharge</option>
+                  <option value="Evacuation Order">Immediate Mandatory Evacuation</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="field-lbl">URGENCY</label>
+                <select id="sachet-urgency" class="field-input">
+                  <option value="IMMEDIATE">IMMEDIATE</option>
+                  <option value="EXPECTED">EXPECTED</option>
+                  <option value="FUTURE">FUTURE</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="field-lbl">SEVERITY</label>
+                <select id="sachet-severity" class="field-input">
+                  <option value="EXTREME">EXTREME (Life Safety)</option>
+                  <option value="SEVERE">SEVERE</option>
+                  <option value="MODERATE">MODERATE</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Language Switcher for Alert Template -->
+            <div class="alert-lang-tabs">
+              <span class="text-xs font-bold text-muted">LANGUAGE TEMPLATE:</span>
+              <button class="lang-tab active" data-lang="en">ENGLISH</button>
+              <button class="lang-tab" data-lang="od">ODIA (ଓଡ଼ିଆ)</button>
+              <button class="lang-tab" data-lang="hi">HINDI (हिन्दी)</button>
+            </div>
+
+            <div class="form-field">
+              <label class="field-lbl">TARGET GEOFENCE AREA</label>
+              <input type="text" id="sachet-geofence" class="field-input" value="Bhadrak, Kendrapara, Balasore Coastal Sectors (Est. 1.84M population)" />
+            </div>
+
+            <div class="form-field">
+              <label class="field-lbl">MULTILINGUAL BROADCAST MESSAGE</label>
+              <textarea id="sachet-msg-body" class="field-input mono" rows="3">EMERGENCY ALERT [NDMA / SDMA]: Severe Cyclone DANA landfall imminent. Move immediately to nearest Multipurpose Cyclone Shelter. Do not approach shoreline. Call 1070 for rescue help.</textarea>
+            </div>
+
+            <div class="form-field">
+              <label class="field-lbl">DELIVERY CHANNELS</label>
+              <div class="channels-grid">
+                <label class="chk-label"><input type="checkbox" checked id="chk-cell" /> Cell Broadcast Siren</label>
+                <label class="chk-label"><input type="checkbox" checked id="chk-sms" /> Multi-Lingual SMS</label>
+                <label class="chk-label"><input type="checkbox" checked id="chk-eas" /> TV/Radio Crawl</label>
+                <label class="chk-label"><input type="checkbox" checked id="chk-sirens" /> Coastal Sirens</label>
+              </div>
+            </div>
+
+            <button id="transmit-sachet-btn" class="btn btn-alert btn-lg btn-block font-black shadow-brutal">
+              🚀 TRANSMIT CAP-SACHET ALERT NOW
+            </button>
+
+            <!-- Rumor Control / Debunking Feed -->
+            <div class="rumor-board-card">
+              <div class="rumor-board-head">
+                <span class="font-bold text-xs">🛡️ RUMOR CONTROL & CITIZEN FACT-CHECK BOARD</span>
+                <button id="add-rumor-btn" class="btn btn-xs btn-outline font-bold">+ CLARIFY RUMOR</button>
+              </div>
+              <div class="rumor-list" id="rumor-list-container">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 5: SIMULATION LAB & TIME MACHINE (EXERCISE MODE)                     -->
+    <!-- ========================================================================= -->
+    <section id="view-simulation" class="view-section">
+      <div class="sim-page-wrap">
+
+        <!-- Sub-View Navigation Switcher -->
+        <div class="sim-subnav-bar shadow-brutal">
+          <div class="sim-subnav-group">
+            <button class="sim-subtab-btn active" data-simtab="msel">
+              <span>⏱️ MSEL DRILL TIMELINE & PLAYBACK</span>
+            </button>
+            <button class="sim-subtab-btn" data-simtab="dependency">
+              <span>⚡ CRITICAL INFRASTRUCTURE CASCADE SIMULATOR</span>
+            </button>
+          </div>
+          <div class="sim-subnav-tag mono text-xs">
+            <span class="badge badge-gold">TRAINING & STOCHASTIC STRESS TESTING</span>
+          </div>
+        </div>
+        
+        <!-- SUB-TAB 1: MSEL DRILL TIMELINE -->
+        <div id="sim-tab-msel" class="sim-tab-content active">
+          <!-- Master Time Machine Scrubber Card -->
+          <div class="time-machine-card shadow-brutal">
+            <div class="tm-top-row">
+              <div>
+                <span class="badge badge-gold">⏱️ MASTER SCENARIO EVENTS LIST (MSEL)</span>
+                <span class="mono font-bold ml-2" id="sim-scenario-name">EXERCISE OPERATION SAGAR SURAKSHA 2026</span>
+              </div>
+              <div class="tm-readout mono text-saffron font-black text-lg" id="sim-clock-readout">
+                SIM TIME: H+01:45:20 / H+06:00:00
+              </div>
+            </div>
+
+            <div class="tm-scrubber-track">
+              <input type="range" id="sim-scrubber" min="0" max="21600" value="6320" step="30" class="time-slider" />
+              <div class="scrubber-pins" id="scrubber-pins"></div>
+            </div>
+
+            <div class="tm-actions-bar">
+              <div class="playback-buttons">
+                <button class="btn btn-sm btn-outline font-bold" id="sim-btn-rewind">⏪ -15 MIN</button>
+                <button class="btn btn-sm btn-saffron font-bold" id="sim-btn-play">▶ PLAY DRILL</button>
+                <button class="btn btn-sm btn-outline font-bold" id="sim-btn-pause">⏸ PAUSE</button>
+                <button class="btn btn-sm btn-outline font-bold" id="sim-btn-ff">⏩ +15 MIN</button>
+              </div>
+
+              <div class="speed-control-group">
+                <span class="font-bold text-xs">SPEED:</span>
+                <button class="speed-btn active" data-speed="1">1×</button>
+                <button class="speed-btn" data-speed="2">2×</button>
+                <button class="speed-btn" data-speed="4">4×</button>
+                <button class="speed-btn" data-speed="8">8×</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sim-grid-layout">
+            <!-- Injects Queue -->
+            <div class="panel inject-panel shadow-brutal">
+              <div class="panel-head">
+                <h3 class="head-text">MSEL INJECT QUEUE & TIMELINE</h3>
+                <button id="fire-manual-inject-btn" class="btn btn-xs btn-saffron font-bold">+ CUSTOM INJECT</button>
+              </div>
+              <div class="injects-scroll-box" id="inject-list-feed"></div>
+            </div>
+
+            <!-- Trainee Matrix -->
+            <div class="panel trainee-panel shadow-brutal">
+              <div class="panel-head">
+                <h3 class="head-text">TRAINEE SCORECARD & TASK BOOKS (PTB)</h3>
+                <span class="badge badge-emerald">AVG READINESS: 87.0%</span>
+              </div>
+              <div class="trainees-scroll-box" id="trainee-score-list"></div>
+              <div class="sim-export-strip">
+                <button class="btn btn-saffron btn-block font-bold launch-view-btn shadow-brutal-sm" data-view="reports">
+                  📊 EXPORT DRILL LOG TO AFTER-ACTION REPORT (AAR) →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 2: DEPENDENCY CASCADE & COMPOUND FAILURE SIMULATOR -->
+        <div id="sim-tab-dependency" class="sim-tab-content">
+          
+          <!-- Top Control Header Bar -->
+          <div class="dep-topbar shadow-brutal">
+            <div class="dep-header-left">
+              <span class="badge badge-gold">⚡ NDMA CRITICAL INFRASTRUCTURE CASCADE ENGINE</span>
+              <h2 class="dep-main-title">Dependency & Compound-Failure Crisis Simulator</h2>
+              <p class="dep-subtext">
+                Define critical lifelines (power, pumps, bridges, levees) as capacity nodes, connect failure cascade edges, configure hazard shocks, and execute 300-run Monte Carlo stress tests.
+              </p>
+            </div>
+            <div class="dep-presets-row">
+              <span class="mono text-xs font-bold text-muted mr-1">PRESETS:</span>
+              <button class="btn btn-xs btn-outline font-bold" id="dep-preset-flood">Mode: Flood</button>
+              <button class="btn btn-xs btn-outline font-bold" id="dep-preset-wildfire">Mode: Wildfire</button>
+              <button class="btn btn-xs btn-outline font-bold" id="dep-preset-earthquake">Mode: Earthquake</button>
+              <button class="btn btn-xs btn-outline font-bold" id="dep-preset-blank">Blank Canvas</button>
+            </div>
+          </div>
+
+          <!-- 2-Column Main Simulation Interface -->
+          <div class="dep-grid-layout">
+            
+            <!-- Left Column: Nodes & Dependency Graph Config -->
+            <div class="dep-left-col">
+              
+              <!-- Baseline Plan Panel -->
+              <div class="panel dep-panel shadow-brutal" id="dep-plan-panel" style="display:none;">
+                <div class="panel-head">
+                  <h3 class="head-text">BASELINE RESPONSE PLAN</h3>
+                  <span class="badge badge-outline">NDMA FRAMEWORK SEC. 6</span>
+                </div>
+                <div id="dep-plan-body" class="dep-plan-text mono text-xs"></div>
+              </div>
+
+              <!-- Nodes Management Panel -->
+              <div class="panel dep-panel shadow-brutal">
+                <div class="panel-head">
+                  <h3 class="head-text">LIFELINE NODES — CAPACITY, FRAGILITY & HAZARD</h3>
+                  <button class="btn btn-xs btn-saffron font-bold" id="dep-add-node-btn">+ ADD NODE</button>
+                </div>
+                <div id="dep-node-list" class="dep-nodes-container"></div>
+              </div>
+
+              <!-- Dependency Edges Panel -->
+              <div class="panel dep-panel shadow-brutal">
+                <div class="panel-head">
+                  <h3 class="head-text">DEPENDENCY CASCADE EDGES</h3>
+                  <button class="btn btn-xs btn-saffron font-bold" id="dep-add-edge-btn">+ ADD EDGE</button>
+                </div>
+                <div id="dep-edge-list" class="dep-edges-container"></div>
+                <div class="dep-edge-hint mono text-xs text-muted">
+                  ℹ️ Weight (0.0 to 1.0) = Proportion of upstream failure load transferred to downstream node.
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right Column: Real-time Simulation, SVG Chart & Fuzzing -->
+            <div class="dep-right-col">
+              
+              <!-- Run Controls & Dynamic SVG Capacity Chart -->
+              <div class="panel dep-panel shadow-brutal">
+                <div class="panel-head">
+                  <h3 class="head-text">SIMULATION ENGINE & CAPACITY DECAY TIMELINE</h3>
+                  <span class="badge badge-emerald" id="dep-sim-status-tag">READY TO SIMULATE</span>
+                </div>
+
+                <div class="dep-run-controls-row">
+                  <div class="dep-control-field">
+                    <label class="font-bold mono text-xs">TIMESTEP TICKS:</label>
+                    <input type="number" id="dep-ticks-input" value="30" min="5" max="120" class="dep-input" />
+                  </div>
+                  <button class="btn btn-sm btn-saffron font-bold shadow-brutal-sm" id="dep-run-sim-btn">
+                    ▶ RUN CASCADE SIMULATION
+                  </button>
+                  <button class="btn btn-sm btn-outline font-bold shadow-brutal-sm text-gold" id="dep-run-fuzz-btn">
+                    ⚡ FUZZ 300 MONTE CARLO RUNS
+                  </button>
+                </div>
+
+                <!-- SVG Capacity Series Chart -->
+                <div class="dep-chart-wrapper">
+                  <svg id="chart-cap" width="100%" viewBox="0 0 940 340" preserveAspectRatio="xMidYMid meet" class="dep-svg-chart"></svg>
+                </div>
+                <div class="dep-legend-row" id="legend-cap"></div>
+              </div>
+
+              <!-- Final Node States Table -->
+              <div class="panel dep-panel shadow-brutal">
+                <div class="panel-head">
+                  <h3 class="head-text">FINAL NODE CAPACITY & SURVIVAL STATUS</h3>
+                  <span class="mono text-xs text-muted">END OF SIMULATION RUN</span>
+                </div>
+                <div class="dep-table-scroll">
+                  <table class="dep-data-table">
+                    <thead>
+                      <tr>
+                        <th>INFRASTRUCTURE NODE</th>
+                        <th class="text-right">FINAL CAPACITY</th>
+                        <th>STATUS</th>
+                      </tr>
+                    </thead>
+                    <tbody id="dep-final-table-body"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Compound-Failure Monte Carlo Fuzzing Results -->
+              <div class="panel dep-panel shadow-brutal">
+                <div class="panel-head">
+                  <h3 class="head-text">COMPOUND-FAILURE FUZZING & VULNERABILITY ANALYSIS</h3>
+                  <span class="badge badge-alert" id="dep-fuzz-note">CLICK 'FUZZ 300 RUNS' TO ANALYZE</span>
+                </div>
+                <div id="dep-fuzz-body" class="dep-fuzz-container">
+                  <div class="empty-state mono text-xs text-muted">
+                    No stochastic fuzz run executed yet. Click "⚡ FUZZ 300 MONTE CARLO RUNS" to uncover hidden systemic failure cascades.
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 6: FIELD DAMAGE ASSESSMENT & AFTER-ACTION REVIEW (AAR)               -->
+    <!-- ========================================================================= -->
+    <section id="view-reports" class="view-section">
+      <div class="aar-page-wrap">
+        
+        <div class="aar-head-bar shadow-brutal">
+          <div>
+            <h2 class="aar-title">AFTER-ACTION REVIEW (AAR) & DAMAGE ASSESSMENT</h2>
+            <span class="mono text-xs">AUTO-GENERATED FROM CHRONOLOGICAL LOGS & EXERCISE AUDIT STREAM</span>
+          </div>
+          <div class="aar-actions-group">
+            <button id="add-damage-btn" class="btn btn-outline font-bold shadow-brutal-sm">+ LOG DAMAGE</button>
+            <button id="add-cap-btn" class="btn btn-outline font-bold shadow-brutal-sm">+ ADD CORRECTIVE ACTION</button>
+            <button id="print-aar-btn" class="btn btn-saffron font-bold shadow-brutal-sm">
+              🖨️ PRINT / EXPORT AAR REPORT
+            </button>
+          </div>
+        </div>
+
+        <div class="aar-doc-canvas shadow-brutal">
+          <div class="aar-official-head">
+            <div class="gov-badge">GOVERNMENT OF INDIA | NDMA / MHA COMPLIANT</div>
+            <h3 class="aar-main-heading">POST-INCIDENT / EXERCISE AFTER-ACTION REPORT (AAR / IP)</h3>
+            <div class="aar-meta-row mono text-xs">
+              <div><strong>INCIDENT:</strong> Severe Cyclone DANA (Bay of Bengal)</div>
+              <div><strong>LOCATION:</strong> Virtual Command Center</div>
+              <div><strong>DATE:</strong> 15 August 2026</div>
+              <div><strong>EFFICIENCY:</strong> 91.4% (EXCELLENT)</div>
+            </div>
+          </div>
+
+          <div class="aar-sec-block">
+            <h4 class="aar-sec-heading">1. EXECUTIVE SUMMARY & BENCHMARKS</h4>
+            <p class="aar-text">
+              The EOC successfully coordinated the mass evacuation of 276,480 citizens across coastal Odisha & West Bengal districts within the 12-hour window prior to landfall. The CAP-SACHET cell broadcast network achieved sub-second latency (0.38s), resulting in zero civilian casualties in high-risk coastal zones.
+            </p>
+          </div>
+
+          <div class="aar-sec-block">
+            <h4 class="aar-sec-heading">2. KEY OPERATIONAL METRICS</h4>
+            <div class="aar-metrics-quad">
+              <div class="aar-m-card"><span class="m-val text-saffron">276,480</span><span class="m-tag">CITIZENS EVACUATED</span></div>
+              <div class="aar-m-card"><span class="m-val text-emerald">18</span><span class="m-tag">NDRF TEAMS DEPLOYED</span></div>
+              <div class="aar-m-card"><span class="m-val text-navy">1.84M</span><span class="m-tag">SACHET ALERTS SENT</span></div>
+              <div class="aar-m-card"><span class="m-val text-alert">0</span><span class="m-tag">CIVILIAN FATALITIES</span></div>
+            </div>
+          </div>
+
+          <!-- Field Damage Assessment Feed -->
+          <div class="aar-sec-block">
+            <h4 class="aar-sec-heading">3. FIELD DAMAGE ASSESSMENT FEED (GEOTAGGED)</h4>
+            <div class="damage-table-wrap">
+              <table class="brutal-table">
+                <thead>
+                  <tr>
+                    <th>SECTOR</th>
+                    <th>DAMAGE TYPE</th>
+                    <th>SEVERITY</th>
+                    <th>DAMAGE REPORT SUMMARY</th>
+                    <th>REPORTED BY</th>
+                  </tr>
+                </thead>
+                <tbody id="damage-table-body">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="aar-sec-block">
+            <h4 class="aar-sec-heading">4. CORRECTIVE ACTION IMPROVEMENT PLAN (CAP / IP)</h4>
+            <div class="aar-table-wrap">
+              <table class="brutal-table">
+                <thead>
+                  <tr>
+                    <th>DEFICIENCY IDENTIFIED</th>
+                    <th>CORRECTIVE ACTION</th>
+                    <th>LEAD AGENCY</th>
+                    <th>STATUS</th>
+                  </tr>
+                </thead>
+                <tbody id="corrective-table-body">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL DIALOGS                                                             -->
+  <!-- ========================================================================= -->
+
+  <!-- MODAL 1: ADD INCIDENT DIALOG -->
+  <div id="modal-incident" class="modal-backdrop hidden">
+    <div class="modal-card shadow-brutal">
+      <div class="modal-head">
+        <h3 class="modal-title font-bold">LOG OPERATIONAL INCIDENT</h3>
+        <button class="modal-x-btn" id="close-incident-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-field">
+          <label class="field-lbl">INCIDENT TITLE</label>
+          <input type="text" id="new-inc-title" class="field-input" placeholder="e.g. Baitarani River embankment erosion" />
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-lbl">SECTION</label>
+            <select id="new-inc-section" class="field-input">
+              <option value="OPS">OPERATIONS (OPS)</option>
+              <option value="LOGISTICS">LOGISTICS</option>
+              <option value="PLANNING">PLANNING</option>
+              <option value="IMD">IMD WEATHER</option>
+              <option value="COMMS">COMMUNICATIONS</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="field-lbl">SEVERITY</label>
+            <select id="new-inc-severity" class="field-input">
+              <option value="CRITICAL">🔴 CRITICAL</option>
+              <option value="HIGH">🟠 HIGH</option>
+              <option value="MEDIUM">🟡 MEDIUM</option>
+              <option value="INFO">🟢 INFO</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">LOCATION & GEO COORDINATES</label>
+          <input type="text" id="new-inc-loc" class="field-input" placeholder="e.g. Dhamra Sector 4 [20.79° N, 86.96° E]" />
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">EVENT DETAILS & DISPATCH ACTIONS</label>
+          <textarea id="new-inc-details" class="field-input" rows="3" placeholder="Describe the ground truth situation and tactical dispatch..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancel-inc-btn">CANCEL</button>
+        <button class="btn btn-saffron font-bold" id="save-inc-btn">COMMIT TO LOG</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: ASSIGN ICS OFFICER MODAL -->
+  <div id="modal-assign-officer" class="modal-backdrop hidden">
+    <div class="modal-card shadow-brutal">
+      <div class="modal-head">
+        <h3 class="modal-title font-bold">ASSIGN / APPOINT ICS OFFICER</h3>
+        <button class="modal-x-btn" id="close-assign-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-field">
+          <label class="field-lbl">ICS ROLE / POSITION</label>
+          <input type="text" id="assign-role-title" class="field-input" readonly />
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">OFFICER NAME & DESIGNATION</label>
+          <input type="text" id="assign-officer-name" class="field-input" placeholder="e.g. Wing Commander S. Roy, IAF" />
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">AGENCY / DEPARTMENT</label>
+          <input type="text" id="assign-officer-agency" class="field-input" placeholder="e.g. Indian Air Force Liaison" />
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">TACTICAL RADIO NET</label>
+          <input type="text" id="assign-officer-radio" class="field-input" value="Command Net (155.475 MHz)" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancel-assign-btn">CANCEL</button>
+        <button class="btn btn-saffron font-bold" id="confirm-assign-btn">CONFIRM APPOINTMENT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: REGISTER ASSET MODAL -->
+  <div id="modal-asset" class="modal-backdrop hidden">
+    <div class="modal-card shadow-brutal">
+      <div class="modal-head">
+        <h3 class="modal-title font-bold">REGISTER EMERGENCY ASSET</h3>
+        <button class="modal-x-btn" id="close-asset-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-field">
+          <label class="field-lbl">ASSET NAME</label>
+          <input type="text" id="new-asset-name" class="field-input" placeholder="e.g. Deep Water Zodiac 04" />
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-lbl">TYPE</label>
+            <select id="new-asset-type" class="field-input">
+              <option value="Water Rescue">Water Rescue (Boat / Dinghy)</option>
+              <option value="Heavy Vehicle">Heavy Vehicle (Truck / Gen)</option>
+              <option value="UAV Drone">UAV Drone / Air</option>
+              <option value="Medical">Medical / Field Ambulance</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="field-lbl">UNIT / BATTALION</label>
+            <input type="text" id="new-asset-unit" class="field-input" value="NDRF 03 Bn" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">STAGING LOCATION</label>
+          <input type="text" id="new-asset-loc" class="field-input" placeholder="e.g. Chandbali Transit Jetty" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancel-asset-btn">CANCEL</button>
+        <button class="btn btn-saffron font-bold" id="save-asset-btn">DEPLOY ASSET</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: PHONE ALERT PREVIEW MODAL -->
+  <div id="modal-phone-preview" class="modal-backdrop hidden">
+    <div class="phone-mockup shadow-brutal-lg">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="phone-top-bar mono">
+          <span>14:30</span>
+          <span>📶 5G • 🔋 98%</span>
+        </div>
+        <div class="phone-alert-card">
+          <div class="phone-alert-head">
+            <span>🚨 EMERGENCY CELL BROADCAST</span>
+            <span>NOW</span>
+          </div>
+          <div class="phone-alert-title font-black" id="phone-alert-title">SEVERE CYCLONE WARNING</div>
+          <div class="phone-alert-msg mono text-xs" id="phone-alert-body">
+            EMERGENCY ALERT [NDMA]: Move immediately to nearest Multipurpose Cyclone Shelter. Call 1070 for rescue help.
+          </div>
+          <button class="phone-dismiss-btn" id="close-phone-modal">OK (ACKNOWLEDGE)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: DRONE VIDEO FLIR INSPECTION MODAL -->
+  <div id="modal-drone-inspect" class="modal-backdrop hidden">
+    <div class="drone-inspect-modal shadow-brutal-lg">
+      <div class="drone-inspect-head">
+        <div class="inspect-title font-bold" id="inspect-cam-title">📹 DRONE RECON FEED INSPECTOR</div>
+        <div class="inspect-tools">
+          <button id="toggle-flir-btn" class="btn btn-xs btn-gold font-bold">FLIR THERMAL: OFF</button>
+          <button class="modal-x-btn text-white" id="close-drone-modal">✕</button>
+        </div>
+      </div>
+      <div class="drone-inspect-body" id="inspect-video-canvas">
+        <div class="scanlines"></div>
+        <div class="hud-crosshair"></div>
+        <div class="inspect-telemetry-hud mono text-xs">
+          <div>ALTITUDE: 120m | AZIMUTH: 184° | SPEED: 24 km/h</div>
+          <div>OPTICAL ZOOM: 12X | ENCRYPTION: AES-256</div>
+          <div class="text-saffron font-bold">SECTOR: DHAMRA JETTY BREACH POINT</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6: CUSTOM INJECT BUILDER MODAL (SIMULATION LAB) -->
+  <div id="modal-custom-inject" class="modal-backdrop hidden">
+    <div class="modal-card shadow-brutal">
+      <div class="modal-head">
+        <h3 class="modal-title font-bold">⚡ INJECT MSEL SCENARIO EVENT</h3>
+        <button class="modal-x-btn" id="close-inject-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-field">
+          <label class="field-lbl">INJECT TITLE</label>
+          <input type="text" id="new-inject-title" class="field-input" placeholder="e.g. Major Highway Bridge Washout" />
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-lbl">TARGET SECTION</label>
+            <select id="new-inject-target" class="field-input">
+              <option value="Operations">Operations (Search & Rescue)</option>
+              <option value="Logistics">Logistics & Supply</option>
+              <option value="Planning">Planning & GIS</option>
+              <option value="Command / Safety">Command Staff / Safety</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="field-lbl">DELIVERY MECHANISM</label>
+            <select id="new-inject-mech" class="field-input">
+              <option value="Drone Recon Video">Drone Recon Video Feed</option>
+              <option value="District Collector Call">District Collector Radio Call</option>
+              <option value="Citizen SOS Call">Citizen SOS Call (Helpline 1070)</option>
+              <option value="Telemetry Alarm">CWC River Gauge Sensor Alarm</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">INJECT DETAILS & SITUATION</label>
+          <textarea id="new-inject-desc" class="field-input" rows="2" placeholder="Explain the simulated breakdown or emergency..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancel-inject-btn">CANCEL</button>
+        <button class="btn btn-alert font-bold" id="confirm-fire-inject-btn">FIRE INJECT NOW ⚡</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="toast-stack"></div>
+
+  <!-- Module Entry Script -->
+</body>
+</html>
