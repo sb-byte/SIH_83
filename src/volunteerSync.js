@@ -41,8 +41,8 @@
 // this up yet).
 // =========================================================================
 
-export const VOLUNTEER_FORM_URL = ''; // e.g. "https://forms.gle/xxxxxxxxxxxxx"
-export const VOLUNTEER_SHEET_CSV_URL = ''; // e.g. "https://docs.google.com/spreadsheets/d/e/xxxx/pub?output=csv"
+export const VOLUNTEER_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeaCANZky3OKG6idXEn1ZiGRHvIND337KT86NN__SSLdL-6gA/viewform?usp=publish-editor';
+export const VOLUNTEER_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTwdLJXOkQx8Nj9eDxOSmckSPrONg3JxEUOap0Kmslq-bV_5pyTE1gtpcXTvEm1FgHfbl2z7D4mvKI4/pub?gid=829303670&single=true&output=csv';
 
 const AUTO_SYNC_INTERVAL_MS = 30_000; // 30s — adjust as needed
 
