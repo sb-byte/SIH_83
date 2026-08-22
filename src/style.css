@@ -1683,6 +1683,66 @@ body {
   border-radius: 2px;
 }
 
+/* Resource & Logistics Management: full-width panels within the 2-col grid */
+.panel-full-span {
+  grid-column: 1 / -1;
+}
+
+.asset-action-cell {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.volunteer-pool-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  padding: 0.6rem 0.85rem 0.2rem;
+}
+
+.vol-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  background: var(--bg-canvas);
+  border: var(--border-sm-w) solid var(--border-color);
+  border-radius: var(--radius);
+}
+
+.vol-stat-digit {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.vol-stat-lbl {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.volunteer-pool-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem 0.85rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.volunteer-pool-filter-bar {
+  padding-top: 0.6rem;
+}
+
+.mt-1 {
+  margin-top: 0.35rem;
+}
+
 .sachet-form-wrap {
   padding: 0.85rem;
   display: flex;

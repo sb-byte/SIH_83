@@ -12,7 +12,9 @@ import {
   icsTasksList,
   exerciseScenario,
   rumorDebunking,
-  damageAssessments
+  damageAssessments,
+  mutualAidRequests,
+  volunteerPool
 } from './data.js';
 
 // Global Application State
@@ -29,6 +31,9 @@ const state = {
   rumorsData: [...rumorDebunking],
   damageData: [...damageAssessments],
   volunteerSquads: [...volunteerSquads],
+  mutualAidData: [...mutualAidRequests],
+  volunteerPoolData: [...volunteerPool],
+  activeVolunteerFilter: 'ALL',
   correctiveActions: [
     { def: "Staging area delay for Sector 9 backup fuel tanker.", action: "Pre-position auxiliary diesel tanker directly at Bhadrak Transit Depot.", lead: "Logistics / Civil Supplies", status: "IN PROGRESS" },
     { def: "Air Ops Branch Director vacancy flagged during initial surge.", action: "Automate roster escalation protocol with IAF liaison desk.", lead: "Operations Section", status: "COMPLETED" },
@@ -89,6 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
   renderDamageTable();
   renderCorrectiveActions();
   renderVolunteerSquads();
+  renderShelterMatrix();
+  renderMutualAid();
+  renderVolunteerPool();
   renderInjects();
   renderTrainees();
   initIapForms();
@@ -486,10 +494,13 @@ function renderAssets() {
       <td>${asset.type}</td>
       <td>${asset.unit}</td>
       <td><span class="badge ${statusClass}">${asset.status}</span></td>
-      <td>${asset.loc}</td>
-      <td>
+      <td>📍 ${asset.loc}</td>
+      <td class="asset-action-cell">
         <button class="btn btn-xs btn-outline cycle-status-btn" data-id="${asset.id}">
           🔄 CYCLE
+        </button>
+        <button class="btn btn-xs btn-outline tag-loc-btn" data-id="${asset.id}">
+          📍 TAG LOC
         </button>
       </td>
     `;
@@ -507,6 +518,22 @@ function renderAssets() {
         else asset.status = 'AVAILABLE';
         renderAssets();
         showToast(`Asset [${asset.id}] status changed: ${asset.status}`);
+      }
+    });
+  });
+
+  document.querySelectorAll('.tag-loc-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      sound.playClick();
+      const assetId = e.currentTarget.dataset.id;
+      const asset = state.assets.find(a => a.id === assetId);
+      if (asset) {
+        const newLoc = prompt(`Update staging / deployment location for ${asset.id}:`, asset.loc);
+        if (newLoc && newLoc.trim()) {
+          asset.loc = newLoc.trim();
+          renderAssets();
+          showToast(`📍 Location tagged: ${asset.id} → ${asset.loc}`);
+        }
       }
     });
   });
@@ -529,6 +556,251 @@ document.querySelectorAll('.asset-filter-bar .chip').forEach(chip => {
     renderAssets();
   });
 });
+
+// =========================================================================
+// SHELTER CAPACITY MATRIX (Full Logistics View)
+// =========================================================================
+function renderShelterMatrix() {
+  const tbody = getEl('shelter-matrix-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  state.sheltersData.forEach((s, idx) => {
+    const pct = Math.round((s.occupied / s.capacity) * 100);
+    let statusClass = 'badge-emerald';
+    if (pct >= 90) statusClass = 'badge-alert';
+    else if (pct >= 70) statusClass = 'badge-gold';
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><strong>${s.name}</strong><br><span class="mono text-xs text-muted">${s.id}</span></td>
+      <td class="mono">${s.occupied}/${s.capacity} <span class="text-muted text-xs">(${pct}%)</span></td>
+      <td><span class="badge ${statusClass}">${pct >= 90 ? 'CRITICAL' : pct >= 70 ? 'NEAR FULL' : 'AVAILABLE'}</span></td>
+      <td>⚕️ ${s.medical}</td>
+      <td>🍞 ${s.foodRations}</td>
+      <td class="asset-action-cell">
+        <button class="btn btn-xs btn-outline shelter-matrix-minus" data-idx="${idx}">-10</button>
+        <button class="btn btn-xs btn-outline shelter-matrix-plus" data-idx="${idx}">+10</button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  document.querySelectorAll('.shelter-matrix-minus').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      sound.playClick();
+      const idx = parseInt(e.currentTarget.dataset.idx, 10);
+      state.sheltersData[idx].occupied = Math.max(0, state.sheltersData[idx].occupied - 10);
+      renderShelterMatrix();
+      renderShelters();
+    });
+  });
+
+  document.querySelectorAll('.shelter-matrix-plus').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      sound.playClick();
+      const idx = parseInt(e.currentTarget.dataset.idx, 10);
+      const s = state.sheltersData[idx];
+      s.occupied = Math.min(s.capacity, s.occupied + 10);
+      renderShelterMatrix();
+      renderShelters();
+    });
+  });
+}
+
+const addShelterBtn = getEl('add-shelter-btn');
+if (addShelterBtn) {
+  addShelterBtn.addEventListener('click', () => {
+    sound.playClick();
+    const name = prompt('Enter Shelter Name (e.g. MCS Chandbali Community Hall):', 'MCS Chandbali Community Hall');
+    if (!name) return;
+    const capacity = parseInt(prompt('Enter Total Capacity:', '250'), 10);
+    if (!capacity || capacity <= 0) { showToast('Invalid capacity value'); return; }
+    state.sheltersData.push({
+      id: `MCS-${String(state.sheltersData.length + 1).padStart(2, '0')}`,
+      name,
+      capacity,
+      occupied: 0,
+      status: 'AVAILABLE',
+      lat: 20.5,
+      lng: 86.5,
+      medical: 'Not Yet Staffed',
+      foodRations: 'Pending Stock'
+    });
+    renderShelterMatrix();
+    renderShelters();
+    showToast(`🏠 Shelter registered: ${name}`);
+  });
+}
+
+// =========================================================================
+// MUTUAL AID REQUEST LOG
+// =========================================================================
+function renderMutualAid() {
+  const tbody = getEl('mutual-aid-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  state.mutualAidData.forEach((req, idx) => {
+    let statusClass = 'badge-gold';
+    if (req.status === 'APPROVED' || req.status === 'SCHEDULED') statusClass = 'badge-emerald';
+    if (req.status === 'DENIED') statusClass = 'badge-alert';
+    if (req.status === 'PENDING') statusClass = 'badge-navy';
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><strong>${req.agency}</strong><br><span class="mono text-xs text-muted">${req.id} • ${req.requestedAt}</span></td>
+      <td>${req.resource} <span class="mono text-xs text-muted">×${req.qty}</span></td>
+      <td><span class="badge ${req.priority === 'CRITICAL' ? 'badge-alert' : 'badge-gold'}">${req.priority}</span></td>
+      <td><span class="badge ${statusClass}">${req.status}</span>${req.approvedBy ? `<br><span class="mono text-xs text-muted">by ${req.approvedBy}</span>` : ''}</td>
+      <td class="asset-action-cell">
+        ${req.status === 'PENDING' ? `
+          <button class="btn btn-xs btn-outline mutual-aid-approve" data-idx="${idx}">✅ APPROVE</button>
+          <button class="btn btn-xs btn-outline mutual-aid-deny" data-idx="${idx}">❌ DENY</button>
+        ` : `<span class="mono text-xs text-muted">—</span>`}
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  document.querySelectorAll('.mutual-aid-approve').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      sound.playClick();
+      const idx = parseInt(e.currentTarget.dataset.idx, 10);
+      const req = state.mutualAidData[idx];
+      req.status = 'APPROVED';
+      req.approvedBy = 'State EOC Duty Officer';
+      renderMutualAid();
+      showToast(`✅ Mutual aid request approved: ${req.resource} → ${req.agency}`);
+    });
+  });
+
+  document.querySelectorAll('.mutual-aid-deny').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      sound.playClick();
+      const idx = parseInt(e.currentTarget.dataset.idx, 10);
+      const req = state.mutualAidData[idx];
+      req.status = 'DENIED';
+      req.approvedBy = 'State EOC Duty Officer';
+      renderMutualAid();
+      showToast(`❌ Mutual aid request denied: ${req.resource} → ${req.agency}`);
+    });
+  });
+}
+
+const addMutualAidBtn = getEl('add-mutual-aid-btn');
+if (addMutualAidBtn) {
+  addMutualAidBtn.addEventListener('click', () => {
+    sound.playClick();
+    const agency = prompt('Requesting Agency:', 'Jagatsinghpur District EOC');
+    if (!agency) return;
+    const resource = prompt('Resource Requested:', 'High-Water Rescue Trucks');
+    if (!resource) return;
+    const qty = parseInt(prompt('Quantity:', '2'), 10) || 1;
+    state.mutualAidData.unshift({
+      id: `MA-${String(state.mutualAidData.length + 1).padStart(2, '0')}`,
+      agency,
+      resource,
+      qty,
+      priority: 'HIGH',
+      status: 'PENDING',
+      requestedAt: 'Just now',
+      approvedBy: null
+    });
+    renderMutualAid();
+    showToast(`🤝 Mutual aid request logged: ${agency}`);
+  });
+}
+
+// =========================================================================
+// VOLUNTEER POOL (Registered vs. Awaiting Assignment)
+// =========================================================================
+function renderVolunteerPool() {
+  const container = getEl('volunteer-pool-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const registered = state.volunteerPoolData.filter(v => v.status === 'REGISTERED').length;
+  const awaiting = state.volunteerPoolData.filter(v => v.status === 'AWAITING_ASSIGNMENT').length;
+  const assigned = state.volunteerPoolData.filter(v => v.status === 'ASSIGNED').length;
+
+  const regEl = getEl('vol-count-registered');
+  const awaitEl = getEl('vol-count-awaiting');
+  const assignEl = getEl('vol-count-assigned');
+  if (regEl) regEl.innerText = registered;
+  if (awaitEl) awaitEl.innerText = awaiting;
+  if (assignEl) assignEl.innerText = assigned;
+
+  const filtered = state.volunteerPoolData.filter(v =>
+    state.activeVolunteerFilter === 'ALL' || v.status === state.activeVolunteerFilter
+  );
+
+  filtered.forEach(v => {
+    let statusClass = 'badge-navy';
+    if (v.status === 'ASSIGNED') statusClass = 'badge-emerald';
+    if (v.status === 'AWAITING_ASSIGNMENT') statusClass = 'badge-gold';
+
+    const item = document.createElement('div');
+    item.className = 'aid-chip';
+    item.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong>${v.name}</strong>
+        <span class="badge ${statusClass} text-xs">${v.status.replace('_', ' ')}</span>
+      </div>
+      <div style="color:var(--text-muted); font-size:0.65rem;">📍 ${v.location} | Skill: ${v.skill}${v.squad ? ` | Squad: ${v.squad}` : ''}</div>
+      ${v.status !== 'ASSIGNED' ? `<button class="btn btn-xs btn-outline assign-volunteer-btn mt-1" data-id="${v.id}">➡️ ASSIGN TO SQUAD</button>` : ''}
+    `;
+    container.appendChild(item);
+  });
+
+  document.querySelectorAll('.assign-volunteer-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      sound.playClick();
+      const volId = e.currentTarget.dataset.id;
+      const vol = state.volunteerPoolData.find(v => v.id === volId);
+      if (vol) {
+        const squad = prompt(`Assign ${vol.name} to which squad?`, state.volunteerSquads[0]?.name || 'Dhamra Coastal Aapda Mitra Squad');
+        if (squad) {
+          vol.status = 'ASSIGNED';
+          vol.squad = squad;
+          renderVolunteerPool();
+          showToast(`➡️ ${vol.name} assigned to ${squad}`);
+        }
+      }
+    });
+  });
+}
+
+document.querySelectorAll('.volunteer-pool-filter-bar .chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    sound.playClick();
+    document.querySelectorAll('.volunteer-pool-filter-bar .chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    state.activeVolunteerFilter = chip.dataset.volFilter;
+    renderVolunteerPool();
+  });
+});
+
+const addVolunteerBtn = getEl('add-volunteer-btn');
+if (addVolunteerBtn) {
+  addVolunteerBtn.addEventListener('click', () => {
+    sound.playClick();
+    const name = prompt('Volunteer Name:', 'New Aapda Mitra Volunteer');
+    if (!name) return;
+    const skill = prompt('Primary Skill:', 'First Aid');
+    const location = prompt('Location / Block:', 'Bhubaneswar');
+    state.volunteerPoolData.unshift({
+      id: `AM-VOL-${Math.floor(100 + Math.random() * 900)}`,
+      name,
+      skill: skill || 'General Support',
+      location: location || 'Unassigned Sector',
+      status: 'REGISTERED',
+      squad: null
+    });
+    renderVolunteerPool();
+    showToast(`🙋 Volunteer registered: ${name}`);
+  });
+}
 
 // =========================================================================
 // TACTICAL RADIO CONSOLE & PTT

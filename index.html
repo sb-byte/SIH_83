@@ -754,6 +754,102 @@
             </div>
           </div>
         </div>
+
+        <!-- ================================================================= -->
+        <!-- RESOURCE & LOGISTICS MANAGEMENT: SHELTER MATRIX, MUTUAL AID, VOLUNTEER POOL -->
+        <!-- ================================================================= -->
+
+        <!-- Shelter Capacity Matrix -->
+        <div class="panel shadow-brutal panel-full-span">
+          <div class="panel-head">
+            <div class="head-title-wrap">
+              <span class="head-icon">🏠</span>
+              <h2 class="head-text">SHELTER CAPACITY MATRIX (MCS)</h2>
+            </div>
+            <button id="add-shelter-btn" class="btn btn-xs btn-saffron font-bold">+ REGISTER SHELTER</button>
+          </div>
+          <div class="table-wrap" style="max-height: 260px;">
+            <table class="brutal-table">
+              <thead>
+                <tr>
+                  <th>SHELTER / ID</th>
+                  <th>OCCUPANCY</th>
+                  <th>STATUS</th>
+                  <th>MEDICAL</th>
+                  <th>FOOD RATIONS</th>
+                  <th>ADJUST</th>
+                </tr>
+              </thead>
+              <tbody id="shelter-matrix-body">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Mutual Aid Request Log -->
+        <div class="panel shadow-brutal panel-full-span">
+          <div class="panel-head">
+            <div class="head-title-wrap">
+              <span class="head-icon">🤝</span>
+              <h2 class="head-text">MUTUAL AID REQUEST LOG</h2>
+            </div>
+            <button id="add-mutual-aid-btn" class="btn btn-xs btn-saffron font-bold">+ NEW REQUEST</button>
+          </div>
+          <div class="table-wrap" style="max-height: 260px;">
+            <table class="brutal-table">
+              <thead>
+                <tr>
+                  <th>REQUESTING AGENCY</th>
+                  <th>RESOURCE REQUESTED</th>
+                  <th>PRIORITY</th>
+                  <th>APPROVAL STATUS</th>
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="mutual-aid-table-body">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Volunteer Pool -->
+        <div class="panel shadow-brutal panel-full-span">
+          <div class="panel-head">
+            <div class="head-title-wrap">
+              <span class="head-icon">🙋</span>
+              <h2 class="head-text">AAPDA MITRA VOLUNTEER POOL</h2>
+            </div>
+            <button id="add-volunteer-btn" class="btn btn-xs btn-saffron font-bold">+ REGISTER VOLUNTEER</button>
+          </div>
+
+          <div class="volunteer-pool-stats">
+            <div class="vol-stat-card">
+              <span class="vol-stat-digit" id="vol-count-registered">0</span>
+              <span class="vol-stat-lbl">REGISTERED</span>
+            </div>
+            <div class="vol-stat-card">
+              <span class="vol-stat-digit text-saffron" id="vol-count-awaiting">0</span>
+              <span class="vol-stat-lbl">AWAITING ASSIGNMENT</span>
+            </div>
+            <div class="vol-stat-card">
+              <span class="vol-stat-digit text-emerald" id="vol-count-assigned">0</span>
+              <span class="vol-stat-lbl">ASSIGNED TO SQUAD</span>
+            </div>
+          </div>
+
+          <div class="asset-filter-bar volunteer-pool-filter-bar">
+            <button class="chip active" data-vol-filter="ALL">ALL VOLUNTEERS</button>
+            <button class="chip" data-vol-filter="REGISTERED">REGISTERED</button>
+            <button class="chip" data-vol-filter="AWAITING_ASSIGNMENT">AWAITING ASSIGNMENT</button>
+            <button class="chip" data-vol-filter="ASSIGNED">ASSIGNED</button>
+          </div>
+
+          <div id="volunteer-pool-list" class="volunteer-pool-list">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
       </div>
     </section>
 

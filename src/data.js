@@ -207,6 +207,24 @@ export const rumorDebunking = [
   }
 ];
 
+export const mutualAidRequests = [
+  { id: "MA-01", agency: "Kendrapara District EOC", resource: "High-Water Rescue Trucks", qty: 3, priority: "CRITICAL", status: "APPROVED", requestedAt: "12:40 IST", approvedBy: "State EOC Duty Officer" },
+  { id: "MA-02", agency: "OSDMA Bhadrak Cell", resource: "Mobile 50kVA Diesel Generators", qty: 4, priority: "HIGH", status: "PENDING", requestedAt: "13:05 IST", approvedBy: null },
+  { id: "MA-03", agency: "Indian Coast Guard Zone (East)", resource: "ALH Helicopters", qty: 1, priority: "HIGH", status: "PENDING", requestedAt: "13:20 IST", approvedBy: null },
+  { id: "MA-04", agency: "Cuttack Fire & Emergency Services", resource: "Deep Water Dinghies", qty: 2, priority: "MODERATE", status: "DENIED", requestedAt: "11:55 IST", approvedBy: "State EOC Duty Officer" },
+  { id: "MA-05", agency: "IAF Bhubaneswar Station", resource: "Mutual Aid Helicopter Fleet", qty: 2, priority: "CRITICAL", status: "SCHEDULED", requestedAt: "10:30 IST", approvedBy: "NDMA Liaison" }
+];
+
+export const volunteerPool = [
+  { id: "AM-VOL-101", name: "Suresh Nayak", skill: "Water Rescue & First Aid", location: "Dhamra", status: "ASSIGNED", squad: "Dhamra Coastal Aapda Mitra Squad" },
+  { id: "AM-VOL-102", name: "Lalita Patra", skill: "Ham Radio Operator", location: "Bhadrak", status: "ASSIGNED", squad: "Bhadrak Relief Distribution Squad" },
+  { id: "AM-VOL-103", name: "Ajay Mallick", skill: "Boat Handling", location: "Kendrapara", status: "ASSIGNED", squad: "Kendrapara Creek Recon Squad" },
+  { id: "AM-VOL-104", name: "Snehalata Swain", skill: "Field Nursing", location: "Balasore", status: "AWAITING_ASSIGNMENT", squad: null },
+  { id: "AM-VOL-105", name: "Biswajit Rout", skill: "Chainsaw / Tree Clearing", location: "Soro", status: "AWAITING_ASSIGNMENT", squad: null },
+  { id: "AM-VOL-106", name: "Debasmita Sahoo", skill: "Shelter Management", location: "Puri", status: "REGISTERED", squad: null },
+  { id: "AM-VOL-107", name: "Manoj Behera", skill: "Logistics & Ham Radio", location: "Paradip", status: "REGISTERED", squad: null }
+];
+
 export const damageAssessments = [
   {
     id: "DA-101",
