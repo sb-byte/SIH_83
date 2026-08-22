@@ -11,10 +11,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Main Stylesheet -->
-  <script type="module" crossorigin src="/assets/index-Drx5m0aJ.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-D_F7NZ5R.css">
+  <script type="module" crossorigin src="/assets/index-CUj2Gk0w.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CNY_1Gt4.css">
 </head>
-<body class="neo-brutal antialiased">
+<body class="modern-command-ui antialiased">
 
   <!-- ========================================================================= -->
   <!-- MASTER COMMAND HEADER                                                     -->
@@ -755,6 +755,102 @@
             </div>
           </div>
         </div>
+
+        <!-- ================================================================= -->
+        <!-- RESOURCE & LOGISTICS MANAGEMENT: SHELTER MATRIX, MUTUAL AID, VOLUNTEER POOL -->
+        <!-- ================================================================= -->
+
+        <!-- Shelter Capacity Matrix -->
+        <div class="panel shadow-brutal panel-full-span">
+          <div class="panel-head">
+            <div class="head-title-wrap">
+              <span class="head-icon">🏠</span>
+              <h2 class="head-text">SHELTER CAPACITY MATRIX (MCS)</h2>
+            </div>
+            <button id="add-shelter-btn" class="btn btn-xs btn-saffron font-bold">+ REGISTER SHELTER</button>
+          </div>
+          <div class="table-wrap" style="max-height: 260px;">
+            <table class="brutal-table">
+              <thead>
+                <tr>
+                  <th>SHELTER / ID</th>
+                  <th>OCCUPANCY</th>
+                  <th>STATUS</th>
+                  <th>MEDICAL</th>
+                  <th>FOOD RATIONS</th>
+                  <th>ADJUST</th>
+                </tr>
+              </thead>
+              <tbody id="shelter-matrix-body">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Mutual Aid Request Log -->
+        <div class="panel shadow-brutal panel-full-span">
+          <div class="panel-head">
+            <div class="head-title-wrap">
+              <span class="head-icon">🤝</span>
+              <h2 class="head-text">MUTUAL AID REQUEST LOG</h2>
+            </div>
+            <button id="add-mutual-aid-btn" class="btn btn-xs btn-saffron font-bold">+ NEW REQUEST</button>
+          </div>
+          <div class="table-wrap" style="max-height: 260px;">
+            <table class="brutal-table">
+              <thead>
+                <tr>
+                  <th>REQUESTING AGENCY</th>
+                  <th>RESOURCE REQUESTED</th>
+                  <th>PRIORITY</th>
+                  <th>APPROVAL STATUS</th>
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="mutual-aid-table-body">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Volunteer Pool -->
+        <div class="panel shadow-brutal panel-full-span">
+          <div class="panel-head">
+            <div class="head-title-wrap">
+              <span class="head-icon">🙋</span>
+              <h2 class="head-text">AAPDA MITRA VOLUNTEER POOL</h2>
+            </div>
+            <button id="add-volunteer-btn" class="btn btn-xs btn-saffron font-bold">🔗 REGISTER VOLUNTEER (GOOGLE FORM)</button>
+          </div>
+
+          <div class="volunteer-pool-stats">
+            <div class="vol-stat-card">
+              <span class="vol-stat-digit" id="vol-count-registered">0</span>
+              <span class="vol-stat-lbl">REGISTERED</span>
+            </div>
+            <div class="vol-stat-card">
+              <span class="vol-stat-digit text-saffron" id="vol-count-awaiting">0</span>
+              <span class="vol-stat-lbl">AWAITING ASSIGNMENT</span>
+            </div>
+            <div class="vol-stat-card">
+              <span class="vol-stat-digit text-emerald" id="vol-count-assigned">0</span>
+              <span class="vol-stat-lbl">ASSIGNED TO SQUAD</span>
+            </div>
+          </div>
+
+          <div class="asset-filter-bar volunteer-pool-filter-bar">
+            <button class="chip active" data-vol-filter="ALL">ALL VOLUNTEERS</button>
+            <button class="chip" data-vol-filter="REGISTERED">REGISTERED</button>
+            <button class="chip" data-vol-filter="AWAITING_ASSIGNMENT">AWAITING ASSIGNMENT</button>
+            <button class="chip" data-vol-filter="ASSIGNED">ASSIGNED</button>
+          </div>
+
+          <div id="volunteer-pool-list" class="volunteer-pool-list">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1043,8 +1139,29 @@
             </div>
           </div>
 
+          <!-- Mutual Aid Request Summary -->
           <div class="aar-sec-block">
-            <h4 class="aar-sec-heading">4. CORRECTIVE ACTION IMPROVEMENT PLAN (CAP / IP)</h4>
+            <h4 class="aar-sec-heading">4. MUTUAL AID REQUEST SUMMARY</h4>
+            <div class="aar-table-wrap">
+              <table class="brutal-table">
+                <thead>
+                  <tr>
+                    <th>REQUESTING AGENCY</th>
+                    <th>RESOURCE REQUESTED</th>
+                    <th>PRIORITY</th>
+                    <th>FINAL STATUS</th>
+                    <th>APPROVED / DENIED BY</th>
+                  </tr>
+                </thead>
+                <tbody id="aar-mutual-aid-body">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="aar-sec-block">
+            <h4 class="aar-sec-heading">5. CORRECTIVE ACTION IMPROVEMENT PLAN (CAP / IP)</h4>
             <div class="aar-table-wrap">
               <table class="brutal-table">
                 <thead>
@@ -1148,6 +1265,32 @@
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancel-assign-btn">CANCEL</button>
         <button class="btn btn-saffron font-bold" id="confirm-assign-btn">CONFIRM APPOINTMENT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ASSIGN VOLUNTEER TO SQUAD -->
+  <div id="modal-assign-squad" class="modal-backdrop hidden">
+    <div class="modal-card shadow-brutal">
+      <div class="modal-head">
+        <h3 class="modal-title font-bold">ASSIGN VOLUNTEER TO SQUAD</h3>
+        <button class="modal-x-btn" id="close-assign-squad-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-field">
+          <label class="field-lbl">VOLUNTEER</label>
+          <input type="text" id="assign-squad-volunteer-name" class="field-input" readonly />
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">SELECT SQUAD</label>
+          <select id="assign-squad-select" class="field-input mono text-xs">
+            <!-- Populated dynamically from volunteerSquads -->
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancel-assign-squad-btn">CANCEL</button>
+        <button class="btn btn-saffron font-bold" id="confirm-assign-squad-btn">CONFIRM ASSIGNMENT</button>
       </div>
     </div>
   </div>
