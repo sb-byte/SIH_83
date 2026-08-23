@@ -13,7 +13,7 @@
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="./src/style.css" />
 </head>
-<body class="neo-brutal antialiased">
+<body class="modern-command-ui antialiased">
 
   <!-- ========================================================================= -->
   <!-- MASTER COMMAND HEADER                                                     -->
@@ -937,128 +937,277 @@
           </div>
         </div>
 
-        <!-- SUB-TAB 2: DEPENDENCY CASCADE & COMPOUND FAILURE SIMULATOR -->
+        <!-- SUB-TAB 2: HAZARD CLUSTER DEPENDENCY CASCADE & COMPOUND FAILURE SIMULATOR -->
         <div id="sim-tab-dependency" class="sim-tab-content">
           
-          <!-- Top Control Header Bar -->
-          <div class="dep-topbar shadow-brutal">
-            <div class="dep-header-left">
-              <span class="badge badge-gold">⚡ NDMA CRITICAL INFRASTRUCTURE CASCADE ENGINE</span>
-              <h2 class="dep-main-title">Dependency & Compound-Failure Crisis Simulator</h2>
-              <p class="dep-subtext">
-                Define critical lifelines (power, pumps, bridges, levees) as capacity nodes, connect failure cascade edges, configure hazard shocks, and execute 300-run Monte Carlo stress tests.
-              </p>
-            </div>
-            <div class="dep-presets-row">
-              <span class="mono text-xs font-bold text-muted mr-1">PRESETS:</span>
-              <button class="btn btn-xs btn-outline font-bold" id="dep-preset-flood">Mode: Flood</button>
-              <button class="btn btn-xs btn-outline font-bold" id="dep-preset-wildfire">Mode: Wildfire</button>
-              <button class="btn btn-xs btn-outline font-bold" id="dep-preset-earthquake">Mode: Earthquake</button>
-              <button class="btn btn-xs btn-outline font-bold" id="dep-preset-blank">Blank Canvas</button>
-            </div>
-          </div>
-
-          <!-- 2-Column Main Simulation Interface -->
-          <div class="dep-grid-layout">
-            
-            <!-- Left Column: Nodes & Dependency Graph Config -->
-            <div class="dep-left-col">
-              
-              <!-- Baseline Plan Panel -->
-              <div class="panel dep-panel shadow-brutal" id="dep-plan-panel" style="display:none;">
-                <div class="panel-head">
-                  <h3 class="head-text">BASELINE RESPONSE PLAN</h3>
-                  <span class="badge badge-outline">NDMA FRAMEWORK SEC. 6</span>
-                </div>
-                <div id="dep-plan-body" class="dep-plan-text mono text-xs"></div>
-              </div>
-
-              <!-- Nodes Management Panel -->
-              <div class="panel dep-panel shadow-brutal">
-                <div class="panel-head">
-                  <h3 class="head-text">LIFELINE NODES — CAPACITY, FRAGILITY & HAZARD</h3>
-                  <button class="btn btn-xs btn-saffron font-bold" id="dep-add-node-btn">+ ADD NODE</button>
-                </div>
-                <div id="dep-node-list" class="dep-nodes-container"></div>
-              </div>
-
-              <!-- Dependency Edges Panel -->
-              <div class="panel dep-panel shadow-brutal">
-                <div class="panel-head">
-                  <h3 class="head-text">DEPENDENCY CASCADE EDGES</h3>
-                  <button class="btn btn-xs btn-saffron font-bold" id="dep-add-edge-btn">+ ADD EDGE</button>
-                </div>
-                <div id="dep-edge-list" class="dep-edges-container"></div>
-                <div class="dep-edge-hint mono text-xs text-muted">
-                  ℹ️ Weight (0.0 to 1.0) = Proportion of upstream failure load transferred to downstream node.
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Right Column: Real-time Simulation, SVG Chart & Fuzzing -->
-            <div class="dep-right-col">
-              
-              <!-- Run Controls & Dynamic SVG Capacity Chart -->
-              <div class="panel dep-panel shadow-brutal">
-                <div class="panel-head">
-                  <h3 class="head-text">SIMULATION ENGINE & CAPACITY DECAY TIMELINE</h3>
-                  <span class="badge badge-emerald" id="dep-sim-status-tag">READY TO SIMULATE</span>
-                </div>
-
-                <div class="dep-run-controls-row">
-                  <div class="dep-control-field">
-                    <label class="font-bold mono text-xs">TIMESTEP TICKS:</label>
-                    <input type="number" id="dep-ticks-input" value="30" min="5" max="120" class="dep-input" />
+          <div class="dep-cluster-engine-wrap" id="dep-cluster-engine">
+            <!-- Cluster Picker Grid -->
+            <div class="cluster-picker">
+              <div class="cluster-picker-label">Hazard Cluster — choose one to load its template</div>
+              <div class="cluster-picker-grid" id="cluster-picker-grid">
+                <!-- Dynamically populated or static cards with click hooks -->
+                <button class="cluster-card active" data-cluster="evacuation" id="cluster-card-evacuation">
+                  <div class="cluster-card-top">
+                    <span class="cluster-icon">🛣️</span>
                   </div>
-                  <button class="btn btn-sm btn-saffron font-bold shadow-brutal-sm" id="dep-run-sim-btn">
-                    ▶ RUN CASCADE SIMULATION
-                  </button>
-                  <button class="btn btn-sm btn-outline font-bold shadow-brutal-sm text-gold" id="dep-run-fuzz-btn">
-                    ⚡ FUZZ 300 MONTE CARLO RUNS
-                  </button>
-                </div>
+                  <div class="cluster-card-label">Directional Evacuation</div>
+                  <div class="cluster-card-status">Engine ready</div>
+                </button>
+                <button class="cluster-card" data-cluster="threshold" id="cluster-card-threshold">
+                  <div class="cluster-card-top">
+                    <span class="cluster-icon">📈</span>
+                    <span class="cluster-lock">🔒</span>
+                  </div>
+                  <div class="cluster-card-label">Sustained-Load / Threshold</div>
+                  <div class="cluster-card-status">New engine required</div>
+                </button>
+                <button class="cluster-card" data-cluster="containment" id="cluster-card-containment">
+                  <div class="cluster-card-top">
+                    <span class="cluster-icon">🛡️</span>
+                  </div>
+                  <div class="cluster-card-label">Point-Source Containment</div>
+                  <div class="cluster-card-status">Engine ready</div>
+                </button>
+                <button class="cluster-card" data-cluster="crowd" id="cluster-card-crowd">
+                  <div class="cluster-card-top">
+                    <span class="cluster-icon">🚨</span>
+                    <span class="cluster-lock">🔒</span>
+                  </div>
+                  <div class="cluster-card-label">Crowd / Security</div>
+                  <div class="cluster-card-status">Blocked — research</div>
+                </button>
+              </div>
+            </div>
 
-                <!-- SVG Capacity Series Chart -->
-                <div class="dep-chart-wrapper">
-                  <svg id="chart-cap" width="100%" viewBox="0 0 940 340" preserveAspectRatio="xMidYMid meet" class="dep-svg-chart"></svg>
+            <!-- Cluster Blurb Bar -->
+            <div class="cluster-blurb-bar" id="cluster-blurb-bar">
+              Existing cascade engine (hop-1 / hop-2), extended with threat-zone geometry — radial, directional, or point-then-radiating.
+            </div>
+
+            <!-- Subbar: Specific Crisis & Crisis Scale Slider -->
+            <div class="subbar" id="dep-subbar">
+              <div>
+                <div class="field-label">
+                  <span>Specific crisis</span>
+                  <span class="optional-tag">optional — the generic template covers scale 1–5</span>
                 </div>
-                <div class="dep-legend-row" id="legend-cap"></div>
+                <select class="hazard-select" id="dep-hazard-select">
+                  <option value="">Generic Directional Evacuation template</option>
+                </select>
+              </div>
+              <div>
+                <div class="field-label">
+                  <span>Crisis scale</span>
+                </div>
+                <div class="severity-row">
+                  <input type="range" min="1" max="10" step="1" value="5" class="severity-slider" id="dep-severity-slider" />
+                  <span class="severity-readout mono" id="dep-severity-readout">5/10</span>
+                </div>
+                <div class="severity-scale-labels">
+                  <span>1 · minor</span>
+                  <span>5 · basic template fine</span>
+                  <span>10 · catastrophic</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Advisory Warning Banner (Shows at scale >= 6 on generic template) -->
+            <div class="advisory-banner" id="dep-advisory-banner" style="display:none;">
+              <span class="advisory-icon">ℹ️</span>
+              <span id="dep-advisory-text">Crisis scale 6/10 — at this level, hazard behavior tends to diverge enough that picking the exact crisis above gives a materially better model. The generic template will still run as an approximation; select a specific hazard for anything you plan to rely on.</span>
+            </div>
+
+            <!-- Mode Banner (Exercise vs Live) -->
+            <div class="mode-banner exercise" id="dep-mode-banner">
+              Exercise, exercise, exercise — synthetic data, no operational effect
+            </div>
+
+            <!-- READY ENGINE INTERFACE (For Evacuation & Containment) -->
+            <div id="dep-engine-view" class="eoc-layout">
+              
+              <!-- LEFT: Controls & Injects -->
+              <div class="eoc-panel">
+                <div class="panel-title">Inject Failure</div>
+                <div id="dep-presets-list"></div>
+                <button class="reset-btn" id="dep-reset-btn">
+                  🔄 Reset to baseline
+                </button>
+
+                <div class="panel-title" style="margin-top: 22px;">Leverage</div>
+                <div class="leverage-note" id="dep-leverage-note">
+                  ⭐ Protecting <strong id="dep-top-leverage-name" style="margin: 0 3px;">Power Grid</strong> prevents the most downstream cascade right now.
+                </div>
               </div>
 
-              <!-- Final Node States Table -->
-              <div class="panel dep-panel shadow-brutal">
-                <div class="panel-head">
-                  <h3 class="head-text">FINAL NODE CAPACITY & SURVIVAL STATUS</h3>
-                  <span class="mono text-xs text-muted">END OF SIMULATION RUN</span>
+              <!-- CENTER: Readiness Overview & SVG Graph -->
+              <div class="eoc-panel">
+                <div class="overall-card">
+                  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="tpl-badge full" id="dep-tpl-badge">Full Template</span>
+                    </div>
+                    <span class="confidence-tag High" id="dep-confidence-tag">Confidence: High</span>
+                  </div>
+                  <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 8px;">
+                    <span class="overall-score mono text-emerald" id="dep-overall-score">8</span>
+                    <span style="font-size: 15px; color: var(--text-muted);">/10</span>
+                  </div>
+                  <div class="overall-label" id="dep-overall-label">Flood — Overall system readiness — Nominal</div>
+                  <div style="margin-top: 10px;" id="dep-alert-chips-box">
+                    <span style="font-size: 11.5px; color: var(--text-muted);">No active alerts.</span>
+                  </div>
                 </div>
-                <div class="dep-table-scroll">
-                  <table class="dep-data-table">
-                    <thead>
-                      <tr>
-                        <th>INFRASTRUCTURE NODE</th>
-                        <th class="text-right">FINAL CAPACITY</th>
-                        <th>STATUS</th>
-                      </tr>
-                    </thead>
-                    <tbody id="dep-final-table-body"></tbody>
-                  </table>
+
+                <!-- Interactive SVG Graph Viewport -->
+                <div class="graph-wrap">
+                  <svg id="dep-graph-svg" viewBox="0 0 800 470" width="100%" style="max-width: 700px; display: block;"></svg>
                 </div>
               </div>
 
-              <!-- Compound-Failure Monte Carlo Fuzzing Results -->
-              <div class="panel dep-panel shadow-brutal">
-                <div class="panel-head">
-                  <h3 class="head-text">COMPOUND-FAILURE FUZZING & VULNERABILITY ANALYSIS</h3>
-                  <span class="badge badge-alert" id="dep-fuzz-note">CLICK 'FUZZ 300 RUNS' TO ANALYZE</span>
+              <!-- RIGHT: Capabilities List & Event Log -->
+              <div class="eoc-panel">
+                <div class="panel-title">Capabilities</div>
+                <div id="dep-nodes-status-list"></div>
+
+                <div class="panel-title" style="margin-top: 20px;">
+                  <span>Event Log</span>
+                  <span class="mono text-xs text-muted">LIVE AUDIT</span>
                 </div>
-                <div id="dep-fuzz-body" class="dep-fuzz-container">
-                  <div class="empty-state mono text-xs text-muted">
-                    No stochastic fuzz run executed yet. Click "⚡ FUZZ 300 MONTE CARLO RUNS" to uncover hidden systemic failure cascades.
+                <div id="dep-event-log-box" style="max-height: 300px; overflow-y: auto;"></div>
+              </div>
+
+            </div>
+
+            <!-- BLOCKED PANEL: SUSTAINED-LOAD / THRESHOLD -->
+            <div id="dep-threshold-blocked-view" class="blocked-wrap" style="display:none;">
+              <div class="blocked-hero">
+                <div class="blocked-hero-top">
+                  <span style="font-size: 20px;">📈</span>
+                  <div class="blocked-title">Sustained-Load / Threshold — new engine mode required</div>
+                </div>
+                <div class="blocked-body" id="dep-threshold-body-text">
+                  This cluster has no discrete trigger event to inject — capacity erodes under sustained demand instead of failing all at once, so the injection-and-cascade UI used by the other clusters doesn't apply here.
+                </div>
+                <ul class="blocked-list">
+                  <li><strong>Load-over-time tracking.</strong> Each node needs a trend line, not a snapshot score — the defining feature of this cluster is capacity eroding under sustained demand.</li>
+                  <li><strong>Escalation tiers.</strong> 70% / 90% / 100% of capacity, each mapped to a different response posture — mutual-aid request, surge staffing, crisis-standard-of-care — instead of one degraded/critical color.</li>
+                  <li><strong>Attrition rate as its own variable.</strong> Two hospitals at 80% capacity are in very different situations if one is trending up and one down. This is the one sub-model that has to exist before the cluster is usable at all.</li>
+                  <li><strong>Contagion sub-model.</strong> Outbreak and Pandemic only — feeds the hospital-load node as an input rather than sitting in the core template, so Drought, Heat, and Hospital Overload can reuse the threshold engine without it.</li>
+                </ul>
+                <div class="demo-note-box">
+                  <span style="font-size: 14px;">ℹ️</span>
+                  <span>This can't be demoed on the current engine. What's below is the threshold-engine design — tiers, trend lines, replenishment actions — shown as the next engine mode to build, not a live walkthrough.</span>
+                </div>
+              </div>
+
+              <div class="tier-panel">
+                <div class="panel-title" style="margin-bottom: 10px;">Escalation tiers (design concept)</div>
+                <div class="tier-bar-wrap">
+                  <div class="tier-seg ok">NOMINAL &lt;70%</div>
+                  <div class="tier-seg mid">70–90%</div>
+                  <div class="tier-seg crit">90%+</div>
+                </div>
+                <div class="tier-legend"><span>0%</span><span>70%</span><span>90%</span><span>100%</span></div>
+                <div class="tier-response-grid">
+                  <div class="tier-response-card">
+                    <div class="tier-pct mono text-emerald">&lt; 70%</div>
+                    <div class="tier-action">Monitor load trend. No escalation.</div>
+                  </div>
+                  <div class="tier-response-card">
+                    <div class="tier-pct mono text-gold">70–90%</div>
+                    <div class="tier-action">Request mutual aid. Begin surge-staffing activation.</div>
+                  </div>
+                  <div class="tier-response-card">
+                    <div class="tier-pct mono text-alert">90%+</div>
+                    <div class="tier-action">Crisis-standard-of-care protocols. Full reserve activation.</div>
                   </div>
                 </div>
               </div>
 
+              <div class="locked-grid">
+                <div class="locked-node">
+                  <div class="locked-node-top">
+                    <span class="locked-node-name">Hospital Capacity</span>
+                    <span>🔒</span>
+                  </div>
+                  <div class="locked-node-desc">Core node — needs load-over-time tracking before it can carry a live score.</div>
+                </div>
+                <div class="locked-node">
+                  <div class="locked-node-top">
+                    <span class="locked-node-name">Personnel / Supply Attrition Rate</span>
+                    <span>🔒</span>
+                  </div>
+                  <div class="locked-node-desc">Core node — needs load-over-time tracking before it can carry a live score.</div>
+                </div>
+                <div class="locked-node">
+                  <div class="locked-node-top">
+                    <span class="locked-node-name">Power (Cooling / Medical Equipment)</span>
+                    <span>🔒</span>
+                  </div>
+                  <div class="locked-node-desc">Core node — needs load-over-time tracking before it can carry a live score.</div>
+                </div>
+                <div class="locked-node">
+                  <div class="locked-node-top">
+                    <span class="locked-node-name">Public Messaging</span>
+                    <span>🔒</span>
+                  </div>
+                  <div class="locked-node-desc">Core node — needs load-over-time tracking before it can carry a live score.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BLOCKED PANEL: CROWD / SECURITY -->
+            <div id="dep-crowd-blocked-view" class="blocked-wrap" style="display:none;">
+              <div class="blocked-hero">
+                <div class="blocked-hero-top">
+                  <span style="font-size: 20px;">🚨</span>
+                  <div class="blocked-title">Crowd / Security — blocked on unresolved research</div>
+                </div>
+                <div class="blocked-body" id="dep-crowd-body-text">
+                  This cluster needs the agent-based population model already flagged in the handoff specification as an open research problem. Building a template here without it would just be a relabeled Point-Source graph with a crowd score standing in for something it can't actually simulate.
+                </div>
+                <ul class="blocked-list">
+                  <li><strong>Per-exit egress modeling.</strong> Not a single aggregate crowd score — this is the unresolved research problem itself.</li>
+                  <li><strong>Security dispatch as a distinct resource type.</strong> Separate from both relief and specialist teams, with its own authority structure and rules of engagement.</li>
+                  <li><strong>Command-authority handoff logic.</strong> Terrorism/Active-threat situations have a different chain of command than a stadium crowd crush — nothing in the current spec addresses this yet.</li>
+                </ul>
+                <div class="demo-note-box">
+                  <span style="font-size: 14px;">ℹ️</span>
+                  <span>Don't demo this live. The honest framing for an audience is "this is what the template will need once the crowd-behavior research problem is resolved" — a scoped placeholder, not a working walkthrough.</span>
+                </div>
+              </div>
+
+              <div class="panel-title" style="padding: 0 2px;">Core nodes — design-ready, not build-ready</div>
+              <div class="locked-grid">
+                <div class="locked-node">
+                  <div class="locked-node-top">
+                    <span class="locked-node-name">Per-Exit Crowd Density / Egress Capacity</span>
+                    <span>🔒</span>
+                  </div>
+                  <div class="locked-node-desc">The actual unresolved research problem — not an engineering gap closeable by adding a node.</div>
+                </div>
+                <div class="locked-node">
+                  <div class="locked-node-top">
+                    <span class="locked-node-name">Medical Surge</span>
+                    <span>🔒</span>
+                  </div>
+                  <div class="locked-node-desc">Casualty and treatment load arising from the crowd event itself.</div>
+                </div>
+                <div class="locked-node">
+                  <div class="locked-node-top">
+                    <span class="locked-node-name">Security / Law-Enforcement Dispatch</span>
+                    <span>🔒</span>
+                  </div>
+                  <div class="locked-node-desc">New resource type — not yet integrated with relief or specialist dispatch.</div>
+                </div>
+                <div class="locked-node">
+                  <div class="locked-node-top">
+                    <span class="locked-node-name">Command Authority</span>
+                    <span>🔒</span>
+                  </div>
+                  <div class="locked-node-desc">Who holds decision authority — changes between hazard types in this cluster.</div>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -1172,6 +1321,28 @@
                   </tr>
                 </thead>
                 <tbody id="corrective-table-body">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Fleet & Sachet Alert Activity Log -->
+          <div class="aar-sec-block">
+            <h4 class="aar-sec-heading">6. FLEET & SACHET ALERT ACTIVITY LOG (CHRONOLOGICAL)</h4>
+            <p class="aar-text" style="margin-bottom: 0.5rem;">
+              Every action taken on the Fleet & Sachet Alert tab — asset registrations and status changes, shelter registrations and occupancy adjustments, mutual aid decisions, volunteer registrations and squad assignments, rumor clarifications, and CAP-SACHET alert transmissions — is captured here automatically, newest first.
+            </p>
+            <div class="aar-table-wrap">
+              <table class="brutal-table">
+                <thead>
+                  <tr>
+                    <th style="width: 90px;">TIME</th>
+                    <th style="width: 140px;">CATEGORY</th>
+                    <th>EVENT</th>
+                  </tr>
+                </thead>
+                <tbody id="activity-log-body">
                   <!-- Rendered dynamically -->
                 </tbody>
               </table>
@@ -1329,6 +1500,106 @@
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancel-asset-btn">CANCEL</button>
         <button class="btn btn-saffron font-bold" id="save-asset-btn">DEPLOY ASSET</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTER SHELTER -->
+  <div id="modal-shelter" class="modal-backdrop hidden">
+    <div class="modal-card shadow-brutal">
+      <div class="modal-head">
+        <h3 class="modal-title font-bold">REGISTER SHELTER</h3>
+        <button class="modal-x-btn" id="close-shelter-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-field">
+          <label class="field-lbl">SHELTER NAME</label>
+          <input type="text" id="new-shelter-name" class="field-input" placeholder="e.g. MCS Chandbali Community Hall" />
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-lbl">TOTAL CAPACITY</label>
+            <input type="number" id="new-shelter-capacity" class="field-input" placeholder="e.g. 250" min="1" />
+          </div>
+          <div class="form-field">
+            <label class="field-lbl">MEDICAL COVERAGE</label>
+            <input type="text" id="new-shelter-medical" class="field-input" placeholder="e.g. Doctor On-Duty" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">FOOD RATIONS</label>
+          <input type="text" id="new-shelter-food" class="field-input" placeholder="e.g. 48h Stored" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancel-shelter-btn">CANCEL</button>
+        <button class="btn btn-saffron font-bold" id="save-shelter-btn">REGISTER SHELTER</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NEW MUTUAL AID REQUEST -->
+  <div id="modal-mutual-aid" class="modal-backdrop hidden">
+    <div class="modal-card shadow-brutal">
+      <div class="modal-head">
+        <h3 class="modal-title font-bold">LOG NEW MUTUAL AID REQUEST</h3>
+        <button class="modal-x-btn" id="close-mutual-aid-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-field">
+          <label class="field-lbl">REQUESTING AGENCY</label>
+          <input type="text" id="new-mutual-aid-agency" class="field-input" placeholder="e.g. Jagatsinghpur District EOC" />
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">RESOURCE REQUESTED</label>
+          <input type="text" id="new-mutual-aid-resource" class="field-input" placeholder="e.g. High-Water Rescue Trucks" />
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-lbl">QUANTITY</label>
+            <input type="number" id="new-mutual-aid-qty" class="field-input" placeholder="e.g. 2" min="1" />
+          </div>
+          <div class="form-field">
+            <label class="field-lbl">PRIORITY</label>
+            <select id="new-mutual-aid-priority" class="field-input">
+              <option value="CRITICAL">CRITICAL</option>
+              <option value="HIGH" selected>HIGH</option>
+              <option value="MODERATE">MODERATE</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancel-mutual-aid-btn">CANCEL</button>
+        <button class="btn btn-saffron font-bold" id="save-mutual-aid-btn">LOG REQUEST</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CLARIFY RUMOR -->
+  <div id="modal-rumor" class="modal-backdrop hidden">
+    <div class="modal-card shadow-brutal">
+      <div class="modal-head">
+        <h3 class="modal-title font-bold">CLARIFY RUMOR / CITIZEN FACT-CHECK</h3>
+        <button class="modal-x-btn" id="close-rumor-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-field">
+          <label class="field-lbl">CLAIM BEING CIRCULATED</label>
+          <textarea id="new-rumor-claim" class="field-input" rows="2" placeholder="e.g. Shelter Kendrapara is turning away incoming evacuees."></textarea>
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">OFFICIAL CLARIFICATION</label>
+          <textarea id="new-rumor-clarification" class="field-input" rows="2" placeholder="e.g. Shelter Kendrapara has capacity for 40 more evacuees as of this hour."></textarea>
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">VERIFIED BY</label>
+          <input type="text" id="new-rumor-verifier" class="field-input" placeholder="e.g. District PIO & Health Dept" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancel-rumor-btn">CANCEL</button>
+        <button class="btn btn-saffron font-bold" id="save-rumor-btn">POST CLARIFICATION</button>
       </div>
     </div>
   </div>

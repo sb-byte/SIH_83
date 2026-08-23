@@ -6,43 +6,56 @@
 // 1. Volunteers register through a Google Form (link the "+ REGISTER
 //    VOLUNTEER" button to it — see openRegistrationForm() below).
 // 2. The Form's responses land in a linked Google Sheet.
-// 3. That Sheet is published to the web as CSV (File > Share > Publish to
-//    web > select the responses tab > CSV > Publish). Paste that URL into
-//    VOLUNTEER_SHEET_CSV_URL below.
-// 4. This module fetches that CSV on page load and on an interval, parses
-//    new rows, and merges them into state.volunteerPoolData as
-//    status: 'REGISTERED', so they show up in the pool ready to be
-//    assigned to a squad from the dropdown.
+// 3. This module reads that Sheet via the Google Sheets API v4 (read-only,
+//    API-key auth) on page load and on an interval, and merges new rows
+//    into state.volunteerPoolData as status: 'REGISTERED', so they show
+//    up in the pool ready to be assigned to a squad from the dropdown.
+//
+// WHY THE SHEETS API INSTEAD OF "PUBLISH TO WEB" CSV: the CSV export does
+// NOT send an Access-Control-Allow-Origin header, so browsers block the
+// fetch outright with a CORS error — the site would silently never sync.
+// The Sheets API v4 endpoint does support CORS for browser fetches, so
+// this is the version that actually works in production, not just when
+// you open the URL directly in a tab.
 //
 // SETUP CHECKLIST (do this once):
 //   a) Create a Google Form with these fields, in this order:
 //        - Full Name              (Short answer, required)
 //        - Phone Number           (Short answer)
-//        - Primary Skill          (Dropdown, required) — suggested options:
-//              Water Rescue & First Aid
-//              Ham Radio Operator
-//              Boat Handling
-//              Chainsaw / Tree Clearing
-//              Shelter Management
-//              Field Nursing
-//              Logistics & Ham Radio
-//              General Support
-//              Other (add an "Other" option so it's never a dead end)
+//        - Primary Skill          (Multiple choice, required) — suggested
+//              options: Water Rescue & First Aid, Ham Radio Operator,
+//              Boat Handling, Chainsaw / Tree Clearing, Shelter
+//              Management, Field Nursing, Logistics & Ham Radio,
+//              General Support, and an "Other" free-text option.
 //        - Location / Block       (Short answer, required)
 //   b) In the Form's "Responses" tab, click the green Sheets icon to
 //      create the linked response Spreadsheet.
-//   c) In that Spreadsheet: File > Share > Publish to web > choose the
-//      response sheet tab > format "Comma-separated values (.csv)" > Publish.
-//   d) Copy the resulting URL into VOLUNTEER_SHEET_CSV_URL below.
-//   e) Copy the Form's live "Send" link into VOLUNTEER_FORM_URL below.
+//   c) Open that Spreadsheet's normal edit URL — it looks like
+//      https://docs.google.com/spreadsheets/d/AbCdEf12345.../edit — and
+//      copy the ID between /d/ and /edit into VOLUNTEER_SHEET_ID below.
+//   d) Make sure the Sheet is shared as "Anyone with the link – Viewer"
+//      (Share button, top right) — the API key below can only read
+//      public sheets, it can't authenticate as you.
+//   e) In Google Cloud Console (console.cloud.google.com): create/select
+//      a project > "APIs & Services" > "Library" > enable "Google Sheets
+//      API" > "Credentials" > "Create Credentials" > "API key". Then
+//      click the new key > "Restrict key" > under "API restrictions"
+//      choose "Google Sheets API" only (so it can't be reused elsewhere).
+//      Optionally also restrict by HTTP referrer to your site's domain.
+//      Paste the key into VOLUNTEER_SHEETS_API_KEY below.
+//   f) Copy the Form's live "Send" link into VOLUNTEER_FORM_URL below.
 //
-// Until both URLs are filled in, registration opens a placeholder tab and
-// sync silently does nothing (no errors thrown at people who haven't set
-// this up yet).
+// Until VOLUNTEER_SHEET_ID and VOLUNTEER_SHEETS_API_KEY are both filled
+// in, sync silently does nothing (no errors thrown at people who haven't
+// set this up yet). Registration opens a friendly reminder instead of a
+// broken link until VOLUNTEER_FORM_URL is set.
 // =========================================================================
 
 export const VOLUNTEER_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeaCANZky3OKG6idXEn1ZiGRHvIND337KT86NN__SSLdL-6gA/viewform?usp=publish-editor';
-export const VOLUNTEER_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTwdLJXOkQx8Nj9eDxOSmckSPrONg3JxEUOap0Kmslq-bV_5pyTE1gtpcXTvEm1FgHfbl2z7D4mvKI4/pub?gid=829303670&single=true&output=csv';
+
+export const VOLUNTEER_SHEET_ID = ''; // e.g. "1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcdef"
+export const VOLUNTEER_SHEET_RANGE = 'Form Responses 1!A:E'; // tab name + column range
+export const VOLUNTEER_SHEETS_API_KEY = ''; // Google Cloud Console > Credentials > API key
 
 const AUTO_SYNC_INTERVAL_MS = 30_000; // 30s — adjust as needed
 
@@ -93,55 +106,9 @@ export function removeVolunteer(state, volunteerId) {
 }
 
 /**
- * Minimal RFC4180-ish CSV parser: handles quoted fields, embedded commas,
- * and escaped quotes ("") inside quoted fields. Good enough for Google
- * Sheets' published CSV export.
- */
-function parseCsv(text) {
-  const rows = [];
-  let row = [];
-  let field = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const next = text[i + 1];
-
-    if (inQuotes) {
-      if (char === '"' && next === '"') {
-        field += '"';
-        i++;
-      } else if (char === '"') {
-        inQuotes = false;
-      } else {
-        field += char;
-      }
-    } else if (char === '"') {
-      inQuotes = true;
-    } else if (char === ',') {
-      row.push(field);
-      field = '';
-    } else if (char === '\n' || char === '\r') {
-      if (char === '\r' && next === '\n') i++;
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = '';
-    } else {
-      field += char;
-    }
-  }
-  if (field.length > 0 || row.length > 0) {
-    row.push(field);
-    rows.push(row);
-  }
-  return rows.filter(r => r.some(cell => cell.trim() !== ''));
-}
-
-/**
- * Turns a raw CSV row into a volunteerPool-shaped object. Google Forms
- * headers are matched loosely (case/whitespace-insensitive) so small
- * wording differences in the Form don't break the sync.
+ * Turns a raw Sheets API row (array of cell strings) into a
+ * volunteerPool-shaped object. Header matching is case/whitespace
+ * insensitive so small wording differences in the Form don't break sync.
  */
 function rowToVolunteer(headerMap, cells, existingById) {
   const get = (label) => {
@@ -177,28 +144,30 @@ function rowToVolunteer(headerMap, cells, existingById) {
 }
 
 /**
- * Fetches the published Sheet CSV, parses it, and merges new/updated
+ * Fetches the response Sheet via the Sheets API v4, and merges new/updated
  * Google Form registrations into state.volunteerPoolData in place.
  * Returns the number of newly-added volunteers (0 if nothing new, or if
- * VOLUNTEER_SHEET_CSV_URL hasn't been configured yet).
+ * VOLUNTEER_SHEET_ID / VOLUNTEER_SHEETS_API_KEY haven't been set yet).
  */
 export async function syncVolunteerRegistrations(state) {
-  if (!VOLUNTEER_SHEET_CSV_URL) return 0;
+  if (!VOLUNTEER_SHEET_ID || !VOLUNTEER_SHEETS_API_KEY) return 0;
 
-  let text;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${VOLUNTEER_SHEET_ID}/values/${encodeURIComponent(VOLUNTEER_SHEET_RANGE)}?key=${VOLUNTEER_SHEETS_API_KEY}`;
+
+  let values;
   try {
-    const res = await fetch(VOLUNTEER_SHEET_CSV_URL, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Sheet fetch failed: ${res.status}`);
-    text = await res.text();
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Sheets API fetch failed: ${res.status}`);
+    const data = await res.json();
+    values = data.values || [];
   } catch (err) {
-    console.warn('Volunteer sync: could not reach the published Sheet CSV.', err);
+    console.warn('Volunteer sync: could not reach the Google Sheets API.', err);
     return 0;
   }
 
-  const rows = parseCsv(text);
-  if (rows.length < 2) return 0; // header only, or empty
+  if (values.length < 2) return 0; // header only, or empty
 
-  const headerRow = rows[0].map(h => h.trim().toLowerCase());
+  const headerRow = values[0].map(h => String(h).trim().toLowerCase());
   const headerMap = {};
   headerRow.forEach((h, idx) => { headerMap[h] = idx; });
 
@@ -207,7 +176,7 @@ export async function syncVolunteerRegistrations(state) {
   const removedIds = getRemovedIds();
 
   let addedCount = 0;
-  for (const cells of rows.slice(1)) {
+  for (const cells of values.slice(1)) {
     const parsed = rowToVolunteer(headerMap, cells, existingById);
     if (!parsed) continue;
     if (removedIds.has(parsed.id)) continue; // deleted on the site — stay gone

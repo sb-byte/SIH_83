@@ -35,6 +35,7 @@ const state = {
   mutualAidData: [...mutualAidRequests],
   volunteerPoolData: filterRemovedVolunteers([...volunteerPool]),
   activeVolunteerFilter: 'ALL',
+  activityLog: [],
   correctiveActions: [
     { def: "Staging area delay for Sector 9 backup fuel tanker.", action: "Pre-position auxiliary diesel tanker directly at Bhadrak Transit Depot.", lead: "Logistics / Civil Supplies", status: "IN PROGRESS" },
     { def: "Air Ops Branch Director vacancy flagged during initial surge.", action: "Automate roster escalation protocol with IAF liaison desk.", lead: "Operations Section", status: "COMPLETED" },
@@ -62,6 +63,41 @@ const state = {
 
 // Safe DOM retrieval
 const getEl = (id) => document.getElementById(id);
+
+// =========================================================================
+// FLEET & SACHET ALERT ACTIVITY LOG (feeds AAR Reports section 6)
+// =========================================================================
+// Every register/adjust/approve/assign/remove/transmit action on the
+// Fleet & Sachet Alert tab calls logActivity() so it shows up in the
+// AAR's chronological log automatically — no manual bookkeeping needed
+// when new features get added later.
+function logActivity(category, message) {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) + ' IST';
+  state.activityLog.unshift({ time: timeStr, category, message });
+  renderActivityLog();
+}
+
+function renderActivityLog() {
+  const tbody = getEl('activity-log-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (state.activityLog.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" class="mono text-xs text-muted">No activity logged yet this session — actions on the Fleet & Sachet Alert tab will appear here automatically.</td></tr>`;
+    return;
+  }
+
+  state.activityLog.forEach(entry => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="mono text-xs text-muted">${entry.time}</td>
+      <td><span class="badge badge-navy">${entry.category}</span></td>
+      <td>${entry.message}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
 
 // Toast Notifier
 function showToast(message, type = 'info') {
@@ -95,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderDamageTable();
   renderCorrectiveActions();
   renderAarMutualAidSummary();
+  renderActivityLog();
   renderVolunteerSquads();
   renderShelterMatrix();
   renderMutualAid();
@@ -521,6 +558,7 @@ function renderAssets() {
         else asset.status = 'AVAILABLE';
         renderAssets();
         showToast(`Asset [${asset.id}] status changed: ${asset.status}`);
+        logActivity('ASSET', `${asset.name} (${asset.id}) status → ${asset.status}`);
       }
     });
   });
@@ -536,6 +574,7 @@ function renderAssets() {
           asset.loc = newLoc.trim();
           renderAssets();
           showToast(`📍 Location tagged: ${asset.id} → ${asset.loc}`);
+          logActivity('ASSET', `${asset.name} (${asset.id}) location tagged → ${asset.loc}`);
         }
       }
     });
@@ -616,9 +655,11 @@ function renderShelterMatrix() {
     btn.addEventListener('click', (e) => {
       sound.playClick();
       const idx = parseInt(e.currentTarget.dataset.idx, 10);
-      state.sheltersData[idx].occupied = Math.max(0, state.sheltersData[idx].occupied - 10);
+      const s = state.sheltersData[idx];
+      s.occupied = Math.max(0, s.occupied - 10);
       renderShelterMatrix();
       renderShelters();
+      logActivity('SHELTER', `Occupancy adjusted: ${s.name} → ${s.occupied}/${s.capacity}`);
     });
   });
 
@@ -630,18 +671,39 @@ function renderShelterMatrix() {
       s.occupied = Math.min(s.capacity, s.occupied + 10);
       renderShelterMatrix();
       renderShelters();
+      logActivity('SHELTER', `Occupancy adjusted: ${s.name} → ${s.occupied}/${s.capacity}`);
     });
   });
 }
 
+// Register Shelter Modal
 const addShelterBtn = getEl('add-shelter-btn');
-if (addShelterBtn) {
+const shelterModal = getEl('modal-shelter');
+const closeShelterModal = () => shelterModal && shelterModal.classList.add('hidden');
+
+if (addShelterBtn && shelterModal) {
   addShelterBtn.addEventListener('click', () => {
     sound.playClick();
-    const name = prompt('Enter Shelter Name (e.g. MCS Chandbali Community Hall):', 'MCS Chandbali Community Hall');
-    if (!name) return;
-    const capacity = parseInt(prompt('Enter Total Capacity:', '250'), 10);
-    if (!capacity || capacity <= 0) { showToast('Invalid capacity value'); return; }
+    shelterModal.classList.remove('hidden');
+  });
+}
+
+const closeShelterBtn = getEl('close-shelter-modal');
+const cancelShelterBtn = getEl('cancel-shelter-btn');
+if (closeShelterBtn) closeShelterBtn.addEventListener('click', closeShelterModal);
+if (cancelShelterBtn) cancelShelterBtn.addEventListener('click', closeShelterModal);
+
+const saveShelterBtn = getEl('save-shelter-btn');
+if (saveShelterBtn) {
+  saveShelterBtn.addEventListener('click', () => {
+    const name = getEl('new-shelter-name')?.value.trim();
+    const capacity = parseInt(getEl('new-shelter-capacity')?.value, 10);
+    const medical = getEl('new-shelter-medical')?.value.trim() || 'Not Yet Staffed';
+    const foodRations = getEl('new-shelter-food')?.value.trim() || 'Pending Stock';
+
+    if (!name) { showToast('Shelter name is required'); return; }
+    if (!capacity || capacity <= 0) { showToast('Enter a valid capacity'); return; }
+
     state.sheltersData.push({
       id: `MCS-${String(state.sheltersData.length + 1).padStart(2, '0')}`,
       name,
@@ -650,12 +712,20 @@ if (addShelterBtn) {
       status: 'AVAILABLE',
       lat: 20.5,
       lng: 86.5,
-      medical: 'Not Yet Staffed',
-      foodRations: 'Pending Stock'
+      medical,
+      foodRations
     });
+
+    sound.playClick();
     renderShelterMatrix();
     renderShelters();
+    closeShelterModal();
+    getEl('new-shelter-name').value = '';
+    getEl('new-shelter-capacity').value = '';
+    getEl('new-shelter-medical').value = '';
+    getEl('new-shelter-food').value = '';
     showToast(`🏠 Shelter registered: ${name}`);
+    logActivity('SHELTER', `New shelter registered: ${name} (capacity ${capacity})`);
   });
 }
 
@@ -699,6 +769,7 @@ function renderMutualAid() {
       renderMutualAid();
       renderAarMutualAidSummary();
       showToast(`✅ Mutual aid request approved: ${req.resource} → ${req.agency}`);
+      logActivity('MUTUAL AID', `Approved: ${req.resource} ×${req.qty} → ${req.agency}`);
     });
   });
 
@@ -712,32 +783,62 @@ function renderMutualAid() {
       renderMutualAid();
       renderAarMutualAidSummary();
       showToast(`❌ Mutual aid request denied: ${req.resource} → ${req.agency}`);
+      logActivity('MUTUAL AID', `Denied: ${req.resource} ×${req.qty} → ${req.agency}`);
     });
   });
 }
 
+// Register Mutual Aid Request Modal
 const addMutualAidBtn = getEl('add-mutual-aid-btn');
-if (addMutualAidBtn) {
+const mutualAidModal = getEl('modal-mutual-aid');
+const closeMutualAidModal = () => mutualAidModal && mutualAidModal.classList.add('hidden');
+
+if (addMutualAidBtn && mutualAidModal) {
   addMutualAidBtn.addEventListener('click', () => {
     sound.playClick();
-    const agency = prompt('Requesting Agency:', 'Jagatsinghpur District EOC');
-    if (!agency) return;
-    const resource = prompt('Resource Requested:', 'High-Water Rescue Trucks');
-    if (!resource) return;
-    const qty = parseInt(prompt('Quantity:', '2'), 10) || 1;
+    mutualAidModal.classList.remove('hidden');
+  });
+}
+
+const closeMutualAidBtn = getEl('close-mutual-aid-modal');
+const cancelMutualAidBtn = getEl('cancel-mutual-aid-btn');
+if (closeMutualAidBtn) closeMutualAidBtn.addEventListener('click', closeMutualAidModal);
+if (cancelMutualAidBtn) cancelMutualAidBtn.addEventListener('click', closeMutualAidModal);
+
+const saveMutualAidBtn = getEl('save-mutual-aid-btn');
+if (saveMutualAidBtn) {
+  saveMutualAidBtn.addEventListener('click', () => {
+    const agency = getEl('new-mutual-aid-agency')?.value.trim();
+    const resource = getEl('new-mutual-aid-resource')?.value.trim();
+    const qty = parseInt(getEl('new-mutual-aid-qty')?.value, 10) || 1;
+    const priority = getEl('new-mutual-aid-priority')?.value || 'HIGH';
+
+    if (!agency) { showToast('Requesting agency is required'); return; }
+    if (!resource) { showToast('Resource requested is required'); return; }
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }) + ' IST';
+
     state.mutualAidData.unshift({
       id: `MA-${String(state.mutualAidData.length + 1).padStart(2, '0')}`,
       agency,
       resource,
       qty,
-      priority: 'HIGH',
+      priority,
       status: 'PENDING',
-      requestedAt: 'Just now',
+      requestedAt: timeStr,
       approvedBy: null
     });
+
+    sound.playClick();
     renderMutualAid();
     renderAarMutualAidSummary();
+    closeMutualAidModal();
+    getEl('new-mutual-aid-agency').value = '';
+    getEl('new-mutual-aid-resource').value = '';
+    getEl('new-mutual-aid-qty').value = '';
     showToast(`🤝 Mutual aid request logged: ${agency}`);
+    logActivity('MUTUAL AID', `New request logged: ${resource} ×${qty} from ${agency} (${priority})`);
   });
 }
 
@@ -814,6 +915,7 @@ function renderVolunteerPool() {
       } else {
         showToast(`🗑 ${vol.name} removed from the pool`);
       }
+      logActivity('VOLUNTEER', `Removed from pool: ${vol.name}`);
     });
   });
 }
@@ -866,6 +968,7 @@ function initAssignSquadModal() {
         vol.squad = squadSelect.value;
         renderVolunteerPool();
         showToast(`➡️ ${vol.name} assigned to ${squadSelect.value}`);
+        logActivity('VOLUNTEER', `${vol.name} assigned to ${squadSelect.value}`);
       }
       close();
     });
@@ -895,6 +998,7 @@ startAutoSync(state, (addedCount) => {
   if (addedCount > 0) {
     renderVolunteerPool();
     showToast(`🙋 ${addedCount} new volunteer${addedCount > 1 ? 's' : ''} synced from registration form`);
+    logActivity('VOLUNTEER', `${addedCount} new volunteer${addedCount > 1 ? 's' : ''} synced from Google Form registration`);
   }
 });
 
@@ -1143,8 +1247,10 @@ function initSachetAlerting() {
         renderIncidents();
 
         showToast(`⚡ CAP-SACHET ALERT BROADCAST SENT TO 1.84M SUBSCRIBERS (${eventType})`, 'alert');
+        logActivity('SACHET ALERT', `LIVE broadcast transmitted: ${eventType} — "${msg.slice(0, 70)}${msg.length > 70 ? '…' : ''}"`);
       } else {
         showToast(`🟡 [EXERCISE SANDBOX]: Alert queued to simulation terminals only.`);
+        logActivity('SACHET ALERT', `Exercise-mode alert queued (sandbox only): ${eventType}`);
       }
     });
   }
@@ -1173,7 +1279,54 @@ function renderRumors() {
   });
 }
 
-// Damage Table & Corrective Actions
+// Clarify Rumor Modal — previously "+ CLARIFY RUMOR" had no handler at all
+const addRumorBtn = getEl('add-rumor-btn');
+const rumorModal = getEl('modal-rumor');
+const closeRumorModal = () => rumorModal && rumorModal.classList.add('hidden');
+
+if (addRumorBtn && rumorModal) {
+  addRumorBtn.addEventListener('click', () => {
+    sound.playClick();
+    rumorModal.classList.remove('hidden');
+  });
+}
+
+const closeRumorBtn = getEl('close-rumor-modal');
+const cancelRumorBtn = getEl('cancel-rumor-btn');
+if (closeRumorBtn) closeRumorBtn.addEventListener('click', closeRumorModal);
+if (cancelRumorBtn) cancelRumorBtn.addEventListener('click', closeRumorModal);
+
+const saveRumorBtn = getEl('save-rumor-btn');
+if (saveRumorBtn) {
+  saveRumorBtn.addEventListener('click', () => {
+    const claim = getEl('new-rumor-claim')?.value.trim();
+    const clarification = getEl('new-rumor-clarification')?.value.trim();
+    const verifiedBy = getEl('new-rumor-verifier')?.value.trim() || 'EOC Duty Officer';
+
+    if (!claim) { showToast('Enter the claim being circulated'); return; }
+    if (!clarification) { showToast('Enter the official clarification'); return; }
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }) + ' IST';
+
+    state.rumorsData.unshift({
+      claim,
+      clarification,
+      status: 'DEBUNKED',
+      verifiedBy,
+      timestamp: timeStr
+    });
+
+    sound.playClick();
+    renderRumors();
+    closeRumorModal();
+    getEl('new-rumor-claim').value = '';
+    getEl('new-rumor-clarification').value = '';
+    getEl('new-rumor-verifier').value = '';
+    showToast(`🛡️ Rumor clarification posted`);
+    logActivity('RUMOR CONTROL', `Clarified: "${claim.slice(0, 60)}${claim.length > 60 ? '…' : ''}" — verified by ${verifiedBy}`);
+  });
+}
 function renderDamageTable() {
   const tbody = getEl('damage-table-body');
   if (!tbody) return;
@@ -1941,6 +2094,7 @@ function initModals() {
       renderAssets();
       closeAssetModal();
       showToast(`🚛 ASSET REGISTERED: ${name}`);
+      logActivity('ASSET', `New asset registered: ${name} (${type}) — ${unit}`);
     });
   }
 
@@ -2055,6 +2209,286 @@ function depNewNode(overrides) {
   }, overrides);
 }
 
+// ===========================================================================
+// HAZARD CLUSTER DEPENDENCY GRAPH ENGINE (32 IN-SCOPE HAZARDS, 4 CLUSTERS)
+// ===========================================================================
+
+const CLUSTER_META = {
+  evacuation: {
+    id: "evacuation",
+    label: "Directional Evacuation",
+    short: "Evacuation",
+    icon: "🛣️",
+    status: "ready",
+    statusLabel: "Engine ready",
+    blurb: "Existing cascade engine (hop-1 / hop-2), extended with threat-zone geometry — radial, directional, or point-then-radiating.",
+  },
+  threshold: {
+    id: "threshold",
+    label: "Sustained-Load / Threshold",
+    short: "Threshold",
+    icon: "📈",
+    status: "blocked-engine",
+    statusLabel: "New engine required",
+    blurb: "Tiered escalation over time, not a discrete trigger to inject. Needs a threshold/attrition engine — the current cascade engine doesn't apply.",
+  },
+  containment: {
+    id: "containment",
+    label: "Point-Source Containment",
+    short: "Containment",
+    icon: "🛡️",
+    status: "ready",
+    statusLabel: "Engine ready",
+    blurb: "Existing cascade engine — the closest fit of any cluster. One clear origin node rather than a moving or expanding threat zone.",
+  },
+  crowd: {
+    id: "crowd",
+    label: "Crowd / Security",
+    short: "Crowd",
+    icon: "🚨",
+    status: "blocked-research",
+    statusLabel: "Blocked — research",
+    blurb: "Needs the agent-based population model already flagged as an open research problem. Design-ready, not build-ready.",
+  },
+};
+
+const CLUSTER_ORDER = ["evacuation", "threshold", "containment", "crowd"];
+
+const EVAC_GENERIC = {
+  nodes: [
+    { id: "power", label: "Power Grid", icon: "zap", x: 130, y: 90 },
+    { id: "comms", label: "Communications", icon: "radio", x: 400, y: 60 },
+    { id: "roads", label: "Access Routes", icon: "route", x: 660, y: 90 },
+    { id: "coord", label: "Evacuation Coordination", icon: "users", x: 250, y: 300 },
+    { id: "relief", label: "Relief Teams", icon: "truck", x: 540, y: 300 },
+    { id: "hospital", label: "Hospital Capacity", icon: "building", x: 395, y: 420 },
+  ],
+  edges: [
+    { from: "power", to: "comms", w: 0.5 },
+    { from: "power", to: "hospital", w: 0.4 },
+    { from: "roads", to: "relief", w: 0.6 },
+    { from: "roads", to: "coord", w: 0.3 },
+    { from: "comms", to: "coord", w: 0.5 },
+    { from: "comms", to: "relief", w: 0.5 },
+    { from: "coord", to: "hospital", w: 0.3 },
+    { from: "relief", to: "hospital", w: 0.4 },
+  ],
+  presets: [
+    { id: "route_out", label: "Route Disabled", target: "roads", drop: 6, note: "Primary evacuation route disabled" },
+    { id: "comms_out", label: "Comms Outage", target: "comms", drop: 7, note: "Regional communications failure" },
+    { id: "coord_strain", label: "Coordination Strain", target: "coord", drop: 5, note: "Evacuation coordination overwhelmed" },
+    { id: "power_fail", label: "Power Failure", target: "power", drop: 6, note: "Power grid failure in affected zone" },
+  ],
+};
+
+const CONTAINMENT_GENERIC = {
+  nodes: [
+    { id: "origin", label: "Failure Origin", icon: "alert", x: 130, y: 90 },
+    { id: "power", label: "Power Grid", icon: "zap", x: 400, y: 60 },
+    { id: "comms", label: "Communications", icon: "radio", x: 660, y: 90 },
+    { id: "transit", label: "Transportation Access", icon: "route", x: 250, y: 300 },
+    { id: "specialist", label: "Specialist Response Readiness", icon: "wrench", x: 540, y: 300 },
+    { id: "hospital", label: "Hospital Capacity", icon: "building", x: 395, y: 420 },
+  ],
+  edges: [
+    { from: "origin", to: "power", w: 0.6 },
+    { from: "origin", to: "comms", w: 0.3 },
+    { from: "power", to: "hospital", w: 0.4 },
+    { from: "power", to: "transit", w: 0.2 },
+    { from: "comms", to: "specialist", w: 0.4 },
+    { from: "transit", to: "specialist", w: 0.5 },
+    { from: "specialist", to: "hospital", w: 0.4 },
+    { from: "transit", to: "hospital", w: 0.3 },
+  ],
+  presets: [
+    { id: "origin_trip", label: "Origin Trips", target: "origin", drop: 7, note: "Point-source failure triggered at origin" },
+    { id: "power_surge", label: "Power Cascade", target: "power", drop: 6, note: "Cascading power disruption from origin" },
+    { id: "comms_disrupt", label: "Comms Disrupted", target: "comms", drop: 5, note: "Communications relay affected by incident" },
+    { id: "access_restricted", label: "Access Restricted", target: "transit", drop: 5, note: "Exclusion zone restricts transit access" },
+  ],
+};
+
+const GENERIC_TEMPLATES = { evacuation: EVAC_GENERIC, containment: CONTAINMENT_GENERIC };
+
+const FULL_BUILDS = {
+  wildfire: {
+    cluster: "evacuation",
+    label: "Wildfire",
+    nodes: [
+      { id: "power", label: "Power Grid", icon: "zap", x: 130, y: 90 },
+      { id: "comms", label: "Communications", icon: "radio", x: 400, y: 60 },
+      { id: "roads", label: "Road Network", icon: "route", x: 660, y: 90 },
+      { id: "crowd", label: "Crowd Control", icon: "users", x: 250, y: 300 },
+      { id: "relief", label: "Relief Teams", icon: "truck", x: 540, y: 300 },
+      { id: "hospital", label: "Hospital Capacity", icon: "building", x: 395, y: 420 },
+    ],
+    edges: [
+      { from: "power", to: "comms", w: 0.5 },
+      { from: "power", to: "hospital", w: 0.4 },
+      { from: "roads", to: "relief", w: 0.6 },
+      { from: "roads", to: "crowd", w: 0.3 },
+      { from: "comms", to: "crowd", w: 0.5 },
+      { from: "comms", to: "relief", w: 0.5 },
+      { from: "crowd", to: "hospital", w: 0.3 },
+      { from: "relief", to: "hospital", w: 0.4 },
+    ],
+    presets: [
+      { id: "bridge", label: "Bridge Out", target: "roads", drop: 6, note: "Primary river crossing disabled" },
+      { id: "comms_out", label: "Comms Outage", target: "comms", drop: 7, note: "Tower failure, sector 4" },
+      { id: "surge", label: "Crowd Surge", target: "crowd", drop: 5, note: "Unplanned convergence at shelter A" },
+      { id: "power_fail", label: "Power Failure", target: "power", drop: 6, note: "Substation trip, north grid" },
+    ],
+  },
+  flood: {
+    cluster: "evacuation",
+    label: "Flood",
+    nodes: [
+      { id: "levee", label: "Levee / Dam Status", icon: "droplet", x: 130, y: 90 },
+      { id: "comms", label: "Communications", icon: "radio", x: 400, y: 60 },
+      { id: "roads", label: "Road Network", icon: "route", x: 660, y: 90 },
+      { id: "evac", label: "Evacuation Coordination", icon: "users", x: 250, y: 300 },
+      { id: "relief", label: "Relief Teams", icon: "truck", x: 540, y: 300 },
+      { id: "hospital", label: "Hospital Capacity", icon: "building", x: 395, y: 420 },
+    ],
+    edges: [
+      { from: "levee", to: "roads", w: 0.6 },
+      { from: "levee", to: "evac", w: 0.4 },
+      { from: "levee", to: "comms", w: 0.2 },
+      { from: "roads", to: "relief", w: 0.5 },
+      { from: "comms", to: "evac", w: 0.5 },
+      { from: "comms", to: "relief", w: 0.4 },
+      { from: "evac", to: "hospital", w: 0.3 },
+      { from: "relief", to: "hospital", w: 0.4 },
+    ],
+    presets: [
+      { id: "levee_breach", label: "Levee Breach", target: "levee", drop: 7, note: "Section 12 failure, rising water" },
+      { id: "comms_flood", label: "Upstream Comms Loss", target: "comms", drop: 5, note: "Relay station flooded" },
+      { id: "route_flood", label: "Evac Route Flooded", target: "roads", drop: 6, note: "Route 9 impassable" },
+      { id: "evac_overwhelm", label: "Evac Overwhelmed", target: "evac", drop: 5, note: "Shelter intake exceeding capacity" },
+    ],
+  },
+};
+
+const HAZARDS_BY_CLUSTER = {
+  evacuation: [
+    { id: "wildfire", label: "Wildfire" },
+    { id: "flood", label: "Flood" },
+    { id: "earthquake", label: "Earthquake" },
+    { id: "hurricane", label: "Hurricane / Cyclone / Typhoon" },
+    { id: "tornado", label: "Tornado" },
+    { id: "landslide", label: "Landslide / Mudslide" },
+    { id: "volcano", label: "Volcanic Eruption" },
+    { id: "tsunami", label: "Tsunami" },
+    { id: "avalanche", label: "Avalanche" },
+    { id: "damLevee", label: "Dam or Levee Failure" },
+    { id: "coldwave", label: "Extreme Cold / Winter Storm" },
+  ],
+  threshold: [
+    { id: "drought", label: "Drought" },
+    { id: "heatwave", label: "Extreme Heat Wave" },
+    { id: "outbreak", label: "Infectious Disease Outbreak" },
+    { id: "pandemic", label: "Pandemic" },
+    { id: "hospitalOverload", label: "Hospital System Overload" },
+  ],
+  containment: [
+    { id: "powerGrid", label: "Power Grid Failure / Blackout" },
+    { id: "transportation", label: "Major Transportation Failure" },
+    { id: "telecom", label: "Telecommunications Outage" },
+    { id: "industrial", label: "Industrial Accident" },
+    { id: "nuclear", label: "Nuclear or Radiological Incident" },
+    { id: "collapse", label: "Structural Collapse" },
+    { id: "gasPipeline", label: "Gas Pipeline Failure / Explosion" },
+    { id: "hazmat", label: "Hazardous Materials Spill" },
+    { id: "fire", label: "Major Structural Fire (non-wildfire)" },
+  ],
+  crowd: [
+    { id: "massCasualtyMedical", label: "Mass Casualty Medical Event" },
+    { id: "activeThreat", label: "Mass Casualty / Active Threat Situation" },
+    { id: "civilUnrest", label: "Large-Scale Civil Unrest" },
+    { id: "terrorism", label: "Terrorism-Related Incident" },
+    { id: "crowdCrush", label: "Stadium or Venue Crowd Crush" },
+    { id: "publicEvent", label: "Large Public Event Emergency" },
+    { id: "transitCrowd", label: "Transit Hub Crowd Emergency" },
+  ],
+};
+
+function depStatusColor(v) {
+  if (v >= 7) return "var(--emerald)";
+  if (v >= 4) return "var(--gold)";
+  return "var(--alert)";
+}
+
+function depStatusLabel(v) {
+  if (v >= 7) return "Nominal";
+  if (v >= 4) return "Degraded";
+  return "Critical";
+}
+
+function depFreshness(ageSec) {
+  if (ageSec < 20) return { tier: "fresh", label: "fresh", opacity: 1 };
+  if (ageSec < 50) return { tier: "aging", label: "aging", opacity: 0.82 };
+  return { tier: "stale", label: "stale", opacity: 0.55 };
+}
+
+function depSeverityMultiplier(sev) {
+  return 0.5 + sev / 10;
+}
+
+function depBaselineForSeverity(sev) {
+  if (sev <= 3) return 9;
+  if (sev <= 6) return 8;
+  if (sev <= 8) return 7;
+  return 6;
+}
+
+function depResolveTemplate(clusterId, hazardId) {
+  if (hazardId && FULL_BUILDS[hazardId]) {
+    return { ...FULL_BUILDS[hazardId], isGeneric: false, isFull: true };
+  }
+  const generic = GENERIC_TEMPLATES[clusterId];
+  if (!generic) return null;
+  const meta = (HAZARDS_BY_CLUSTER[clusterId] || []).find((h) => h.id === hazardId);
+  return {
+    ...generic,
+    cluster: clusterId,
+    label: meta ? meta.label : CLUSTER_META[clusterId].label,
+    isGeneric: true,
+    isFull: false,
+  };
+}
+
+// Icon path helper for SVG rendering
+function getSvgIconPath(type) {
+  switch (type) {
+    case 'zap': return '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+    case 'radio': return '<circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>';
+    case 'route': return '<circle cx="6" cy="19" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="5" r="3" fill="none" stroke="currentColor" stroke-width="2"/>';
+    case 'users': return '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M22 21v-2a4 4 0 0 0-3-3.87" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 3.13a4 4 0 0 1 0 7.75" fill="none" stroke="currentColor" stroke-width="2"/>';
+    case 'truck': return '<rect x="1" y="3" width="15" height="13" fill="none" stroke="currentColor" stroke-width="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="5.5" cy="18.5" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18.5" cy="18.5" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/>';
+    case 'building': return '<rect x="4" y="2" width="16" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 22v-4h6v4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01" fill="none" stroke="currentColor" stroke-width="2"/>';
+    case 'droplet': return '<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+    case 'wrench': return '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" fill="none" stroke="currentColor" stroke-width="2"/>';
+    case 'alert': return '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="9" x2="12" y2="13" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>';
+    default: return '<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/>';
+  }
+}
+
+// Engine State
+let depClusterId = "evacuation";
+let depHazardId = "flood";
+let depEngineMode = "exercise";
+let depSeverity = 5;
+let depScores = {};
+let depLog = [];
+let depPulsingEdges = [];
+let depPulseKind = "crit";
+let depActivePresets = [];
+let depClock = 0;
+let depSourceMap = {};
+let depConflictLogged = new Set();
+let depClockTimer = null;
+let depLiveFeedTimer = null;
+
 function initDependencySimulator() {
   // Subtab navigation switcher
   const subtabs = document.querySelectorAll('.sim-subtab-btn');
@@ -2073,502 +2507,591 @@ function initDependencySimulator() {
       } else {
         if (mselContent) mselContent.classList.remove('active');
         if (depContent) depContent.classList.add('active');
-        // Render chart when switching to make sure dimensions are ready
-        setTimeout(() => { depRunSim(); }, 50);
+        depRenderEngine();
       }
     });
   });
 
-  // Preset button listeners
-  const presetFlood = getEl('dep-preset-flood');
-  const presetWildfire = getEl('dep-preset-wildfire');
-  const presetEarthquake = getEl('dep-preset-earthquake');
-  const presetBlank = getEl('dep-preset-blank');
-
-  if (presetFlood) presetFlood.addEventListener('click', () => { sound.playClick(); depLoadPreset('flood'); });
-  if (presetWildfire) presetWildfire.addEventListener('click', () => { sound.playClick(); depLoadPreset('wildfire'); });
-  if (presetEarthquake) presetEarthquake.addEventListener('click', () => { sound.playClick(); depLoadPreset('earthquake'); });
-  if (presetBlank) presetBlank.addEventListener('click', () => { sound.playClick(); depLoadPreset('blank'); });
-
-  // Add Node and Add Edge buttons
-  const addNodeBtn = getEl('dep-add-node-btn');
-  const addEdgeBtn = getEl('dep-add-edge-btn');
-
-  if (addNodeBtn) addNodeBtn.addEventListener('click', () => {
-    sound.playClick();
-    depNodes.push(depNewNode({ label: `Lifeline Node ${depNodes.length + 1}` }));
-    depRenderAll();
-    showToast('Infrastructure node added');
-  });
-
-  if (addEdgeBtn) addEdgeBtn.addEventListener('click', () => {
-    sound.playClick();
-    if (depNodes.length < 2) {
-      showToast('Need at least 2 nodes to create a dependency edge', 'alert');
-      return;
+  // Cluster Picker buttons
+  CLUSTER_ORDER.forEach(id => {
+    const card = getEl(`cluster-card-${id}`);
+    if (card) {
+      card.addEventListener('click', () => {
+        sound.playClick();
+        depSwitchCluster(id);
+      });
     }
-    depEdges.push({ from: depNodes[0].id, to: depNodes[1].id, weight: 0.5 });
-    depRenderAll();
-    showToast('Dependency cascade edge added');
   });
 
-  // Run Simulation button
-  const runSimBtn = getEl('dep-run-sim-btn');
-  if (runSimBtn) runSimBtn.addEventListener('click', () => {
-    sound.playClick();
-    depRunSim();
-    showToast('⚡ Cascade simulation executed');
+  // Hazard dropdown
+  const hazardSelect = getEl('dep-hazard-select');
+  if (hazardSelect) {
+    hazardSelect.addEventListener('change', (e) => {
+      sound.playClick();
+      depSwitchHazard(e.target.value);
+    });
+  }
+
+  // Severity Slider
+  const sevSlider = getEl('dep-severity-slider');
+  if (sevSlider) {
+    sevSlider.addEventListener('input', (e) => {
+      const v = +e.target.value;
+      const readout = getEl('dep-severity-readout');
+      if (readout) readout.innerText = `${v}/10`;
+    });
+    sevSlider.addEventListener('change', (e) => {
+      depCommitSeverity(+e.target.value);
+    });
+  }
+
+  // Reset button
+  const resetBtn = getEl('dep-reset-btn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      sound.playClick();
+      depReset();
+    });
+  }
+
+  // Timers
+  if (depClockTimer) clearInterval(depClockTimer);
+  depClockTimer = setInterval(() => {
+    depClock += 1;
+    // Re-render every few ticks to update freshness labels if view is open
+    const depContent = getEl('sim-tab-dependency');
+    if (depContent && depContent.classList.contains('active') && depClock % 5 === 0) {
+      depRenderEngine();
+    }
+  }, 1000);
+
+  if (depLiveFeedTimer) clearInterval(depLiveFeedTimer);
+  depLiveFeedTimer = setInterval(() => {
+    if (depEngineMode !== "live") return;
+    const clusterMeta = CLUSTER_META[depClusterId];
+    if (clusterMeta.status !== "ready") return;
+    const H = depResolveTemplate(depClusterId, depHazardId);
+    if (!H) return;
+
+    const ids = Object.keys(depScores);
+    if (ids.length === 0) return;
+    const pick = ids[Math.floor(Math.random() * ids.length)];
+    const delta = Math.random() < 0.5 ? -1 : 1;
+    const cur = depScores[pick];
+    if (cur) {
+      depScores[pick] = {
+        value: Math.max(2, Math.min(10, cur.value + delta)),
+        updatedAt: depClock,
+        source: "live feed",
+      };
+      depRenderEngine();
+    }
+  }, 9000);
+
+  // Initial setup
+  depInitBaseline();
+  depRenderEngine();
+}
+
+function depInitBaseline() {
+  const clusterMeta = CLUSTER_META[depClusterId];
+  if (clusterMeta.status !== "ready") return;
+  const H = depResolveTemplate(depClusterId, depHazardId);
+  if (!H) return;
+
+  const base = depBaselineForSeverity(depSeverity);
+  depScores = {};
+  H.nodes.forEach(n => {
+    depScores[n.id] = { value: base, updatedAt: depClock, source: depEngineMode === "live" ? "live feed" : "baseline" };
+  });
+  depSourceMap = {};
+  depConflictLogged = new Set();
+  depActivePresets = [];
+  depPulsingEdges = [];
+  depLog = [{ t: depStamp(), text: `Scenario loaded: ${H.label} (${clusterMeta.label}). All capabilities at baseline, crisis scale ${depSeverity}/10.`, kind: "info" }];
+}
+
+function depStamp() {
+  const s = depClock;
+  const hh = String(Math.floor(s / 3600)).padStart(2, "0");
+  const mm = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
+  const ss = String(s % 60).padStart(2, "0");
+  return `${hh}:${mm}:${ss}`;
+}
+
+function addDepLog(text, kind = "info") {
+  depLog.unshift({ t: depStamp(), text, kind });
+  if (depLog.length > 50) depLog.pop();
+}
+
+function depNeighbors(H, id) {
+  return H.edges.filter(e => e.from === id);
+}
+
+function depMarkSource(H, nodeId, presetId) {
+  const set = depSourceMap[nodeId] || new Set();
+  const before = set.size;
+  set.add(presetId);
+  depSourceMap[nodeId] = set;
+  if (set.size >= 2 && before < 2 && !depConflictLogged.has(nodeId)) {
+    depConflictLogged.add(nodeId);
+    const nd = H.nodes.find(n => n.id === nodeId);
+    const label = nd ? nd.label : nodeId;
+    addDepLog(
+      `CONFLICT DETECTED — ${label} is being degraded by more than one active failure at once. A contingency written for a single failure may not hold here.`,
+      "conflict"
+    );
+  }
+}
+
+function depTriggerFailure(preset) {
+  const H = depResolveTemplate(depClusterId, depHazardId);
+  if (!H || depEngineMode !== "exercise" || depActivePresets.includes(preset.id)) return;
+
+  depActivePresets.push(preset.id);
+  if (depActivePresets.length >= 2) {
+    addDepLog(`COMPOUND INJECT — ${preset.label} triggered while another failure is still active.`, "trigger");
+  }
+
+  const mult = depSeverityMultiplier(depSeverity);
+  const adjDrop = Math.max(1, Math.round(preset.drop * mult));
+  if (depScores[preset.target]) {
+    depScores[preset.target] = {
+      value: Math.max(0, depScores[preset.target].value - adjDrop),
+      updatedAt: depClock,
+      source: "manual inject",
+    };
+  }
+
+  depMarkSource(H, preset.target, preset.id);
+  const targetNode = H.nodes.find(n => n.id === preset.target);
+  addDepLog(`INJECT — ${targetNode ? targetNode.label : preset.target}: ${preset.note} (scale ${depSeverity}/10)`, "trigger");
+  sound.playCriticalAlert();
+  depRenderEngine();
+
+  // Hop 1 cascade after 550ms
+  setTimeout(() => {
+    depPulseKind = "crit";
+    depPulsingEdges = depNeighbors(H, preset.target).map(e => `${e.from}-${e.to}`);
+    const sourceVal = depScores[preset.target] ? depScores[preset.target].value : 5;
+    depNeighbors(H, preset.target).forEach(e => {
+      const impact = Math.round(e.w * (10 - sourceVal) * mult);
+      if (impact > 0 && depScores[e.to]) {
+        depScores[e.to] = {
+          value: Math.max(0, depScores[e.to].value - impact),
+          updatedAt: depClock,
+          source: "cascade",
+        };
+        depMarkSource(H, e.to, preset.id);
+      }
+    });
+    depRenderEngine();
+  }, 550);
+
+  // Hop 2 cascade after 1150ms
+  setTimeout(() => {
+    depNeighbors(H, preset.target).forEach(e => {
+      if (depScores[e.to] && depScores[e.to].value < 7) {
+        const destNode = H.nodes.find(n => n.id === e.to);
+        const srcNode = H.nodes.find(n => n.id === preset.target);
+        addDepLog(
+          `CASCADE — hop 1 — ${destNode ? destNode.label : e.to} degraded to ${depScores[e.to].value}/10 (depends on ${srcNode ? srcNode.label : preset.target})`,
+          "cascade"
+        );
+      }
+    });
+
+    const hop2Edges = [];
+    depNeighbors(H, preset.target).forEach(e1 => {
+      depNeighbors(H, e1.to).forEach(e2 => hop2Edges.push(`${e2.from}-${e2.to}`));
+    });
+    depPulsingEdges = [...depPulsingEdges, ...hop2Edges];
+
+    depNeighbors(H, preset.target).forEach(e1 => {
+      const midScore = depScores[e1.to] ? depScores[e1.to].value : 5;
+      depNeighbors(H, e1.to).forEach(e2 => {
+        const impact = Math.round(e2.w * (10 - midScore) * 0.6 * mult);
+        if (impact > 0 && depScores[e2.to]) {
+          depScores[e2.to] = {
+            value: Math.max(0, depScores[e2.to].value - impact),
+            updatedAt: depClock,
+            source: "cascade",
+          };
+          depMarkSource(H, e2.to, preset.id);
+          const n2 = H.nodes.find(n => n.id === e2.to);
+          const n1 = H.nodes.find(n => n.id === e1.to);
+          addDepLog(`CASCADE — hop 2 — ${n2 ? n2.label : e2.to} affected via ${n1 ? n1.label : e1.to}`, "cascade2");
+        }
+      });
+    });
+    depRenderEngine();
+  }, 1150);
+
+  setTimeout(() => {
+    depPulsingEdges = [];
+    depRenderEngine();
+  }, 2300);
+}
+
+function depDispatch(nodeId) {
+  const H = depResolveTemplate(depClusterId, depHazardId);
+  if (!H || !depScores[nodeId]) return;
+
+  const node = H.nodes.find(n => n.id === nodeId);
+  const label = node ? node.label : nodeId;
+  depScores[nodeId] = {
+    value: Math.min(10, depScores[nodeId].value + 3),
+    updatedAt: depClock,
+    source: depEngineMode === "live" ? "dispatch (live)" : "dispatch (exercise)",
+  };
+  addDepLog(`DISPATCH — response committed to ${label}. Capability reinforced.`, "dispatch");
+  sound.playClick();
+  depRenderEngine();
+
+  setTimeout(() => {
+    depPulseKind = "good";
+    depPulsingEdges = depNeighbors(H, nodeId).map(e => `${e.from}-${e.to}`);
+    depNeighbors(H, nodeId).forEach(e => {
+      const relief = Math.round(e.w * 2);
+      if (relief > 0 && depScores[e.to]) {
+        depScores[e.to] = {
+          value: Math.min(10, depScores[e.to].value + relief),
+          updatedAt: depClock,
+          source: "relief cascade",
+        };
+      }
+    });
+    depNeighbors(H, nodeId).forEach(e => {
+      const targetN = H.nodes.find(n => n.id === e.to);
+      addDepLog(`RELIEF CASCADE — hop 1 — ${targetN ? targetN.label : e.to} eased by reinforcement of ${label}`, "dispatch");
+    });
+    depRenderEngine();
+  }, 500);
+
+  setTimeout(() => {
+    depPulsingEdges = [];
+    depRenderEngine();
+  }, 1400);
+}
+
+function depReset() {
+  depInitBaseline();
+  addDepLog(`Reset to baseline at crisis scale ${depSeverity}/10. All active injects cleared.`, "info");
+  depRenderEngine();
+  showToast('Simulation reset to baseline');
+}
+
+function depSwitchMode(next) {
+  if (next === depEngineMode) return;
+  depEngineMode = next;
+  depInitBaseline();
+  addDepLog(
+    next === "live"
+      ? "Data source switched to LIVE. Manual injection disabled; capabilities now driven by feed."
+      : "Data source switched to EXERCISE. Synthetic inputs enabled.",
+    "mode"
+  );
+  depRenderEngine();
+}
+
+function depSwitchCluster(id) {
+  if (id === depClusterId) return;
+  depClusterId = id;
+  depHazardId = (id === "evacuation" ? "flood" : null);
+  depInitBaseline();
+  depRenderEngine();
+}
+
+function depSwitchHazard(id) {
+  depHazardId = id || null;
+  depInitBaseline();
+  depRenderEngine();
+}
+
+function depCommitSeverity(v) {
+  depSeverity = v;
+  const readout = getEl('dep-severity-readout');
+  if (readout) readout.innerText = `${v}/10`;
+  depInitBaseline();
+  depRenderEngine();
+}
+
+function depRenderEngine() {
+  const clusterMeta = CLUSTER_META[depClusterId];
+  const isReady = clusterMeta.status === "ready";
+  const H = isReady ? depResolveTemplate(depClusterId, depHazardId) : null;
+  const hazardList = HAZARDS_BY_CLUSTER[depClusterId] || [];
+
+  // Update Cluster Picker Cards
+  CLUSTER_ORDER.forEach(id => {
+    const card = getEl(`cluster-card-${id}`);
+    if (card) {
+      card.classList.toggle('active', depClusterId === id);
+      card.classList.toggle('blocked', CLUSTER_META[id].status !== 'ready');
+    }
   });
 
-  // Run Fuzz button
-  const runFuzzBtn = getEl('dep-run-fuzz-btn');
-  if (runFuzzBtn) runFuzzBtn.addEventListener('click', () => {
-    sound.playCriticalAlert();
-    depRunFuzz();
-    showToast('🎲 Monte Carlo 300-run vulnerability analysis completed!');
+  // Update Blurb Bar
+  const blurbBar = getEl('cluster-blurb-bar');
+  if (blurbBar) blurbBar.innerText = clusterMeta.blurb;
+
+  // Update Hazard Select dropdown
+  const hazardSelect = getEl('dep-hazard-select');
+  if (hazardSelect) {
+    hazardSelect.innerHTML = `<option value="">Generic ${clusterMeta.label} template</option>` +
+      hazardList.map(h => `<option value="${h.id}" ${h.id === depHazardId ? 'selected' : ''}>${h.label}</option>`).join('');
+    const advisory = isReady && !depHazardId && depSeverity >= 6;
+    hazardSelect.classList.toggle('needs-attention', advisory);
+  }
+
+  // Update Advisory Banner
+  const advisoryBanner = getEl('dep-advisory-banner');
+  const advisoryText = getEl('dep-advisory-text');
+  const advisory = isReady && !depHazardId && depSeverity >= 6;
+  if (advisoryBanner) {
+    advisoryBanner.style.display = advisory ? 'flex' : 'none';
+    if (advisoryText) {
+      advisoryText.innerText = `Crisis scale ${depSeverity}/10 — at this level, hazard behavior tends to diverge enough that picking the exact crisis above gives a materially better model. The generic template will still run as an approximation; select a specific hazard for anything you plan to rely on.`;
+    }
+  }
+
+  // Update Mode Banner
+  const modeBanner = getEl('dep-mode-banner');
+  if (modeBanner) {
+    modeBanner.className = `mode-banner ${depEngineMode}`;
+    modeBanner.innerText = depEngineMode === "exercise"
+      ? "Exercise, exercise, exercise — synthetic data, no operational effect"
+      : "Live mode — driven by feed data, manual injection disabled";
+  }
+
+  // Views Switching
+  const engineView = getEl('dep-engine-view');
+  const thresholdView = getEl('dep-threshold-blocked-view');
+  const crowdView = getEl('dep-crowd-blocked-view');
+
+  if (depClusterId === 'threshold') {
+    if (engineView) engineView.style.display = 'none';
+    if (crowdView) crowdView.style.display = 'none';
+    if (thresholdView) {
+      thresholdView.style.display = 'block';
+      const picked = (hazardList.find(x => x.id === depHazardId) || {}).label;
+      const bText = getEl('dep-threshold-body-text');
+      if (bText) {
+        bText.innerText = (picked ? `You're scoping ${picked}. ` : '') +
+          `This cluster has no discrete trigger event to inject — capacity erodes under sustained demand instead of failing all at once, so the injection-and-cascade UI used by the other clusters doesn't apply here.`;
+      }
+    }
+    return;
+  }
+
+  if (depClusterId === 'crowd') {
+    if (engineView) engineView.style.display = 'none';
+    if (thresholdView) thresholdView.style.display = 'none';
+    if (crowdView) {
+      crowdView.style.display = 'block';
+      const picked = (hazardList.find(x => x.id === depHazardId) || {}).label;
+      const bText = getEl('dep-crowd-body-text');
+      if (bText) {
+        bText.innerText = (picked ? `You're scoping ${picked}. ` : '') +
+          `This cluster needs the agent-based population model already flagged in the handoff specification as an open research problem. Building a template here without it would just be a relabeled Point-Source graph with a crowd score standing in for something it can't actually simulate.`;
+      }
+    }
+    return;
+  }
+
+  // Engine Ready Mode
+  if (thresholdView) thresholdView.style.display = 'none';
+  if (crowdView) crowdView.style.display = 'none';
+  if (engineView) engineView.style.display = 'grid';
+
+  if (!H || !depScores[H.nodes[0]?.id]) return;
+
+  // Render Presets
+  const presetsBox = getEl('dep-presets-list');
+  if (presetsBox) {
+    presetsBox.innerHTML = H.presets.map(p => {
+      const active = depActivePresets.includes(p.id);
+      return `
+        <button class="preset-btn ${active ? 'is-active' : ''}" data-preset-id="${p.id}" ${depEngineMode !== 'exercise' || active ? 'disabled' : ''}>
+          <span style="font-size:14px; opacity:0.8; margin-top:1px;">⚡</span>
+          <div>
+            <div>${p.label}</div>
+            <div class="preset-note">${p.note}</div>
+            ${active ? '<div class="active-tag">ACTIVE</div>' : ''}
+          </div>
+        </button>
+      `;
+    }).join('');
+
+    presetsBox.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pid = btn.dataset.presetId;
+        const preset = H.presets.find(p => p.id === pid);
+        if (preset) depTriggerFailure(preset);
+      });
+    });
+  }
+
+  // Calculate Metrics & Top Leverage
+  const overall = Math.round(H.nodes.reduce((sum, n) => sum + (depScores[n.id]?.value || 0), 0) / H.nodes.length);
+  const avgAge = H.nodes.reduce((sum, n) => sum + (depClock - (depScores[n.id]?.updatedAt || 0)), 0) / H.nodes.length;
+  const confidence = avgAge < 20 ? "High" : avgAge < 50 ? "Medium" : "Low";
+  const critNodes = H.nodes.filter(n => (depScores[n.id]?.value || 0) < 4);
+  const warnNodes = H.nodes.filter(n => (depScores[n.id]?.value || 0) >= 4 && (depScores[n.id]?.value || 0) < 7);
+
+  const leverage = {};
+  H.nodes.forEach(n => { leverage[n.id] = 0; });
+  H.edges.forEach(e => { leverage[e.from] += e.w; });
+  let topScore = -1;
+  let topLeverageId = H.nodes[0].id;
+  H.nodes.forEach(n => {
+    const degradation = (10 - (depScores[n.id]?.value || 0)) / 10;
+    const score = leverage[n.id] * (0.4 + degradation);
+    if (score > topScore) { topScore = score; topLeverageId = n.id; }
   });
 
-  // Initial load
-  depLoadPreset('flood');
-}
+  const topNode = H.nodes.find(n => n.id === topLeverageId);
+  const topNameEl = getEl('dep-top-leverage-name');
+  if (topNameEl) topNameEl.innerText = topNode ? topNode.label : topLeverageId;
 
-function depRenderPlan(kind) {
-  const panel = getEl('dep-plan-panel');
-  const body = getEl('dep-plan-body');
-  if (!panel || !body) return;
-  const plan = DEP_BASELINE_PLANS[kind];
-  if (!plan) {
-    panel.style.display = 'none';
-    return;
-  }
-  panel.style.display = 'block';
-  body.innerHTML = `
-    <div style="margin-bottom:6px;"><span style="color:var(--text-muted);">Lead capability:</span> <strong class="text-saffron">${plan.leadCapability}</strong></div>
-    <div style="margin-bottom:6px;"><span style="color:var(--text-muted);">Evacuation logic:</span> <strong>${plan.evacuation}</strong></div>
-    <div><span style="color:var(--text-muted);">Key dependencies:</span> <strong>${plan.dependencies.join(' · ')}</strong></div>
-  `;
-}
-
-function depLoadPreset(kind) {
-  depIdSeq = 1;
-  if (kind === 'blank') {
-    depNodes = [];
-    depEdges = [];
-    depRenderPlan(null);
-    depRenderAll();
-    return;
-  }
-  depRenderPlan(kind);
-  if (kind === 'flood') {
-    depNodes = [
-      depNewNode({ id: 'n1', label: 'Baitarani Tributary A', capacity: 100, recovery: 6, fragility: 0.7, hazardType: 'pulse', hazardMag: 95, hazardStart: 2, hazardDuration: 6 }),
-      depNewNode({ id: 'n2', label: 'Salandi Tributary B', capacity: 100, recovery: 5, fragility: 0.6, hazardType: 'pulse', hazardMag: 70, hazardStart: 3, hazardDuration: 6 }),
-      depNewNode({ id: 'n3', label: 'Mainstem Embankment', capacity: 100, recovery: 3, fragility: 0.5, hazardType: 'none' }),
-      depNewNode({ id: 'n4', label: 'Coastal Levee Integrity', capacity: 100, recovery: 2, fragility: 0.6, hazardType: 'none' }),
-      depNewNode({ id: 'n5', label: 'Dewatering Pump Capacity', capacity: 100, recovery: 4, fragility: 0.4, hazardType: 'none' }),
-      depNewNode({ id: 'n6', label: 'Dhamra Port Sector A', capacity: 100, recovery: 2, fragility: 0.8, hazardType: 'none' }),
-      depNewNode({ id: 'n7', label: 'Chandbali Evacuation Sector B', capacity: 100, recovery: 2, fragility: 0.8, hazardType: 'none' }),
-    ];
-    depEdges = [
-      { from: 'n1', to: 'n3', weight: 0.6 },
-      { from: 'n2', to: 'n3', weight: 0.6 },
-      { from: 'n3', to: 'n4', weight: 0.5 },
-      { from: 'n3', to: 'n5', weight: 0.3 },
-      { from: 'n3', to: 'n6', weight: 0.6 },
-      { from: 'n4', to: 'n6', weight: 0.5 },
-      { from: 'n3', to: 'n7', weight: 0.4 },
-      { from: 'n4', to: 'n7', weight: 0.3 },
-    ];
-  } else if (kind === 'wildfire') {
-    depNodes = [
-      depNewNode({ id: 'n1', label: 'Wind & Humidity Conditions', capacity: 100, recovery: 1, fragility: 0.5, hazardType: 'sustained', hazardMag: 75, hazardStart: 0, hazardDuration: 40 }),
-      depNewNode({ id: 'n2', label: 'Forest Fire Perimeter', capacity: 100, recovery: 2, fragility: 0.8, hazardType: 'none' }),
-      depNewNode({ id: 'n3', label: 'Air Tanker Availability', capacity: 100, recovery: 3, fragility: 0.5, hazardType: 'none' }),
-      depNewNode({ id: 'n4', label: 'Defensible Break Line', capacity: 100, recovery: 2, fragility: 0.6, hazardType: 'none' }),
-      depNewNode({ id: 'n5', label: 'Comms Relay Tower', capacity: 100, recovery: 1, fragility: 0.9, hazardType: 'spike', hazardMag: 100, hazardStart: 8, hazardDuration: 2 }),
-      depNewNode({ id: 'n6', label: 'Valley Evac Corridor', capacity: 100, recovery: 3, fragility: 0.7, hazardType: 'none' }),
-      depNewNode({ id: 'n7', label: 'Settlement Risk Level', capacity: 100, recovery: 2, fragility: 0.8, hazardType: 'none' }),
-    ];
-    depEdges = [
-      { from: 'n1', to: 'n2', weight: 0.8 },
-      { from: 'n2', to: 'n3', weight: 0.6 },
-      { from: 'n2', to: 'n4', weight: 0.7 },
-      { from: 'n2', to: 'n6', weight: 0.5 },
-      { from: 'n5', to: 'n6', weight: 0.4 },
-      { from: 'n6', to: 'n7', weight: 0.6 },
-      { from: 'n4', to: 'n7', weight: 0.5 },
-      { from: 'n3', to: 'n7', weight: 0.3 },
-    ];
-  } else if (kind === 'earthquake') {
-    depNodes = [
-      depNewNode({ id: 'n1', label: 'Masonry Building Stock', capacity: 100, recovery: 1, fragility: 0.9, hazardType: 'pulse', hazardMag: 95, hazardStart: 1, hazardDuration: 2 }),
-      depNewNode({ id: 'n2', label: 'Highway & Bridge Grid', capacity: 100, recovery: 3, fragility: 0.6, hazardType: 'none' }),
-      depNewNode({ id: 'n3', label: 'Substation & Gas Trunklines', capacity: 100, recovery: 3, fragility: 0.6, hazardType: 'none' }),
-      depNewNode({ id: 'n4', label: 'Hospital Trauma Surge', capacity: 100, recovery: 2, fragility: 0.7, hazardType: 'none' }),
-      depNewNode({ id: 'n5', label: 'NDRF USAR Rescue Teams', capacity: 100, recovery: 2, fragility: 0.5, hazardType: 'none' }),
-      depNewNode({ id: 'n6', label: 'District Containment', capacity: 100, recovery: 2, fragility: 0.8, hazardType: 'none' }),
-    ];
-    depEdges = [
-      { from: 'n1', to: 'n2', weight: 0.7 },
-      { from: 'n1', to: 'n3', weight: 0.6 },
-      { from: 'n1', to: 'n4', weight: 0.4 },
-      { from: 'n2', to: 'n4', weight: 0.5 },
-      { from: 'n1', to: 'n5', weight: 0.5 },
-      { from: 'n4', to: 'n6', weight: 0.6 },
-      { from: 'n2', to: 'n6', weight: 0.5 },
-      { from: 'n3', to: 'n6', weight: 0.4 },
-    ];
-  }
-  depRenderAll();
-  depRunSim();
-}
-
-function depRenderNodes() {
-  const list = getEl('dep-node-list');
-  if (!list) return;
-  list.innerHTML = '';
-  if (depNodes.length === 0) {
-    list.innerHTML = '<div class="empty-state mono text-xs text-muted">No infrastructure nodes defined. Click "+ ADD NODE" or choose a preset above.</div>';
-    return;
+  // Update Overview Card
+  const tplBadge = getEl('dep-tpl-badge');
+  if (tplBadge) {
+    tplBadge.className = `tpl-badge ${H.isFull ? 'full' : 'generic'}`;
+    tplBadge.innerText = H.isFull ? 'Full Template' : 'Generic Template';
   }
 
-  depNodes.forEach(n => {
-    const card = document.createElement('div');
-    card.className = 'dep-node-card';
-    card.innerHTML = `
-      <div class="dep-node-row1">
-        <input type="text" class="dep-node-name-input" value="${n.label}" data-node-id="${n.id}" data-key="label">
-        <button class="btn btn-xs btn-outline text-alert font-bold" data-remove-node="${n.id}">REMOVE</button>
-      </div>
-      <div class="dep-field-grid">
-        <div class="dep-field">
-          <label>Initial Capacity (0-100)</label>
-          <input type="number" min="0" max="100" class="dep-input" value="${n.capacity}" data-node-id="${n.id}" data-key="capacity">
-        </div>
-        <div class="dep-field">
-          <label>Recovery / Tick</label>
-          <input type="number" min="0" max="20" class="dep-input" value="${n.recovery}" data-node-id="${n.id}" data-key="recovery">
-        </div>
-        <div class="dep-field">
-          <label>Fragility Factor (0-1)</label>
-          <input type="number" step="0.1" min="0" max="1" class="dep-input" value="${n.fragility}" data-node-id="${n.id}" data-key="fragility">
-        </div>
-        <div class="dep-field">
-          <label>Hazard Wave Type</label>
-          <select class="dep-select" data-node-id="${n.id}" data-key="hazardType">
-            ${['none', 'spike', 'pulse', 'sustained', 'ramp', 'random'].map(t => `<option value="${t}" ${n.hazardType === t ? 'selected' : ''}>${t.toUpperCase()}</option>`).join('')}
-          </select>
-        </div>
-        <div class="dep-field">
-          <label>Hazard Magnitude</label>
-          <input type="number" min="0" max="150" class="dep-input" value="${n.hazardMag}" data-node-id="${n.id}" data-key="hazardMag">
-        </div>
-        <div class="dep-field">
-          <label>Hazard Start Tick</label>
-          <input type="number" min="0" max="120" class="dep-input" value="${n.hazardStart}" data-node-id="${n.id}" data-key="hazardStart">
-        </div>
-        <div class="dep-field">
-          <label>Hazard Duration</label>
-          <input type="number" min="0" max="120" class="dep-input" value="${n.hazardDuration}" data-node-id="${n.id}" data-key="hazardDuration">
-        </div>
-        <div class="dep-field">
-          <label>Strained / Critical Cutoffs</label>
-          <div style="display:flex;gap:4px;">
-            <input type="number" min="0" max="100" class="dep-input" style="width:50%" value="${n.threshStrained}" data-node-id="${n.id}" data-key="threshStrained" title="Strained threshold">
-            <input type="number" min="0" max="100" class="dep-input" style="width:50%" value="${n.threshCritical}" data-node-id="${n.id}" data-key="threshCritical" title="Critical threshold">
+  const confTag = getEl('dep-confidence-tag');
+  if (confTag) {
+    confTag.className = `confidence-tag ${confidence}`;
+    confTag.innerText = `Confidence: ${confidence}`;
+  }
+
+  const scoreEl = getEl('dep-overall-score');
+  if (scoreEl) {
+    scoreEl.style.color = depStatusColor(overall);
+    scoreEl.innerText = overall;
+  }
+
+  const labelEl = getEl('dep-overall-label');
+  if (labelEl) {
+    labelEl.innerText = `${H.label} — Overall system readiness — ${depStatusLabel(overall)}`;
+  }
+
+  const alertBox = getEl('dep-alert-chips-box');
+  if (alertBox) {
+    if (critNodes.length === 0 && warnNodes.length === 0) {
+      alertBox.innerHTML = `<span style="font-size: 11.5px; color: var(--text-muted);">No active alerts.</span>`;
+    } else {
+      alertBox.innerHTML = critNodes.map(n => `<span class="alert-chip crit">⚠️ ${n.label}</span>`).join('') +
+        warnNodes.map(n => `<span class="alert-chip warn">⚡ ${n.label}</span>`).join('');
+    }
+  }
+
+  // Render SVG Graph
+  const svg = getEl('dep-graph-svg');
+  if (svg) {
+    let svgContent = '';
+
+    // Edges
+    H.edges.forEach(e => {
+      const a = H.nodes.find(n => n.id === e.from);
+      const b = H.nodes.find(n => n.id === e.to);
+      if (!a || !b) return;
+      const key = `${e.from}-${e.to}`;
+      const active = depPulsingEdges.includes(key);
+      const stroke = active ? (depPulseKind === "good" ? "var(--emerald)" : "var(--alert)") : "var(--border-color)";
+      const strokeW = active ? 3 : 1.5;
+      svgContent += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${stroke}" stroke-width="${strokeW}" style="transition: stroke 0.3s ease, stroke-width 0.3s ease;"/>`;
+    });
+
+    // Nodes
+    H.nodes.forEach(n => {
+      const s = depScores[n.id] || { value: 8, updatedAt: depClock, source: 'baseline' };
+      const color = depStatusColor(s.value);
+      const age = depClock - s.updatedAt;
+      const fr = depFreshness(age);
+      const isTop = n.id === topLeverageId;
+
+      svgContent += `<g transform="translate(${n.x},${n.y})" opacity="${fr.opacity}" style="transition: opacity 0.4s ease; cursor: pointer;" data-node-id="${n.id}">`;
+      if (isTop) {
+        svgContent += `<circle r="46" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.8"/>`;
+      }
+      svgContent += `<circle r="38" fill="var(--bg-panel)" stroke="${color}" stroke-width="2.5" style="transition: stroke 0.4s ease;"/>`;
+
+      if (s.value < 4) {
+        svgContent += `
+          <circle r="38" fill="none" stroke="${color}" stroke-width="2.5" opacity="0.4">
+            <animate attributeName="r" values="38;50;38" dur="1.8s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.4;0;0.4" dur="1.8s" repeatCount="indefinite" />
+          </circle>
+        `;
+      }
+
+      // Icon
+      svgContent += `
+        <g transform="translate(-10, -28)" color="${color}">
+          <svg width="20" height="20" viewBox="0 0 24 24">${getSvgIconPath(n.icon)}</svg>
+        </g>
+      `;
+
+      svgContent += `
+        <text text-anchor="middle" y="6" font-size="15" font-weight="800" fill="${color}" font-family="JetBrains Mono, monospace">${s.value}</text>
+        <text text-anchor="middle" y="58" font-size="10.5" font-weight="700" fill="var(--text-main)" letter-spacing="0.02em">${n.label}</text>
+        <text text-anchor="middle" y="71" font-size="8.5" fill="var(--text-muted)" letter-spacing="0.03em">${fr.label} · ${s.source}</text>
+      </g>`;
+    });
+
+    svg.innerHTML = svgContent;
+
+    svg.querySelectorAll('g[data-node-id]').forEach(g => {
+      g.addEventListener('click', () => {
+        const nid = g.dataset.nodeId;
+        depDispatch(nid);
+      });
+    });
+  }
+
+  // Render Capabilities List
+  const nodesList = getEl('dep-nodes-status-list');
+  if (nodesList) {
+    nodesList.innerHTML = H.nodes.map(n => {
+      const s = depScores[n.id] || { value: 8, updatedAt: depClock, source: 'baseline' };
+      const color = depStatusColor(s.value);
+      const age = depClock - s.updatedAt;
+      const fr = depFreshness(age);
+      return `
+        <div class="node-card" style="opacity: ${fr.opacity};">
+          <div class="node-row">
+            <span class="node-name">${n.label}</span>
+            <span class="node-score mono" style="color:${color};">${s.value}</span>
+          </div>
+          <div class="node-bar"><div class="node-bar-fill" style="width: ${s.value * 10}%; background:${color};"></div></div>
+          <div class="node-meta">
+            <span class="node-source ${fr.tier === 'fresh' ? 'fresh' : ''}">${s.source} · ${fr.label}</span>
+            <button class="dispatch-btn" data-dispatch-id="${n.id}" title="Dispatch response to reinforce this capability">
+              🛡️ Dispatch
+            </button>
           </div>
         </div>
+      `;
+    }).join('');
+
+    nodesList.querySelectorAll('.dispatch-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nid = btn.dataset.dispatchId;
+        depDispatch(nid);
+      });
+    });
+  }
+
+  // Render Event Log
+  const logBox = getEl('dep-event-log-box');
+  if (logBox) {
+    logBox.innerHTML = depLog.map(entry => `
+      <div class="log-entry ${entry.kind}">
+        <span class="log-time mono">${entry.t}</span>${entry.text}
       </div>
-    `;
-
-    // Event listeners for inputs
-    card.querySelectorAll('input, select').forEach(inp => {
-      inp.addEventListener('change', (e) => {
-        const id = e.target.dataset.nodeId;
-        const key = e.target.dataset.key;
-        const val = e.target.type === 'number' ? +e.target.value : e.target.value;
-        const targetNode = depNodes.find(item => item.id === id);
-        if (targetNode) targetNode[key] = val;
-        depRenderEdges(); // update dropdown labels if name changed
-        depRunSim();
-      });
-    });
-
-    // Remove node button
-    const rmBtn = card.querySelector('[data-remove-node]');
-    if (rmBtn) {
-      rmBtn.addEventListener('click', () => {
-        sound.playClick();
-        depNodes = depNodes.filter(item => item.id !== n.id);
-        depEdges = depEdges.filter(e => e.from !== n.id && e.to !== n.id);
-        depRenderAll();
-        depRunSim();
-      });
-    }
-
-    list.appendChild(card);
-  });
-}
-
-function depRenderEdges() {
-  const list = getEl('dep-edge-list');
-  if (!list) return;
-  list.innerHTML = '';
-  if (depEdges.length === 0) {
-    list.innerHTML = '<div class="empty-state mono text-xs text-muted">No dependency edges. Click "+ ADD EDGE" to connect nodes.</div>';
-    return;
-  }
-
-  depEdges.forEach((e, idx) => {
-    const row = document.createElement('div');
-    row.className = 'dep-edge-row';
-    const opts = depNodes.map(n => `<option value="${n.id}">${n.label}</option>`).join('');
-    row.innerHTML = `
-      <select class="dep-select dep-edge-from">${depNodes.map(n => `<option value="${n.id}" ${n.id === e.from ? 'selected' : ''}>${n.label}</option>`).join('')}</select>
-      <span class="dep-arrow-sep">→</span>
-      <select class="dep-select dep-edge-to">${depNodes.map(n => `<option value="${n.id}" ${n.id === e.to ? 'selected' : ''}>${n.label}</option>`).join('')}</select>
-      <input type="number" step="0.1" min="0" max="1" class="dep-input dep-edge-weight" value="${e.weight}" title="Transfer weight (0.0 to 1.0)">
-      <button class="btn btn-xs btn-outline text-alert font-bold" data-remove-edge="${idx}">×</button>
-    `;
-
-    const fromSel = row.querySelector('.dep-edge-from');
-    const toSel = row.querySelector('.dep-edge-to');
-    const weightInp = row.querySelector('.dep-edge-weight');
-    const rmBtn = row.querySelector('[data-remove-edge]');
-
-    if (fromSel) fromSel.addEventListener('change', (evt) => { depEdges[idx].from = evt.target.value; depRunSim(); });
-    if (toSel) toSel.addEventListener('change', (evt) => { depEdges[idx].to = evt.target.value; depRunSim(); });
-    if (weightInp) weightInp.addEventListener('change', (evt) => { depEdges[idx].weight = +evt.target.value; depRunSim(); });
-    if (rmBtn) rmBtn.addEventListener('click', () => {
-      sound.playClick();
-      depEdges.splice(idx, 1);
-      depRenderEdges();
-      depRunSim();
-    });
-
-    list.appendChild(row);
-  });
-}
-
-function depRenderAll() {
-  depRenderNodes();
-  depRenderEdges();
-}
-
-function depHazardAt(n, tick) {
-  const t = tick - n.hazardStart;
-  if (t < 0) return 0;
-  switch (n.hazardType) {
-    case 'none': return 0;
-    case 'spike': return t < n.hazardDuration ? n.hazardMag : 0;
-    case 'sustained': return t < n.hazardDuration ? n.hazardMag : 0;
-    case 'ramp': {
-      if (t > n.hazardDuration) return n.hazardMag;
-      return n.hazardMag * (t / Math.max(1, n.hazardDuration));
-    }
-    case 'pulse': {
-      if (t > n.hazardDuration * 3) return 0;
-      if (t <= n.hazardDuration) return n.hazardMag * (t / n.hazardDuration);
-      return n.hazardMag * Math.exp(-(t - n.hazardDuration) / (n.hazardDuration * 0.8));
-    }
-    case 'random': {
-      if (t > n.hazardDuration) return 0;
-      return Math.max(0, n.hazardMag * (0.6 + Math.random() * 0.8));
-    }
-    default: return 0;
-  }
-}
-
-function depStatusFor(n, capacity) {
-  if (capacity < n.threshCritical * 0.5) return 'Failed';
-  if (capacity < n.threshCritical) return 'Critical';
-  if (capacity < n.threshStrained) return 'Strained';
-  return 'Normal';
-}
-
-function depSimulate(nodesCfg, edgesCfg, ticks, seedNoise) {
-  const stateMap = {};
-  nodesCfg.forEach(n => { stateMap[n.id] = n.capacity; });
-  const history = { ticks: [], series: {} };
-  nodesCfg.forEach(n => { history.series[n.id] = []; });
-
-  for (let t = 0; t < ticks; t++) {
-    const outputLoad = {};
-    nodesCfg.forEach(n => { outputLoad[n.id] = Math.max(0, 100 - stateMap[n.id]); });
-
-    const newState = {};
-    nodesCfg.forEach(n => {
-      let hazard = depHazardAt(n, t);
-      if (seedNoise) hazard *= seedNoise[n.id] ?? 1;
-      let incoming = 0;
-      edgesCfg.forEach(e => {
-        if (e.to === n.id) incoming += e.weight * (outputLoad[e.from] || 0);
-      });
-      const totalStress = hazard + incoming;
-      let cap = stateMap[n.id];
-      const frag = seedNoise ? n.fragility * (seedNoise['frag_' + n.id] ?? 1) : n.fragility;
-      const rec = seedNoise ? n.recovery * (seedNoise['rec_' + n.id] ?? 1) : n.recovery;
-      if (totalStress > cap) {
-        cap = cap - frag * (totalStress - cap) * 0.15;
-      } else {
-        cap = cap + rec * 0.5;
-      }
-      cap = Math.max(0, Math.min(100, cap));
-      newState[n.id] = cap;
-    });
-    Object.assign(stateMap, newState);
-    history.ticks.push(t);
-    nodesCfg.forEach(n => { history.series[n.id].push(stateMap[n.id]); });
-  }
-  return history;
-}
-
-let depLastHistory = null;
-
-function depRunSim() {
-  if (depNodes.length === 0) return;
-  const ticksInput = getEl('dep-ticks-input');
-  const ticks = ticksInput ? (+ticksInput.value || 30) : 30;
-  depLastHistory = depSimulate(depNodes, depEdges, ticks, null);
-  depDrawChart(depLastHistory);
-  depRenderFinalTable(depLastHistory);
-
-  const statusTag = getEl('dep-sim-status-tag');
-  if (statusTag) statusTag.innerText = `CASCADE CONVERGED (T=${ticks})`;
-}
-
-function depDrawChart(history) {
-  const svg = getEl('chart-cap');
-  if (!svg) return;
-  const W = 940, H = 340, padL = 40, padR = 15, padT = 16, padB = 32;
-  const n = history.ticks.length;
-  const xFor = i => padL + (W - padL - padR) * (i / (Math.max(1, n - 1)));
-  const top = padT, h = H - padT - padB;
-  const yFor = v => top + h - (v / 100) * h;
-  let s = '';
-
-  // Horizontal Grid Lines & Y Labels
-  [0, 25, 50, 75, 100].forEach(v => {
-    const y = yFor(v);
-    s += `<line class="axis-line" x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}"/>`;
-    s += `<text class="chart-label" x="4" y="${(y + 3).toFixed(1)}">${v}%</text>`;
-  });
-
-  // Series Lines
-  const ids = Object.keys(history.series);
-  ids.forEach((id, idx) => {
-    const vals = history.series[id];
-    const path = vals.map((v, i) => (i === 0 ? 'M' : 'L') + xFor(i).toFixed(1) + ',' + yFor(v).toFixed(1)).join(' ');
-    s += `<path d="${path}" fill="none" stroke="${DEP_COLORS[idx % DEP_COLORS.length]}" stroke-width="2.5" stroke-linecap="round"/>`;
-  });
-
-  // X-axis Time Labels
-  const step = Math.max(1, Math.ceil(n / 10));
-  for (let i = 0; i < n; i += step) {
-    s += `<text class="chart-label" x="${xFor(i).toFixed(1)}" y="${H - padB + 18}" text-anchor="middle">T+${i}</text>`;
-  }
-  svg.innerHTML = s;
-
-  // Legend
-  const legend = getEl('legend-cap');
-  if (legend) {
-    legend.innerHTML = '';
-    ids.forEach((id, idx) => {
-      const nd = depNodes.find(n => n.id === id);
-      const item = document.createElement('div');
-      item.className = 'dep-legend-item';
-      item.innerHTML = `<span class="dep-legend-swatch" style="background:${DEP_COLORS[idx % DEP_COLORS.length]}"></span>${nd ? nd.label : id}`;
-      legend.appendChild(item);
-    });
-  }
-}
-
-function depRenderFinalTable(history) {
-  const body = getEl('dep-final-table-body');
-  if (!body) return;
-  body.innerHTML = '';
-  depNodes.forEach(n => {
-    const vals = history.series[n.id];
-    if (!vals || vals.length === 0) return;
-    const finalCap = vals[vals.length - 1];
-    const status = depStatusFor(n, finalCap);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><strong>${n.label}</strong></td>
-      <td class="text-right mono font-bold">${finalCap.toFixed(1)}%</td>
-      <td><span class="dep-status-pill dep-status-${status}">${status.toUpperCase()}</span></td>
-    `;
-    body.appendChild(tr);
-  });
-}
-
-function depRunFuzz() {
-  if (depNodes.length === 0) return;
-  const ticksInput = getEl('dep-ticks-input');
-  const ticks = ticksInput ? (+ticksInput.value || 30) : 30;
-  const N = 300;
-  const results = [];
-
-  for (let run = 0; run < N; run++) {
-    const noise = {};
-    depNodes.forEach(n => {
-      noise[n.id] = 0.6 + Math.random() * 0.8;
-      noise['frag_' + n.id] = 0.7 + Math.random() * 0.6;
-      noise['rec_' + n.id] = 0.7 + Math.random() * 0.6;
-    });
-    const hist = depSimulate(depNodes, depEdges, ticks, noise);
-    const failedSet = [];
-    let minCapByNode = {};
-    depNodes.forEach(n => {
-      const vals = hist.series[n.id];
-      const minCap = Math.min(...vals);
-      minCapByNode[n.id] = minCap;
-      if (depStatusFor(n, minCap) === 'Failed') failedSet.push(n.label);
-    });
-    results.push({ failedSet: failedSet.sort(), minCapByNode });
-  }
-
-  const byCombo = {};
-  results.forEach(r => {
-    const key = r.failedSet.length ? r.failedSet.join(' + ') : '(None Failed)';
-    if (!byCombo[key]) byCombo[key] = [];
-    const worst = Math.min(...Object.values(r.minCapByNode));
-    byCombo[key].push(worst);
-  });
-
-  const ranked = Object.entries(byCombo).map(([combo, vals]) => ({
-    combo,
-    n: vals.length,
-    avgWorst: vals.reduce((a, b) => a + b, 0) / vals.length
-  })).sort((a, b) => a.avgWorst - b.avgWorst).slice(0, 8);
-
-  const multi = results.filter(r => r.failedSet.length >= 2).length;
-  const fuzzNote = getEl('dep-fuzz-note');
-  if (fuzzNote) {
-    fuzzNote.innerText = `${N} RUNS · ${(100 * multi / N).toFixed(0)}% MULTI-LIFELINE SYSTEMIC COLLAPSE`;
-  }
-
-  const body = getEl('dep-fuzz-body');
-  if (body) {
-    body.innerHTML = `
-      <table class="dep-data-table">
-        <thead>
-          <tr>
-            <th>CONCURRENT COLLAPSE COMBINATION</th>
-            <th class="text-right">RUNS</th>
-            <th class="text-right">AVG WORST-CASE CAPACITY</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${ranked.map(r => `
-            <tr>
-              <td><strong class="text-alert">${r.combo}</strong></td>
-              <td class="text-right mono font-bold">${r.n}</td>
-              <td class="text-right mono font-bold ${r.avgWorst < 25 ? 'text-alert' : 'text-saffron'}">${r.avgWorst.toFixed(1)}%</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
+    `).join('');
   }
 }
