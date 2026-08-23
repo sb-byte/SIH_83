@@ -2009,6 +2009,26 @@ body {
   box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15);
 }
 
+.shelter-occupancy-input {
+  width: 72px;
+  display: inline-block;
+  text-align: center;
+  margin-right: 0.35rem;
+  padding: 0.35rem 0.4rem;
+}
+
+/* Hide the number input's native up/down spinners so it matches the
+   app's own SET button instead of showing two competing controls */
+.shelter-occupancy-input::-webkit-outer-spin-button,
+.shelter-occupancy-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.shelter-occupancy-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 .channels-grid {
   display: flex;
   flex-wrap: wrap;

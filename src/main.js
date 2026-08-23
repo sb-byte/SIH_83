@@ -644,34 +644,51 @@ function renderShelterMatrix() {
       <td>⚕️ ${s.medical}</td>
       <td>🍞 ${s.foodRations}</td>
       <td class="asset-action-cell">
-        <button class="btn btn-xs btn-outline shelter-matrix-minus" data-idx="${idx}">-10</button>
-        <button class="btn btn-xs btn-outline shelter-matrix-plus" data-idx="${idx}">+10</button>
+        <input type="number" class="field-input shelter-occupancy-input mono text-xs"
+               data-idx="${idx}" value="${s.occupied}" min="0" max="${s.capacity}" />
+        <button class="btn btn-xs btn-saffron shelter-matrix-set" data-idx="${idx}">SET</button>
       </td>
     `;
     tbody.appendChild(row);
   });
 
-  document.querySelectorAll('.shelter-matrix-minus').forEach(btn => {
+  const commitOccupancy = (idx, rawValue) => {
+    const s = state.sheltersData[idx];
+    let val = parseInt(rawValue, 10);
+
+    if (Number.isNaN(val)) {
+      showToast('Enter a valid number');
+      renderShelterMatrix();
+      return;
+    }
+    val = Math.max(0, Math.min(s.capacity, val)); // clamp to [0, capacity]
+
+    if (val !== parseInt(rawValue, 10)) {
+      showToast(`Clamped to valid range: 0–${s.capacity}`);
+    }
+
+    s.occupied = val;
+    renderShelterMatrix();
+    renderShelters();
+    logActivity('SHELTER', `Occupancy set: ${s.name} → ${s.occupied}/${s.capacity}`);
+  };
+
+  document.querySelectorAll('.shelter-matrix-set').forEach(btn => {
     btn.addEventListener('click', (e) => {
       sound.playClick();
       const idx = parseInt(e.currentTarget.dataset.idx, 10);
-      const s = state.sheltersData[idx];
-      s.occupied = Math.max(0, s.occupied - 10);
-      renderShelterMatrix();
-      renderShelters();
-      logActivity('SHELTER', `Occupancy adjusted: ${s.name} → ${s.occupied}/${s.capacity}`);
+      const input = document.querySelector(`.shelter-occupancy-input[data-idx="${idx}"]`);
+      commitOccupancy(idx, input.value);
     });
   });
 
-  document.querySelectorAll('.shelter-matrix-plus').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      sound.playClick();
-      const idx = parseInt(e.currentTarget.dataset.idx, 10);
-      const s = state.sheltersData[idx];
-      s.occupied = Math.min(s.capacity, s.occupied + 10);
-      renderShelterMatrix();
-      renderShelters();
-      logActivity('SHELTER', `Occupancy adjusted: ${s.name} → ${s.occupied}/${s.capacity}`);
+  document.querySelectorAll('.shelter-occupancy-input').forEach(input => {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const idx = parseInt(e.currentTarget.dataset.idx, 10);
+        commitOccupancy(idx, e.currentTarget.value);
+      }
     });
   });
 }
