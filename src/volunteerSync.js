@@ -55,7 +55,7 @@ export const VOLUNTEER_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeaC
 
 export const VOLUNTEER_SHEET_ID = '1zgub9vwpm2WqsuF_hTLtPWsY2m3VniMy7SG21Bx8B1Y';
 export const VOLUNTEER_SHEET_RANGE = 'Form Responses 1!A:E'; // tab name + column range
-export const VOLUNTEER_SHEETS_API_KEY = 'AIzaSyATRU6cC6lyy4FOJPrd8WR70MmrU10nKHY';
+export const VOLUNTEER_SHEETS_API_KEY = 'AIzaSyCt0rNMthzo48T0TnMF0V6QzPU4xQ7DWUs';
 
 const AUTO_SYNC_INTERVAL_MS = 30_000; // 30s — adjust as needed
 
