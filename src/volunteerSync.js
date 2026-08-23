@@ -53,9 +53,9 @@
 
 export const VOLUNTEER_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeaCANZky3OKG6idXEn1ZiGRHvIND337KT86NN__SSLdL-6gA/viewform?usp=publish-editor';
 
-export const VOLUNTEER_SHEET_ID = ''; // e.g. "1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcdef"
+export const VOLUNTEER_SHEET_ID = '1zgub9vwpm2WqsuF_hTLtPWsY2m3VniMy7SG21Bx8B1Y';
 export const VOLUNTEER_SHEET_RANGE = 'Form Responses 1!A:E'; // tab name + column range
-export const VOLUNTEER_SHEETS_API_KEY = ''; // Google Cloud Console > Credentials > API key
+export const VOLUNTEER_SHEETS_API_KEY = 'AIzaSyATRU6cC6lyy4FOJPrd8WR70MmrU10nKHY';
 
 const AUTO_SYNC_INTERVAL_MS = 30_000; // 30s — adjust as needed
 
