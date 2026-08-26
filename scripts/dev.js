@@ -58,11 +58,12 @@ function stopAll(code = 0) {
 process.on('SIGINT', () => stopAll(0));
 process.on('SIGTERM', () => stopAll(0));
 
-console.log(`${COLOR.dim}Unity EOC — starting access-control API (:4000) and Vite (:5173).${COLOR.reset}`);
-console.log(`${COLOR.dim}UNITY_DEMO_MODE=1 is set for local demos: it enables the "fetch current 2FA code" button. Never set it in a deployment.${COLOR.reset}\n`);
+console.log(`${COLOR.dim}Unity EOC — starting FastAPI backend (:8000) and Vite frontend (:5173).${COLOR.reset}`);
+console.log(`${COLOR.dim}Swagger Docs: http://localhost:8000/docs | Live App: http://localhost:5173${COLOR.reset}\n`);
 
-// API first so the browser's boot-time GET /api/me has something to talk to.
-run('api', process.execPath, [path.join(ROOT, 'server', 'src', 'server.js')], {
+// Start FastAPI Backend first
+const pyCmd = process.platform === 'win32' ? 'python' : 'python3';
+run('fastapi', pyCmd, ['-m', 'uvicorn', 'backend.app.main:app', '--port', '8000', '--reload'], {
   env: { UNITY_DEMO_MODE: '1' },
 });
 
