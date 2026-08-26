@@ -1640,54 +1640,67 @@
     <!-- ========================================================================= -->
     <!-- VIEW 7: T4 FIELD HUB — Tactical Assignment & Report-Up                   -->
     <!-- ========================================================================= -->
+    <!-- ========================================================================= -->
+    <!-- VIEW 7: T4 FIELD HUB — Tactical Assignment & Report-Up                   -->
+    <!-- ========================================================================= -->
     <section id="view-field" class="view-section">
-      <div style="max-width: 700px; margin: 30px auto; padding: 0 16px;">
+      <div class="field-hub-wrapper">
 
-        <!-- Header -->
-        <div style="background: var(--navy-primary); color: #fff; border-radius: 8px 8px 0 0; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <div style="font-size: 1.1rem; font-weight: bold; letter-spacing: 0.05em;">ACTIVE TACTICAL FIELD HUB</div>
-            <div id="field-hub-subtitle" style="font-size: 0.8rem; opacity: 0.75; margin-top: 2px;">Strike Team • Field Operations</div>
+        <div class="field-hub-panel">
+          <!-- Header Strip -->
+          <div class="field-hub-header">
+            <div>
+              <div class="field-hub-title">TACTICAL FIELD OPERATIONS HUB</div>
+              <div id="field-hub-subtitle" class="field-hub-subtitle">Frontline Strike Team • Live Mission Terminal</div>
+            </div>
+            <div id="field-hub-team-badge" class="tier-pill-badge tier4-badge">T4 • FRONTLINE STRIKE</div>
           </div>
-          <div id="field-hub-team-badge" class="tier-pill-badge tier4-badge">T4 • FRONTLINE</div>
-        </div>
 
-        <!-- Current Assignment -->
-        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-top: none; padding: 20px 24px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-            <h3 style="margin: 0; font-size: 1rem; color: var(--text-main);">[LOG] Current Assignment</h3>
-            <span id="field-task-status-badge" class="badge badge-gold" style="font-size: 0.75rem;">NO TASK</span>
+          <!-- Current Assignment Card -->
+          <div class="field-assignment-box">
+            <div class="field-assignment-head">
+              <span class="field-assignment-title">CURRENT ASSIGNED MISSION</span>
+              <span id="field-task-status-badge" class="badge badge-gold">IN PROGRESS</span>
+            </div>
+            <div id="field-task-card" class="field-task-display-card">
+              <div id="field-task-main-title" class="field-task-main-text">Complete aerial FLIR survey of Dhamra port breach</div>
+              <div class="field-task-meta-row">
+                <span>DIVISION: <strong id="field-task-division">Operations</strong></span>
+                <span>•</span>
+                <span>TARGET PERIOD: <strong id="field-task-target">16:00 IST</strong></span>
+              </div>
+            </div>
           </div>
-          <div id="field-task-card" style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: 6px; padding: 14px; margin-bottom: 0;">
-            <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Awaiting assignment from coordinator. Monitor radio net for instructions.</p>
-          </div>
-        </div>
 
-        <!-- Site & Team Info -->
-        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-top: none; padding: 14px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <div>
-            <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;">Site / Sector</div>
-            <div id="field-site-info" style="font-size: 0.9rem; font-weight: bold; color: var(--text-main);">—</div>
+          <!-- Sector & Radio Telemetry -->
+          <div class="field-info-grid">
+            <div>
+              <div class="field-info-lbl">ASSIGNED SECTOR / SITE</div>
+              <div id="field-site-info" class="field-info-val">Bhadrak / Dhamra Port</div>
+            </div>
+            <div>
+              <div class="field-info-lbl">PRIMARY TACTICAL RADIO NET</div>
+              <div id="field-radio-info" class="field-info-val">CH-02 (Tactical Ops Net • 154.280 MHz)</div>
+            </div>
           </div>
-          <div>
-            <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;">Radio Channel</div>
-            <div id="field-radio-info" style="font-size: 0.9rem; font-weight: bold; color: var(--text-main);">CH-02 / CH-04</div>
-          </div>
-        </div>
 
-        <!-- Report-Up Buttons: 3 Big Tactical Actions -->
-        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-top: none; border-radius: 0 0 8px 8px; padding: 20px 24px;">
-          <div style="font-size: 0.75rem; font-weight: bold; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px;">REPORT TO COMMAND</div>
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            <button id="field-btn-complete" class="btn font-bold" style="padding: 18px; font-size: 1rem; background: #1a7f4b; color: #fff; border: none; border-radius: 6px; letter-spacing: 0.06em; cursor: pointer;">
-              [VERIFIED] TASK COMPLETE
-            </button>
-            <button id="field-btn-backup" class="btn font-bold" style="padding: 18px; font-size: 1rem; background: #d97706; color: #fff; border: none; border-radius: 6px; letter-spacing: 0.06em; cursor: pointer;">
-              🆘 NEED BACKUP
-            </button>
-            <button id="field-btn-hazard" class="btn font-bold" style="padding: 18px; font-size: 1rem; background: #dc2626; color: #fff; border: none; border-radius: 6px; letter-spacing: 0.06em; cursor: pointer;">
-              [WARNING] HAZARD REPORT
-            </button>
+          <!-- Tactical Action Buttons -->
+          <div class="field-actions-container">
+            <div class="field-actions-lbl">REPORT STATUS TO COMMAND</div>
+            <div class="field-action-stack">
+              <button id="field-btn-complete" type="button" class="field-tactical-btn field-btn-complete">
+                <span>✓</span>
+                <span>MISSION COMPLETE &amp; VERIFIED</span>
+              </button>
+              <button id="field-btn-backup" type="button" class="field-tactical-btn field-btn-backup">
+                <span>[URGENT]</span>
+                <span>REQUEST IMMEDIATE BACKUP (DIRECT LINE TO STATE EOC T2)</span>
+              </button>
+              <button id="field-btn-hazard" type="button" class="field-tactical-btn field-btn-hazard">
+                <span>[ALERT]</span>
+                <span>LOG CRITICAL FIELD HAZARD TO INCIDENT FEED</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1695,40 +1708,74 @@
     </section>
 
     <!-- ========================================================================= -->
-    <!-- VIEW 8: ESCALATION — Submit & Inbox (All tiers, role-appropriate)          -->
+    <!-- VIEW 8: ESCALATION — Structured Two-Way Escalation Command Hub           -->
     <!-- ========================================================================= -->
     <section id="view-escalation" class="view-section">
-      <div style="max-width: 960px; margin: 30px auto; padding: 0 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      <div class="escalation-view-wrapper">
 
-        <!-- Left: Submit Form (T2/T3/T4/T5) -->
-        <div id="escalation-submit-panel" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
-          <h3 style="margin: 0 0 14px; color: var(--navy-primary);"> Submit Escalation Request</h3>
-          <div class="form-field" style="margin-bottom: 12px;">
-            <label class="field-lbl">Kind</label>
-            <select id="esc-kind-select" class="field-input">
-              <option value="general">General — Situation update requiring senior action</option>
-              <option value="resource">Resource — Equipment/personnel gap</option>
-              <option value="authority">Authority — Need decision beyond my tier</option>
-              <option value="backup_request">Backup — Immediate field reinforcement needed</option>
-            </select>
+        <!-- Top Header & Summary Stats -->
+        <div class="escalation-top-strip">
+          <div class="escalation-top-left">
+            <h2 class="escalation-top-title" id="esc-hub-main-title">STRUCTURED ESCALATION COMMAND HUB</h2>
+            <span class="escalation-top-sub" id="esc-hub-main-sub">Two-Way Command Flow: Lower Tiers Submit Upward • Higher Tiers Action &amp; Authorize Surge</span>
           </div>
-          <div class="form-field" style="margin-bottom: 16px;">
-            <label class="field-lbl">Reason / Details</label>
-            <textarea id="esc-reason-input" class="field-input" rows="4" placeholder="Describe the situation clearly. Include location, what's needed, and urgency level." style="resize: vertical;"></textarea>
+          <div class="escalation-stats-pills">
+            <span class="esc-stat-pill esc-stat-pending" id="esc-stat-pending-pill">
+              <span>●</span>
+              <span id="esc-count-pending">0 PENDING</span>
+            </span>
+            <span class="esc-stat-pill esc-stat-approved" id="esc-stat-approved-pill">
+              <span>✓</span>
+              <span id="esc-count-approved">0 APPROVED</span>
+            </span>
+            <span class="esc-stat-pill esc-stat-denied" id="esc-stat-denied-pill">
+              <span>✕</span>
+              <span id="esc-count-denied">0 DENIED</span>
+            </span>
           </div>
-          <button id="esc-submit-btn" class="btn btn-saffron font-bold" style="width: 100%;">SUBMIT ESCALATION →</button>
-          <div id="esc-submit-feedback" style="margin-top: 10px; font-size: 0.8rem; color: var(--text-muted); display: none;"></div>
         </div>
 
-        <!-- Right: Inbox (T1/T2/T3 see incoming; T4/T5 see own submissions) -->
-        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-            <h3 style="margin: 0; color: var(--navy-primary);" id="esc-inbox-title"> Escalation Inbox</h3>
-            <button id="esc-refresh-btn" class="btn btn-xs btn-outline font-bold">REFRESH</button>
+        <!-- Dynamic Grid Layout (Full width for T1, 2-column for T2/T3/T4/T5) -->
+        <div class="escalation-layout-grid" id="escalation-layout-grid">
+
+          <!-- Left Column: Submit Panel (T2/T3/T4/T5) -->
+          <div id="escalation-submit-panel" class="escalation-panel-card">
+            <div class="escalation-panel-head">
+              <h3 class="escalation-panel-title">SUBMIT NEW ESCALATION REQUEST</h3>
+              <span class="status-chip online">STRUCTURED ROUTING</span>
+            </div>
+            <div style="padding: 1.25rem;">
+              <div class="form-field" style="margin-bottom: 0.85rem;">
+                <label class="field-lbl">ESCALATION CATEGORY</label>
+                <select id="esc-kind-select" class="field-input">
+                  <option value="resource">Resource Surge — Heavy machinery / high-capacity pumps / aircraft</option>
+                  <option value="backup_request">Tactical Backup — Life-safety rescue reinforcement</option>
+                  <option value="authority">Jurisdiction Authority — Executive legal / financial sign-off required</option>
+                  <option value="general">General Situation — Rapid operational priority change</option>
+                </select>
+              </div>
+              <div class="form-field" style="margin-bottom: 1rem;">
+                <label class="field-lbl">JUSTIFICATION &amp; FIELD SITUATION</label>
+                <textarea id="esc-reason-input" class="field-input" rows="4" placeholder="Detail the situation, exact geographic coordinates, requested units, and time-criticality..." style="resize: vertical;"></textarea>
+              </div>
+              <button id="esc-submit-btn" type="button" class="btn btn-saffron font-bold btn-lg w-full">
+                TRANSMIT ESCALATION UPWARD →
+              </button>
+              <div id="esc-submit-feedback" style="margin-top: 10px; font-size: 0.8rem; color: var(--text-muted); display: none;"></div>
+            </div>
           </div>
-          <div id="esc-inbox-list" style="max-height: 420px; overflow-y: auto;">
-            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 24px 0;">Loading escalations…</p>
+
+          <!-- Right Column / Full Width: Actionable Escalation Inbox -->
+          <div class="escalation-panel-card" id="escalation-inbox-panel">
+            <div class="escalation-panel-head">
+              <h3 class="escalation-panel-title" id="esc-inbox-title">ACTIONABLE ESCALATION INBOX</h3>
+              <button id="esc-refresh-btn" type="button" class="btn btn-xs btn-outline font-bold">↻ REFRESH QUEUE</button>
+            </div>
+            <div id="esc-inbox-list" class="escalation-inbox-scroll">
+              <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 2rem 0;">Loading escalations...</p>
+            </div>
           </div>
+
         </div>
 
       </div>

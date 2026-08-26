@@ -57,6 +57,8 @@
   --text-dim: #475569;
   --text-inverse: #FFFFFF;
   --text-navy: #0F2942;
+  --navy-primary: #0F2942;
+  --bg-card: #FFFFFF;
 
   /* Tier Color Accents (High Contrast) */
   --tier1-color: #1E3A8A;
@@ -107,6 +109,8 @@ html.dark {
   --text-dim: #94A3B8;
   --text-inverse: #0F172A;
   --text-navy: #93C5FD;
+  --navy-primary: #93C5FD;
+  --bg-card: #0F172A;
 
   --tier1-color: #93C5FD;
   --tier1-bg: rgba(30, 58, 138, 0.45);
@@ -4743,25 +4747,413 @@ html.dark .demo-roster-callout {
   background: var(--bg-canvas);
 }
 
-.escalation-card {
-  background: #FFFFFF;
+/* ========================================================================= */
+/* TACTICAL FIELD HUB (T4) & VOLUNTEER STATION (T5) STYLING                  */
+/* ========================================================================= */
+.field-hub-wrapper {
+  max-width: 780px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.field-hub-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.field-hub-header {
+  background: #0B192C;
+  color: #FFFFFF;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--saffron);
+}
+
+.field-hub-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #FFFFFF;
+}
+
+.field-hub-subtitle {
+  font-size: 0.78rem;
+  color: #94A3B8;
+  margin-top: 2px;
+}
+
+.field-assignment-box {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-panel);
+}
+
+.field-assignment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.field-assignment-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-navy);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.field-task-display-card {
+  background: var(--bg-panel-subtle);
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  padding: 1rem 1.25rem;
+}
+
+.field-task-main-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+
+.field-task-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.field-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-panel-subtle);
+}
+
+.field-info-lbl {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.field-info-val {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-top: 2px;
+}
+
+.field-actions-container {
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-panel);
+}
+
+.field-actions-lbl {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.85rem;
+}
+
+.field-action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.field-tactical-btn {
+  padding: 1rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  border: none;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  transition: transform 0.1s ease, filter 0.15s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.field-tactical-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.field-tactical-btn:active {
+  transform: translateY(1px);
+}
+
+.field-btn-complete {
+  background: #059669;
+  color: #FFFFFF;
+}
+
+.field-btn-backup {
+  background: #D97706;
+  color: #FFFFFF;
+}
+
+.field-btn-hazard {
+  background: #DC2626;
+  color: #FFFFFF;
+}
+
+/* ========================================================================= */
+/* SOVEREIGN ESCALATION COMMAND HUB (ALL TIERS)                              */
+/* ========================================================================= */
+.escalation-view-wrapper {
+  max-width: 1280px;
+  margin: 1.5rem auto;
+  padding: 0 1.25rem;
+}
+
+.escalation-top-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-xs);
+}
+
+.escalation-top-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.escalation-top-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-navy);
+}
+
+.escalation-top-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.escalation-stats-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.esc-stat-pill {
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.esc-stat-pending {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.esc-stat-approved {
+  background: #D1FAE5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+.esc-stat-denied {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+html.dark .esc-stat-pending {
+  background: rgba(217, 119, 6, 0.25);
+  color: #FDE047;
+  border-color: rgba(217, 119, 6, 0.4);
+}
+
+html.dark .esc-stat-approved {
+  background: rgba(5, 150, 105, 0.25);
+  color: #6EE7B7;
+  border-color: rgba(5, 150, 105, 0.4);
+}
+
+html.dark .esc-stat-denied {
+  background: rgba(220, 38, 38, 0.25);
+  color: #FCA5A5;
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.escalation-layout-grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.escalation-layout-grid.full-width {
+  grid-template-columns: 1fr;
+}
+
+.escalation-panel-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.escalation-panel-head {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-panel-subtle);
+}
+
+.escalation-panel-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text-navy);
+}
+
+.escalation-inbox-scroll {
+  padding: 1rem 1.25rem;
+  max-height: 560px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+/* Rich Sovereign Escalation Card */
+.escalation-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1rem;
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+
+.escalation-card:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: var(--border-focus);
 }
 
 .escalation-card.status-pending {
-  border-left: 4px solid #d97706;
+  border-left: 5px solid var(--gold);
 }
 
 .escalation-card.status-approved {
-  border-left: 4px solid #16a34a;
+  border-left: 5px solid var(--emerald);
+  background: rgba(5, 150, 105, 0.02);
 }
 
 .escalation-card.status-denied {
-  border-left: 4px solid #dc2626;
+  border-left: 5px solid var(--alert);
+  background: rgba(220, 38, 38, 0.02);
+}
+
+.escalation-card.status-forwarded {
+  border-left: 5px solid var(--ashoka-blue);
+  background: rgba(29, 78, 216, 0.02);
+}
+
+.esc-card-top-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.esc-card-ids {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.esc-tag-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+}
+
+.esc-routing-flow {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.esc-routing-flow strong {
+  color: var(--text-navy);
+}
+
+.esc-reason-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.35;
+  margin-bottom: 0.4rem;
+}
+
+.esc-meta-info {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 0.65rem;
+}
+
+.esc-triage-callout {
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  border-radius: 4px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.75rem;
+  color: #0369A1;
+  font-weight: 600;
+  margin-bottom: 0.65rem;
+}
+
+html.dark .esc-triage-callout {
+  background: rgba(2, 132, 199, 0.2);
+  color: #7DD3FC;
+}
+
+.esc-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .vol-status-btn {

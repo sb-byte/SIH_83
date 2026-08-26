@@ -2544,32 +2544,31 @@ export function initFieldHub() {
   const radioInfo = getEl('field-radio-info');
   const taskCard = getEl('field-task-card');
   const taskBadge = getEl('field-task-status-badge');
+  const taskMainTitle = getEl('field-task-main-title');
+  const taskDivision = getEl('field-task-division');
+  const taskTarget = getEl('field-task-target');
 
-  if (subTitle) subTitle.innerText = `${session.team || 'NDRF Strike Team Alpha'} • Tactical Field Ops`;
+  if (subTitle) subTitle.innerText = `${session.team || 'NDRF Strike Team Alpha'} • Tactical Field Operations`;
   if (teamBadge) teamBadge.innerText = `T4 • ${session.team || 'STRIKE TEAM'}`;
-  if (siteInfo) siteInfo.innerText = session.site || 'Dhamra / Rajnagar Sector';
-  if (radioInfo) radioInfo.innerText = 'CH-02 (Ops Net) / CH-04';
+  if (siteInfo) siteInfo.innerText = session.site || 'Bhadrak / Dhamra Port';
+  if (radioInfo) radioInfo.innerText = 'CH-02 (Tactical Ops Net • 154.280 MHz) / CH-04';
 
   // Find T4 current assignment
   const activeTask = state.tasksData.find(t => 
     !t.completed && (t.assignee?.includes('NDRF') || t.assignee?.includes('SDRF') || t.site === session.site)
   ) || state.tasksData[0];
 
-  if (taskCard && activeTask) {
-    taskCard.innerHTML = `
-      <div style="font-weight: 700; font-size: 1rem; color: var(--navy-primary); margin-bottom: 6px;">${activeTask.task || activeTask.title}</div>
-      <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; gap: 14px;">
-        <span>Division: <strong>${activeTask.section}</strong></span>
-        <span>Target: <strong>${activeTask.due || 'Operational Period 2'}</strong></span>
-      </div>
-    `;
+  if (activeTask) {
+    if (taskMainTitle) taskMainTitle.innerText = activeTask.task || activeTask.title;
+    if (taskDivision) taskDivision.innerText = activeTask.section || 'Operations';
+    if (taskTarget) taskTarget.innerText = activeTask.due || 'Operational Period 2';
     if (taskBadge) {
-      taskBadge.className = activeTask.completed ? 'badge badge-emerald' : 'badge badge-alert';
+      taskBadge.className = activeTask.completed ? 'badge badge-emerald' : 'badge badge-gold';
       taskBadge.innerText = activeTask.completed ? 'COMPLETED' : 'IN PROGRESS';
     }
   }
 
-  // 3 Tactical Big Buttons
+  // 3 Tactical Big Action Buttons
   const btnComplete = getEl('field-btn-complete');
   const btnBackup = getEl('field-btn-backup');
   const btnHazard = getEl('field-btn-hazard');
@@ -2587,7 +2586,7 @@ export function initFieldHub() {
       }
       renderKanban();
       initFieldHub();
-      showToast('[VERIFIED] Assignment Marked COMPLETE & Reported Up to Command');
+      showToast('Assignment marked COMPLETE and reported up to Command', 'success');
       logActivity('STRIKE TEAM', `Task marked complete by frontline team: ${activeTask ? (activeTask.task || activeTask.title) : 'Active Mission'}`);
     };
   }
@@ -2601,12 +2600,12 @@ export function initFieldHub() {
           reason: `Frontline Strike Team (${session.name}, ${session.team || session.site}) requests immediate tactical backup.`
         });
         if (res.ok) {
-          showToast('🆘 URGENT BACKUP REQUEST Escalated directly to Tier 2 Strategist!', 'alert');
+          showToast('URGENT: Backup Request Escalated directly to Tier 2 State EOC!', 'alert');
         } else {
-          showToast('🆘 Backup Request Dispatched to State EOC', 'alert');
+          showToast('Backup Request Dispatched to State EOC', 'alert');
         }
       } catch {
-        showToast('🆘 Backup Request Dispatched to State EOC', 'alert');
+        showToast('Backup Request Dispatched to State EOC', 'alert');
       }
       logActivity('ESCALATION', `T4 Strike Team (${session.name}) requested immediate field backup.`);
       renderEscalationInbox();
@@ -2616,7 +2615,7 @@ export function initFieldHub() {
   if (btnHazard) {
     btnHazard.onclick = async () => {
       sound.playCriticalAlert();
-      const hazardTitle = `EMERGENCY HAZARD: Road breach / severe obstruction at ${session.site || 'operational sector'}`;
+      const hazardTitle = `CRITICAL HAZARD: Road breach / surge obstruction at ${session.site || 'operational sector'}`;
       try {
         await apiFetch('POST', '/incidents', {
           title: hazardTitle,
@@ -2635,16 +2634,17 @@ export function initFieldHub() {
       });
 
       renderIncidents();
-      showToast('[WARNING] Critical Hazard Alert Broadcast to Incident Stream!', 'alert');
+      showToast('Critical Hazard Alert Broadcast to National Incident Stream!', 'alert');
       logActivity('HAZARD', `Frontline team flagged critical hazard at ${session.site || 'sector'}`);
     };
   }
 }
 
 // =========================================================================
-// ESCALATION REQUESTS & INBOX CONTROLLER
+// ESCALATION WORKFLOW CONTROLLER
 // =========================================================================
-export function initEscalationPanel() {
+export const initEscalationPanel = initEscalationWorkflow;
+export function initEscalationWorkflow() {
   const submitBtn = getEl('esc-submit-btn');
   const refreshBtn = getEl('esc-refresh-btn');
 
@@ -2652,32 +2652,35 @@ export function initEscalationPanel() {
     submitBtn.addEventListener('click', async () => {
       const kind = getEl('esc-kind-select')?.value || 'general';
       const reason = getEl('esc-reason-input')?.value.trim();
+      const feedback = getEl('esc-submit-feedback');
 
       if (!reason) {
-        showToast('Please provide a reason / details for the escalation', 'alert');
+        showToast('Please provide situation details and justification for escalation.', 'alert');
         return;
       }
 
+      const session = getAuthSession();
       sound.playClick();
-      submitBtn.disabled = true;
-      submitBtn.innerText = 'SUBMITTING…';
 
       try {
         const res = await apiFetch('POST', '/escalations', { kind, reason });
         if (res.ok) {
           sound.playSuccess();
-          showToast(`Escalation request submitted & routed to ${res.body.data ? res.body.data.routed_to_tier : 'supervising tier'}!`);
           if (getEl('esc-reason-input')) getEl('esc-reason-input').value = '';
-          logActivity('ESCALATION', `New escalation submitted (${kind}): ${reason.slice(0, 50)}...`);
+          showToast(`Escalation request dispatched upward (${res.body.data?.routed_to_tier || 'Higher Command'})`);
+          logActivity('ESCALATION', `New escalation submitted by ${session?.name || 'Officer'}: ${reason}`);
+          if (feedback) {
+            feedback.style.display = 'block';
+            feedback.className = 'text-xs font-bold text-emerald';
+            feedback.innerText = '✓ Escalation successfully transmitted to higher command.';
+            setTimeout(() => { feedback.style.display = 'none'; }, 4000);
+          }
+          renderEscalationInbox();
         } else {
-          showToast(res.body.message || 'Failed to submit escalation', 'alert');
+          showToast(res.body.message || 'Error submitting escalation', 'alert');
         }
-      } catch {
-        showToast('Escalation recorded', 'info');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerText = 'SUBMIT ESCALATION →';
-        renderEscalationInbox();
+      } catch (err) {
+        showToast('Error submitting escalation request.', 'alert');
       }
     });
   }
@@ -2686,7 +2689,7 @@ export function initEscalationPanel() {
     refreshBtn.addEventListener('click', () => {
       sound.playClick();
       renderEscalationInbox();
-      showToast('Escalation inbox refreshed');
+      showToast('Escalation queue refreshed.');
     });
   }
 }
@@ -2694,32 +2697,50 @@ export function initEscalationPanel() {
 export async function renderEscalationInbox() {
   const container = getEl('esc-inbox-list');
   const inboxTitle = getEl('esc-inbox-title');
+  const layoutGrid = getEl('escalation-layout-grid');
+  const submitPanel = getEl('escalation-submit-panel');
   if (!container) return;
 
   const session = getAuthSession();
   if (!session) {
-    container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 24px 0;">Sign in to view escalations.</p>`;
+    container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 2rem 0;">Sign in to view escalations.</p>`;
     return;
   }
 
-  // T1 does not originate escalations; hide submit panel for T1
-  const submitPanel = getEl('escalation-submit-panel');
+  // Layout adjustment: Tier 1 has full-width approval desk; T2-T5 have submit panel
   if (submitPanel) {
     submitPanel.style.display = session.tier === 'T1' ? 'none' : 'block';
   }
+  if (layoutGrid) {
+    layoutGrid.className = session.tier === 'T1' ? 'escalation-layout-grid full-width' : 'escalation-layout-grid';
+  }
 
   if (inboxTitle) {
-    if (['T1', 'T2'].includes(session.tier)) inboxTitle.innerText = ' Actionable Escalation Inbox (Approval Authority)';
-    else if (session.tier === 'T3') inboxTitle.innerText = ' District Triage Inbox (Forward to T2)';
-    else inboxTitle.innerText = ' My Submitted Escalations';
+    if (session.tier === 'T1') inboxTitle.innerText = 'NATIONAL APEX ACTIONABLE ESCALATION QUEUE';
+    else if (session.tier === 'T2') inboxTitle.innerText = 'STATE REGIONAL ESCALATION INBOX';
+    else if (session.tier === 'T3') inboxTitle.innerText = 'DISTRICT TRIAGE INBOX (FORWARD TO T2)';
+    else inboxTitle.innerText = 'MY SUBMITTED ESCALATIONS & STATUS TRACKER';
   }
 
   try {
     const res = await apiFetch('GET', '/escalations');
     const rows = (res.ok && Array.isArray(res.body.data)) ? res.body.data : [];
 
+    // Calculate Summary Stats
+    const pendingCount = rows.filter(r => r.status === 'pending').length;
+    const approvedCount = rows.filter(r => r.status === 'approved').length;
+    const deniedCount = rows.filter(r => r.status === 'denied').length;
+
+    const countPendingEl = getEl('esc-count-pending');
+    const countApprovedEl = getEl('esc-count-approved');
+    const countDeniedEl = getEl('esc-count-denied');
+
+    if (countPendingEl) countPendingEl.innerText = `${pendingCount} PENDING`;
+    if (countApprovedEl) countApprovedEl.innerText = `${approvedCount} APPROVED`;
+    if (countDeniedEl) countDeniedEl.innerText = `${deniedCount} DENIED`;
+
     if (rows.length === 0) {
-      container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 24px 0;">No active escalation requests in your queue.</p>`;
+      container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 2.5rem 0;">No active escalation requests in your queue.</p>`;
       return;
     }
 
@@ -2729,35 +2750,57 @@ export async function renderEscalationInbox() {
       const canAction = ['T1', 'T2'].includes(session.tier) && r.status === 'pending';
       const canForward = session.tier === 'T3' && r.status === 'pending' && r.routed_to_tier === 'T3';
 
+      const kindLabel = {
+        'resource': 'RESOURCE SURGE',
+        'backup_request': 'TACTICAL BACKUP',
+        'authority': 'AUTHORITY / LEGAL',
+        'general': 'GENERAL SITUATION'
+      }[r.kind] || (r.kind ? r.kind.toUpperCase() : 'GENERAL');
+
       return `
         <div class="escalation-card ${statusClass}" data-esc-id="${r.id}">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <div>
-              <span class="mono font-bold text-xs" style="color: var(--navy-primary);">${r.id}</span>
-              <span class="tier-pill-badge" style="font-size: 0.65rem; margin-left: 6px;">Origin: ${r.origin_role}</span>
-              <span class="mono text-xs text-muted" style="margin-left: 6px;">→ Routed to: <strong>${r.routed_to_tier}</strong></span>
+          <div class="esc-card-top-strip">
+            <div class="esc-card-ids">
+              <span class="mono font-bold text-xs" style="color: var(--text-navy); font-size: 0.85rem;">#${r.id}</span>
+              <span class="tier-pill-badge" style="font-size: 0.65rem;">Origin: ${r.origin_role}</span>
+              <span class="esc-routing-flow">→ Routed to: <strong>Tier ${r.routed_to_tier}</strong></span>
             </div>
             <span class="badge ${badgeClass}">${r.status.toUpperCase()}</span>
           </div>
-          <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
-            [${r.kind ? r.kind.toUpperCase() : 'GENERAL'}]: ${r.reason}
-          </div>
-          <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px;">
-            <span>Location: ${r.region || '—'} · ${r.site || '—'}</span> · 
-            <span>Logged: ${r.created_at ? new Date(r.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : 'Recent'}</span>
-            ${r.triage_note ? `<div style="margin-top: 4px; color: #0369a1;"><em>Triage Note: ${r.triage_note}</em></div>` : ''}
+
+          <div class="esc-reason-title">
+            <span class="esc-tag-pill badge-outline" style="margin-right: 4px; font-size: 0.68rem;">${kindLabel}</span>
+            ${r.reason}
           </div>
 
+          <div class="esc-meta-info">
+            <span>Location: <strong>${r.region || '—'} · ${r.site || '—'}</strong></span>
+            <span>•</span>
+            <span>Timestamp: <strong>${r.created_at ? new Date(r.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : 'Recent'}</strong></span>
+          </div>
+
+          ${r.triage_note ? `
+            <div class="esc-triage-callout">
+              <em>Triage Note: ${r.triage_note}</em>
+            </div>
+          ` : ''}
+
           ${canAction ? `
-            <div style="display: flex; gap: 8px; margin-top: 8px;">
-              <button class="btn btn-xs btn-emerald font-bold esc-approve-btn" data-esc-id="${r.id}">APPROVE REQUEST</button>
-              <button class="btn btn-xs btn-alert font-bold esc-deny-btn" data-esc-id="${r.id}">DENY</button>
+            <div class="esc-actions-row">
+              <button class="btn btn-xs btn-emerald font-bold esc-approve-btn" data-esc-id="${r.id}">
+                ✓ APPROVE &amp; AUTHORIZE DISPATCH
+              </button>
+              <button class="btn btn-xs btn-alert font-bold esc-deny-btn" data-esc-id="${r.id}">
+                ✕ DENY REQUEST
+              </button>
             </div>
           ` : ''}
 
           ${canForward ? `
-            <div style="display: flex; gap: 8px; margin-top: 8px;">
-              <button class="btn btn-xs btn-navy font-bold esc-forward-btn" data-esc-id="${r.id}">FORWARD TO STATE T2 →</button>
+            <div class="esc-actions-row">
+              <button class="btn btn-xs btn-navy font-bold esc-forward-btn" data-esc-id="${r.id}">
+                FORWARD TO STATE EOC (T2) →
+              </button>
             </div>
           ` : ''}
         </div>
