@@ -45,7 +45,20 @@ function persist() {
   ensure();
   const tmp = DB_PATH + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
-  fs.renameSync(tmp, DB_PATH); // atomic-ish write
+  try {
+    fs.renameSync(tmp, DB_PATH); // atomic write
+  } catch (err) {
+    if (err.code === 'EPERM' || err.code === 'EBUSY') {
+      try { fs.unlinkSync(DB_PATH); } catch (_) {}
+      try {
+        fs.renameSync(tmp, DB_PATH);
+      } catch (_) {
+        fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+      }
+    } else {
+      fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+    }
+  }
 }
 
 function nextId(coll) {

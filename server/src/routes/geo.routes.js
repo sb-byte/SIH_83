@@ -44,12 +44,12 @@ function register(router) {
     }
 
     let items = [];
-    if (targetType === 'shelters') {
-      items = store.all('shelters') || [];
+    if (targetType === 'sites') {
+      items = store.all('sites') || [];
     } else if (targetType === 'incidents') {
       items = store.all('incidents') || [];
     } else {
-      items = store.all('fleet') || [];
+      items = store.all('resources') || [];
     }
 
     const results = items
@@ -83,9 +83,9 @@ function register(router) {
       if (shelter) return res.json({ engine: 'PostGIS', shelter });
     }
 
-    const allShelters = store.all('shelters') || [];
+    const allShelters = store.all('sites') || [];
     const valid = allShelters
-      .filter(s => s.lat && s.lng && (s.occupied < s.capacity || !s.capacity))
+      .filter(s => s.lat && s.lng)
       .map(s => ({
         ...s,
         distance_km: Math.round(haversineKm(lat, lng, s.lat, s.lng) * 100) / 100

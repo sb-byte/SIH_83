@@ -62,43 +62,43 @@ function seed({ reset = false } = {}) {
 
   // ---- Sites (district EOC / shelter capacity) ----
   const sites = [
-    { name: SITE_BHADRAK,    region: REGION_OD, site: SITE_BHADRAK,    status: 'active', population_at_risk: 128000, shelter_capacity: 4200, shelter_occupancy: 3180 },
-    { name: SITE_KENDRAPARA, region: REGION_OD, site: SITE_KENDRAPARA, status: 'active', population_at_risk: 96000,  shelter_capacity: 3100, shelter_occupancy: 1875 },
-    { name: SITE_SUNDERBANS, region: REGION_WB, site: SITE_SUNDERBANS, status: 'active', population_at_risk: 71000,  shelter_capacity: 2400, shelter_occupancy: 508 },
+    { name: SITE_BHADRAK,    region: REGION_OD, site: SITE_BHADRAK,    status: 'active', population_at_risk: 128000, shelter_capacity: 4200, shelter_occupancy: 3180, lat: 20.7937, lng: 86.9634 },
+    { name: SITE_KENDRAPARA, region: REGION_OD, site: SITE_KENDRAPARA, status: 'active', population_at_risk: 96000,  shelter_capacity: 3100, shelter_occupancy: 1875, lat: 20.5732, lng: 86.8522 },
+    { name: SITE_SUNDERBANS, region: REGION_WB, site: SITE_SUNDERBANS, status: 'active', population_at_risk: 71000,  shelter_capacity: 2400, shelter_occupancy: 508,  lat: 21.8750, lng: 88.1880 },
   ];
   sites.forEach((s) => store.insert('sites', s));
 
   // ---- Tasks (some assigned to specific T4/T5, some site-level) ----
   const tasks = [
-    { title: 'Reinforce Dhamra saline embankment breach', section: 'Operations', region: REGION_OD, site: SITE_BHADRAK,    team: TEAM_NDRF,  assigned_to: uid('TACT-NDRF-01'),  status: 'in_progress', progress: 60 },
-    { title: 'Water pouch distribution — Shelter B Chandbali', section: 'Logistics', region: REGION_OD, site: SITE_BHADRAK, team: TEAM_NDRF,  assigned_to: uid('VOL-AM-01'),     status: 'assigned',    progress: 10 },
-    { title: 'Shelter readiness sweep — Dhamra block',   section: 'Planning',   region: REGION_OD, site: SITE_BHADRAK,    team: null,       assigned_to: null,                 status: 'open',        progress: 0 },
-    { title: 'Riverine SAR sweep — Rajnagar creek',      section: 'Operations', region: REGION_OD, site: SITE_KENDRAPARA, team: TEAM_ODRAF, assigned_to: uid('TACT-ODRAF-02'), status: 'in_progress', progress: 35 },
-    { title: 'Register evacuees — Kendrapara High School',section: 'Logistics',  region: REGION_OD, site: SITE_KENDRAPARA, team: TEAM_ODRAF, assigned_to: uid('VOL-AM-02'),     status: 'assigned',    progress: 0 },
-    { title: 'Gosaba embankment watch rotation',         section: 'Operations', region: REGION_WB, site: SITE_SUNDERBANS, team: null,       assigned_to: null,                 status: 'open',        progress: 0 },
+    { title: 'Reinforce Dhamra saline embankment breach', section: 'Operations', region: REGION_OD, site: SITE_BHADRAK,    team: TEAM_NDRF,  assigned_to: uid('TACT-NDRF-01'),  status: 'in_progress', progress: 60, lat: 20.7937, lng: 86.9634 },
+    { title: 'Water pouch distribution — Shelter B Chandbali', section: 'Logistics', region: REGION_OD, site: SITE_BHADRAK, team: TEAM_NDRF,  assigned_to: uid('VOL-AM-01'),     status: 'assigned',    progress: 10, lat: 20.7761, lng: 86.7420 },
+    { title: 'Shelter readiness sweep — Dhamra block',   section: 'Planning',   region: REGION_OD, site: SITE_BHADRAK,    team: null,       assigned_to: null,                 status: 'open',        progress: 0, lat: 20.7885, lng: 86.9580 },
+    { title: 'Riverine SAR sweep — Rajnagar creek',      section: 'Operations', region: REGION_OD, site: SITE_KENDRAPARA, team: TEAM_ODRAF, assigned_to: uid('TACT-ODRAF-02'), status: 'in_progress', progress: 35, lat: 20.5732, lng: 86.8522 },
+    { title: 'Register evacuees — Kendrapara High School',section: 'Logistics',  region: REGION_OD, site: SITE_KENDRAPARA, team: TEAM_ODRAF, assigned_to: uid('VOL-AM-02'),     status: 'assigned',    progress: 0, lat: 20.5028, lng: 86.4227 },
+    { title: 'Gosaba embankment watch rotation',         section: 'Operations', region: REGION_WB, site: SITE_SUNDERBANS, team: null,       assigned_to: null,                 status: 'open',        progress: 0, lat: 22.1653, lng: 88.8021 },
   ];
   tasks.forEach((t) => store.insert('tasks', t));
 
   // ---- Resources (some with an owning frontline user) ----
   const resources = [
-    { type: 'Rescue Boat',   label: 'NDRF-BOAT-04', region: REGION_OD, site: SITE_BHADRAK,    status: 'deployed',        owner_user_id: uid('TACT-NDRF-01') },
-    { type: 'Ambulance',     label: 'OD-AMB-112',   region: REGION_OD, site: SITE_BHADRAK,    status: 'available',       owner_user_id: null },
-    { type: 'Drone',         label: 'OD-UAV-07',    region: REGION_OD, site: SITE_BHADRAK,    status: 'available',       owner_user_id: uid('TACT-NDRF-01') },
-    { type: 'Rescue Boat',   label: 'ODRAF-BOAT-11',region: REGION_OD, site: SITE_KENDRAPARA, status: 'deployed',        owner_user_id: uid('TACT-ODRAF-02') },
-    { type: 'Heavy Pump',    label: 'OD-PUMP-22',   region: REGION_OD, site: SITE_KENDRAPARA, status: 'out_of_service',  owner_user_id: null },
-    { type: 'Rescue Boat',   label: 'WB-IRB-21',    region: REGION_WB, site: SITE_SUNDERBANS, status: 'available',       owner_user_id: null },
-    { type: 'Heavy Vehicle', label: 'WB-HWV-07',    region: REGION_WB, site: SITE_SUNDERBANS, status: 'available',       owner_user_id: null },
+    { type: 'Rescue Boat',   label: 'NDRF-BOAT-04', region: REGION_OD, site: SITE_BHADRAK,    status: 'deployed',        owner_user_id: uid('TACT-NDRF-01'), lat: 20.7937, lng: 86.9634 },
+    { type: 'Ambulance',     label: 'OD-AMB-112',   region: REGION_OD, site: SITE_BHADRAK,    status: 'available',       owner_user_id: null,               lat: 21.0543, lng: 86.5186 },
+    { type: 'Drone',         label: 'OD-UAV-07',    region: REGION_OD, site: SITE_BHADRAK,    status: 'available',       owner_user_id: uid('TACT-NDRF-01'), lat: 20.7885, lng: 86.9580 },
+    { type: 'Rescue Boat',   label: 'ODRAF-BOAT-11',region: REGION_OD, site: SITE_KENDRAPARA, status: 'deployed',        owner_user_id: uid('TACT-ODRAF-02'), lat: 20.5732, lng: 86.8522 },
+    { type: 'Heavy Pump',    label: 'OD-PUMP-22',   region: REGION_OD, site: SITE_KENDRAPARA, status: 'out_of_service',  owner_user_id: null,               lat: 20.6680, lng: 86.6430 },
+    { type: 'Rescue Boat',   label: 'WB-IRB-21',    region: REGION_WB, site: SITE_SUNDERBANS, status: 'available',       owner_user_id: null,               lat: 21.8750, lng: 88.1880 },
+    { type: 'Heavy Vehicle', label: 'WB-HWV-07',    region: REGION_WB, site: SITE_SUNDERBANS, status: 'available',       owner_user_id: null,               lat: 22.1653, lng: 88.8021 },
   ];
   resources.forEach((r) => store.insert('resources', r));
 
   // ---- Incidents ----
   const now = () => new Date().toISOString();
   const incidents = [
-    { title: 'Saline embankment breach — Dhamra',      region: REGION_OD, site: SITE_BHADRAK,    severity: 'high',   verified: true,  reported_by: uid('COORD-BHK-01'),  body: 'Tidal surge overtopped the embankment near Dhamra jetty.', created_at: now() },
-    { title: 'Power line down — Sector 4 Chandbali',   region: REGION_OD, site: SITE_BHADRAK,    severity: 'medium', verified: false, reported_by: uid('TACT-NDRF-01'),  body: 'Live 11kV conductor reported down across approach road.',  created_at: now() },
-    { title: 'Rajnagar creek above danger level',      region: REGION_OD, site: SITE_KENDRAPARA, severity: 'high',   verified: true,  reported_by: uid('COORD-KNP-02'),  body: 'Gauge reading 1.2m over danger mark, rising.',              created_at: now() },
-    { title: 'Boat capsize — Pattamundai channel',     region: REGION_OD, site: SITE_KENDRAPARA, severity: 'high',   verified: false, reported_by: uid('VOL-AM-02'),     body: 'Fishing boat overturned, 4 persons unaccounted.',           created_at: now() },
-    { title: 'Sunderbans embankment breach — Gosaba',  region: REGION_WB, site: SITE_SUNDERBANS, severity: 'high',   verified: true,  reported_by: null,                 body: 'Ring bund failure flooding 3 villages in Gosaba block.',    created_at: now() },
+    { title: 'Saline embankment breach — Dhamra',      region: REGION_OD, site: SITE_BHADRAK,    severity: 'high',   verified: true,  reported_by: uid('COORD-BHK-01'),  body: 'Tidal surge overtopped the embankment near Dhamra jetty.', lat: 20.7937, lng: 86.9634, created_at: now() },
+    { title: 'Power line down — Sector 4 Chandbali',   region: REGION_OD, site: SITE_BHADRAK,    severity: 'medium', verified: false, reported_by: uid('TACT-NDRF-01'),  body: 'Live 11kV conductor reported down across approach road.',  lat: 20.7761, lng: 86.7420, created_at: now() },
+    { title: 'Rajnagar creek above danger level',      region: REGION_OD, site: SITE_KENDRAPARA, severity: 'high',   verified: true,  reported_by: uid('COORD-KNP-02'),  body: 'Gauge reading 1.2m over danger mark, rising.',              lat: 20.5732, lng: 86.8522, created_at: now() },
+    { title: 'Boat capsize — Pattamundai channel',     region: REGION_OD, site: SITE_KENDRAPARA, severity: 'high',   verified: false, reported_by: uid('VOL-AM-02'),     body: 'Fishing boat overturned, 4 persons unaccounted.',           lat: 20.5810, lng: 86.5740, created_at: now() },
+    { title: 'Sunderbans embankment breach — Gosaba',  region: REGION_WB, site: SITE_SUNDERBANS, severity: 'high',   verified: true,  reported_by: null,                 body: 'Ring bund failure flooding 3 villages in Gosaba block.',    lat: 22.1653, lng: 88.8021, created_at: now() },
   ];
   incidents.forEach((i) => store.insert('incidents', i));
 
