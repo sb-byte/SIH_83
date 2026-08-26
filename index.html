@@ -664,6 +664,19 @@
               <div id="gis-search-results" class="gis-search-dropdown hidden"></div>
             </div>
 
+            <!-- Floating Tactical Draw & Action Guidance Banner (Visible during Danger Zone Drawing / Drop Pin Mode) -->
+            <div id="gis-draw-guidance" class="gis-draw-guidance-banner hidden">
+              <div class="guidance-content">
+                <span class="guidance-pulse-icon" id="guidance-icon">🔴</span>
+                <span class="guidance-title font-bold" id="guidance-title">DANGER ZONE DRAWING MODE</span>
+                <span class="guidance-msg" id="guidance-msg">Step 1: Click on map to set circle center</span>
+              </div>
+              <div class="guidance-actions">
+                <span class="guidance-badge font-mono" id="guidance-metric" style="display: none;">0.0 KM</span>
+                <button id="cancel-gis-mode-btn" class="btn btn-outline-danger btn-xs font-bold" title="Cancel operation (or press ESC)">✕ CANCEL (ESC)</button>
+              </div>
+            </div>
+
             <!-- Main Leaflet Map Canvas -->
             <div id="gis-map" class="gis-map-canvas"></div>
 

@@ -4106,6 +4106,118 @@ html.dark .demo-roster-callout {
   animation: map-sos-pulse 1.5s infinite;
 }
 
+/* Interactive Map Drawing Mode & Guidance HUD */
+.gis-map-canvas.drawing-mode,
+.gis-map-canvas.drawing-mode .leaflet-grab,
+.gis-map-canvas.drawing-mode .leaflet-interactive {
+  cursor: crosshair !important;
+}
+
+.gis-draw-guidance-banner {
+  position: absolute;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1.5px solid #EF4444;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #F8FAFC;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(239, 68, 68, 0.4);
+  backdrop-filter: blur(8px);
+  animation: slideDownFade 0.25s ease-out;
+  pointer-events: auto;
+  max-width: 90%;
+}
+
+.gis-draw-guidance-banner.mode-pin {
+  border-color: #38BDF8;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(56, 189, 248, 0.4);
+}
+
+.gis-draw-guidance-banner.hidden {
+  display: none !important;
+}
+
+.guidance-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+.guidance-pulse-icon {
+  font-size: 1rem;
+  animation: map-sos-pulse 1.2s infinite;
+}
+
+.guidance-title {
+  color: #FCA5A5;
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.gis-draw-guidance-banner.mode-pin .guidance-title {
+  color: #7DD3FC;
+}
+
+.guidance-msg {
+  color: #E2E8F0;
+  font-size: 0.82rem;
+}
+
+.guidance-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guidance-badge {
+  background: #991B1B;
+  color: #FEF2F2;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #F87171;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.5);
+  white-space: nowrap;
+}
+
+.danger-radius-tooltip {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid #EF4444 !important;
+  color: #FFFFFF !important;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.danger-radius-tooltip::before {
+  border-top-color: #EF4444 !important;
+}
+
+.tac-action-btn.btn-danger-action {
+  background: rgba(220, 38, 38, 0.2);
+  border: 1px solid #EF4444;
+  color: #FCA5A5;
+}
+
+.tac-action-btn.btn-danger-action:hover {
+  background: #DC2626;
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+}
+
 
 
 

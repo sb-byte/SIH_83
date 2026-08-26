@@ -3840,20 +3840,29 @@ function renderTrainees() {
 }
 
 // =========================================================================
-// TACTICAL GIS SPATIAL ENGINE & TURF.JS UTILITIES
+// TACTICAL GIS SPATIAL ENGINE & UTILITIES
 // =========================================================================
+
+function calculateGeoDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 function findNearestShelter(lat, lng) {
   const sheltersList = state.sheltersData && state.sheltersData.length ? state.sheltersData : shelters;
   if (!sheltersList || !sheltersList.length) return null;
-  const fromPt = turf.point([lng, lat]);
   let nearest = null;
   let minDistance = Infinity;
 
   sheltersList.forEach(s => {
-    if (!s.lat || !s.lng) return;
-    const toPt = turf.point([s.lng, s.lat]);
-    const dist = turf.distance(fromPt, toPt, { units: 'kilometers' });
+    if (typeof s.lat !== 'number' || typeof s.lng !== 'number') return;
+    const dist = calculateGeoDistance(lat, lng, s.lat, s.lng);
     if (dist < minDistance) {
       minDistance = dist;
       nearest = { ...s, distanceKm: dist.toFixed(1) };
@@ -3865,15 +3874,13 @@ function findNearestShelter(lat, lng) {
 function findNearestAsset(lat, lng, preferredType = null) {
   const assetList = state.assets && state.assets.length ? state.assets : fleetAssets;
   if (!assetList || !assetList.length) return null;
-  const fromPt = turf.point([lng, lat]);
   let nearest = null;
   let minDistance = Infinity;
 
   assetList.forEach(a => {
     if (!a.lat || !a.lng || a.status === 'OUT_OF_SERVICE') return;
     if (preferredType && a.type !== preferredType) return;
-    const toPt = turf.point([a.lng, a.lat]);
-    const dist = turf.distance(fromPt, toPt, { units: 'kilometers' });
+    const dist = calculateGeoDistance(lat, lng, a.lat, a.lng);
     if (dist < minDistance) {
       minDistance = dist;
       nearest = { ...a, distanceKm: dist.toFixed(1) };
@@ -3894,13 +3901,11 @@ function findNearestSosOrIncident(lat, lng) {
   });
 
   if (!allTargets.length) return null;
-  const fromPt = turf.point([lng, lat]);
   let nearest = null;
   let minDistance = Infinity;
 
   allTargets.forEach(t => {
-    const toPt = turf.point([t.lng, t.lat]);
-    const dist = turf.distance(fromPt, toPt, { units: 'kilometers' });
+    const dist = calculateGeoDistance(lat, lng, t.lat, t.lng);
     if (dist < minDistance) {
       minDistance = dist;
       nearest = { ...t, distanceKm: dist.toFixed(1) };
@@ -3913,13 +3918,14 @@ function findNearestSosOrIncident(lat, lng) {
 // OSRM ROUTING ENGINE & ACTIVE ROUTE HUD
 // =========================================================================
 
-async function calculateAndDrawRoute(startCoords, endCoords, title, routeType = 'EVACUATION') {
+async function calculateAndDrawRoute(startCoords, endCoords, title, routeType = 'EVACUATION', pinId = null) {
   if (!state.map) return;
   sound.playClick();
   showToast(`Calculating road route: ${title}...`);
 
   const [startLat, startLng] = startCoords;
   const [endLat, endLng] = endCoords;
+  state.activeRoutePinId = pinId;
 
   try {
     if (state.routeLayer) {
@@ -3935,7 +3941,10 @@ async function calculateAndDrawRoute(startCoords, endCoords, title, routeType = 
 
     const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
     try {
-      const response = await fetch(osrmUrl);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const response = await fetch(osrmUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (response.ok) {
         const data = await response.json();
         if (data.routes && data.routes.length > 0) {
@@ -3950,8 +3959,8 @@ async function calculateAndDrawRoute(startCoords, endCoords, title, routeType = 
     }
 
     if (!coordinates.length) {
-      engine = 'Geodesic Waypoint (Offline Fallback)';
-      const directDist = turf.distance(turf.point([startLng, startLat]), turf.point([endLng, endLat]), { units: 'kilometers' });
+      engine = 'Geodesic Evacuation Corridor (Tactical Fallback)';
+      const directDist = calculateGeoDistance(startLat, startLng, endLat, endLng);
       distanceKm = directDist.toFixed(1);
       etaMinutes = Math.max(1, Math.round((directDist / 35) * 60));
       coordinates = [[startLat, startLng], [endLat, endLng]];
@@ -3980,7 +3989,7 @@ async function calculateAndDrawRoute(startCoords, endCoords, title, routeType = 
       color: '#FFFFFF',
       weight: 2,
       fillOpacity: 1
-    }).bindPopup(`<div class="tactical-popup"><div class="tac-popup-head"><span>ROUTE ORIGIN</span></div><div class="tac-popup-body"><div class="tac-popup-title font-bold">${title.split('')[0] || 'Origin'}</div></div></div>`);
+    }).bindPopup(`<div class="tactical-popup"><div class="tac-popup-head"><span>ROUTE ORIGIN</span></div><div class="tac-popup-body"><div class="tac-popup-title font-bold">${escapeHtml(title.split('➔')[0] || 'Origin')}</div></div></div>`);
     routeGroup.addLayer(startPin);
 
     const endPin = L.circleMarker([endLat, endLng], {
@@ -3989,7 +3998,7 @@ async function calculateAndDrawRoute(startCoords, endCoords, title, routeType = 
       color: '#FFFFFF',
       weight: 2,
       fillOpacity: 1
-    }).bindPopup(`<div class="tactical-popup"><div class="tac-popup-head head-saffron"><span>ROUTE DESTINATION</span></div><div class="tac-popup-body"><div class="tac-popup-title font-bold">${title.split('')[1] || 'Destination'}</div></div></div>`);
+    }).bindPopup(`<div class="tactical-popup"><div class="tac-popup-head head-saffron"><span>ROUTE DESTINATION</span></div><div class="tac-popup-body"><div class="tac-popup-title font-bold">${escapeHtml(title.split('➔')[1] || 'Destination')}</div></div></div>`);
     routeGroup.addLayer(endPin);
 
     routeGroup.addTo(state.map);
@@ -4027,6 +4036,7 @@ function clearActiveRoute() {
     state.map.removeLayer(state.routeLayer);
     state.routeLayer = null;
   }
+  state.activeRoutePinId = null;
   const routeHud = getEl('gis-route-hud');
   if (routeHud) routeHud.classList.add('hidden');
   showToast('Active Tactical Route Cleared');
@@ -4039,7 +4049,7 @@ window.routeFromPointToShelter = (fromLat, fromLng, shelterLat, shelterLng, shel
 
 window.routeToShelter = (shelterLat, shelterLng, shelterName) => {
   let startLat = 20.78, startLng = 86.95;
-  if (state.lastDroppedPin) {
+  if (state.lastDroppedPin && state.lastDroppedPin.lat && state.lastDroppedPin.lng) {
     startLat = state.lastDroppedPin.lat;
     startLng = state.lastDroppedPin.lng;
   } else if (state.map) {
@@ -4048,6 +4058,23 @@ window.routeToShelter = (shelterLat, shelterLng, shelterName) => {
     startLng = center.lng;
   }
   calculateAndDrawRoute([startLat, startLng], [shelterLat, shelterLng], `Tactical Location  ${shelterName}`, 'EVACUATION');
+};
+
+window.removeCustomPin = (pinId) => {
+  if (!state.customPinsGroup) return;
+  state.customPinsGroup.eachLayer(layer => {
+    if (layer._pinId === pinId) {
+      state.customPinsGroup.removeLayer(layer);
+    }
+  });
+  if (state.lastDroppedPin && state.lastDroppedPin.id === pinId) {
+    state.lastDroppedPin = null;
+  }
+  if (state.activeRoutePinId === pinId) {
+    clearActiveRoute();
+  }
+  showToast(`📍 Tactical Pin ${pinId} removed`);
+  logActivity('GIS', `Tactical hotspot pin [${pinId}] cancelled/removed`);
 };
 
 window.dispatchToSos = (sosId, sosLat, sosLng) => {
@@ -4104,11 +4131,11 @@ function renderScenarioRiskPolygons(scenarioKey) {
             <span class="tac-popup-id font-mono">${p.id}</span>
           </div>
           <div class="tac-popup-body">
-            <div class="tac-popup-title font-bold">${p.name}</div>
-            <div class="tac-popup-desc">${p.description}</div>
+            <div class="tac-popup-title font-bold">${escapeHtml(p.name)}</div>
+            <div class="tac-popup-desc">${escapeHtml(p.description)}</div>
             <div class="tac-popup-metrics">
-              <div>Severity Level: <strong class="${p.severity === 'EXTREME' || p.severity === 'CRITICAL' ? 'text-alert' : 'text-saffron'}">${p.severity}</strong></div>
-              <div>Water / Surge Depth: <strong>${p.depth}</strong></div>
+              <div>Severity Level: <strong class="${p.severity === 'EXTREME' || p.severity === 'CRITICAL' ? 'text-alert' : 'text-saffron'}">${escapeHtml(p.severity)}</strong></div>
+              <div>Water / Surge Depth: <strong>${escapeHtml(p.depth)}</strong></div>
             </div>
             <div class="tac-popup-coords font-mono text-xs"> ISRO Bhuvan & CWC Hydro-Spatial Model</div>
           </div>
@@ -4124,10 +4151,11 @@ function renderScenarioRiskPolygons(scenarioKey) {
 // DECLARE / DRAW RED DANGER & IMPACT ZONES (DMA §30)
 // =========================================================================
 
-function declareDangerZone(lat, lng, radiusKm, title, severity = 'CRITICAL', directive = 'Mandatory evacuation enforced under DMA 2005 §30.') {
+function declareDangerZone(lat, lng, radiusKm, title = 'IMPACT DANGER ZONE', severity = 'CRITICAL', directive = 'Mandatory evacuation enforced under DMA 2005 §30.') {
   if (!state.map || !state.dangerZonesGroup) return;
 
-  const radiusMeters = (radiusKm || 5) * 1000;
+  const validRadius = Math.max(0.2, parseFloat(radiusKm) || 5);
+  const radiusMeters = validRadius * 1000;
   const zoneId = `DZ-${Date.now().toString().slice(-4)}`;
 
   // Outer red pulsing circle
@@ -4144,12 +4172,19 @@ function declareDangerZone(lat, lng, radiusKm, title, severity = 'CRITICAL', dir
   const centerMarker = L.marker([lat, lng], {
     icon: L.divIcon({
       className: 'custom-map-marker-wrap',
-      html: `<div class="danger-zone-center-pin" title="${title}"><span>[WARNING]</span><span>${title} (${radiusKm}km)</span></div>`,
+      html: `<div class="danger-zone-center-pin" title="${escapeHtml(title)}"><span>⚠️</span><span>${escapeHtml(title)} (${validRadius.toFixed(1)}km)</span></div>`,
       iconSize: null
     })
   });
 
   const zoneFeatureGroup = L.featureGroup([dangerCircle, centerMarker]);
+  zoneFeatureGroup._zoneId = zoneId;
+  zoneFeatureGroup._lat = lat;
+  zoneFeatureGroup._lng = lng;
+  zoneFeatureGroup._radiusKm = validRadius;
+  zoneFeatureGroup._title = title;
+  zoneFeatureGroup._severity = severity;
+  zoneFeatureGroup._directive = directive;
 
   const popupContent = `
     <div class="tactical-popup">
@@ -4158,16 +4193,17 @@ function declareDangerZone(lat, lng, radiusKm, title, severity = 'CRITICAL', dir
         <span class="tac-popup-id font-mono">${zoneId}</span>
       </div>
       <div class="tac-popup-body">
-        <div class="tac-popup-title font-bold">${title}</div>
-        <div class="tac-popup-desc">${directive}</div>
+        <div class="tac-popup-title font-bold">${escapeHtml(title)}</div>
+        <div class="tac-popup-desc">${escapeHtml(directive)}</div>
         <div class="tac-popup-metrics">
-          <div>Hazard Level: <strong class="text-alert">${severity}</strong></div>
-          <div>Impact Radius: <strong class="text-alert">${radiusKm} KM (${(radiusKm * 2).toFixed(1)} km dia)</strong></div>
+          <div>Hazard Level: <strong class="text-alert">${escapeHtml(severity)}</strong></div>
+          <div>Impact Radius: <strong class="text-alert">${validRadius.toFixed(1)} KM (${(validRadius * 2).toFixed(1)} km dia)</strong></div>
           <div>Center Coordinates: <strong class="font-mono">${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E</strong></div>
           <div>Legal Authority: <strong>Disaster Management Act 2005 §30</strong></div>
         </div>
         <div class="tac-popup-actions">
-          <button class="tac-action-btn btn-saffron-action" onclick="window.removeDangerZone('${zoneId}')"> Remove Hazard Zone</button>
+          <button class="tac-action-btn btn-saffron-action" onclick="window.resizeDangerZone('${zoneId}')">✏️ Adjust Radius</button>
+          <button class="tac-action-btn btn-danger-action" onclick="window.removeDangerZone('${zoneId}')">✕ Remove Hazard Zone</button>
         </div>
       </div>
     </div>
@@ -4176,7 +4212,6 @@ function declareDangerZone(lat, lng, radiusKm, title, severity = 'CRITICAL', dir
   dangerCircle.bindPopup(popupContent);
   centerMarker.bindPopup(popupContent);
 
-  zoneFeatureGroup._zoneId = zoneId;
   state.dangerZonesGroup.addLayer(zoneFeatureGroup);
 
   if (!state.map.hasLayer(state.dangerZonesGroup)) {
@@ -4184,8 +4219,8 @@ function declareDangerZone(lat, lng, radiusKm, title, severity = 'CRITICAL', dir
   }
 
   sound.playCriticalAlert();
-  showToast(`[CRITICAL] DANGER ZONE DECLARED: ${title} (${radiusKm} km radius)`, 'alert');
-  logActivity('GIS', `Declared danger/impact zone [${zoneId}]: ${title} (${radiusKm}km) at [${lat}, ${lng}]`);
+  showToast(`🔴 DANGER ZONE DECLARED: ${title} (${validRadius.toFixed(1)} km radius)`, 'alert');
+  logActivity('GIS', `Declared danger/impact zone [${zoneId}]: ${title} (${validRadius.toFixed(1)}km) at [${lat}, ${lng}]`);
   centerMarker.openPopup();
 }
 
@@ -4198,6 +4233,29 @@ window.removeDangerZone = (zoneId) => {
   });
   showToast(`Danger Zone ${zoneId} removed`);
   logActivity('GIS', `Danger zone ${zoneId} de-escalated`);
+};
+
+window.resizeDangerZone = (zoneId) => {
+  if (!state.dangerZonesGroup) return;
+  state.dangerZonesGroup.eachLayer(layerGroup => {
+    if (layerGroup._zoneId === zoneId) {
+      const currentRadius = layerGroup._radiusKm || 5;
+      const newRadiusStr = prompt(`Enter new impact radius in KM for ${zoneId}:`, currentRadius);
+      if (newRadiusStr !== null) {
+        const newRadiusKm = parseFloat(newRadiusStr);
+        if (!isNaN(newRadiusKm) && newRadiusKm > 0) {
+          const lat = layerGroup._lat;
+          const lng = layerGroup._lng;
+          const title = layerGroup._title || 'IMPACT DANGER ZONE';
+          const severity = layerGroup._severity || 'CRITICAL';
+          const directive = layerGroup._directive;
+          state.dangerZonesGroup.removeLayer(layerGroup);
+          declareDangerZone(lat, lng, newRadiusKm, title, severity, directive);
+          showToast(`Hazard Zone ${zoneId} radius updated to ${newRadiusKm} km`);
+        }
+      }
+    }
+  });
 };
 
 // =========================================================================
@@ -4816,19 +4874,96 @@ function initGISMap() {
     });
 
     // =======================================================================
-    // 10. INTERACTIVE DROP PIN & DANGER ZONE MAP CLICK LISTENER
+    // 10. INTERACTIVE DROP PIN & DANGER ZONE MAP CLICK & DRAW LISTENER
     // =======================================================================
+    function updateGuidanceBanner(icon, title, msg, metric = null, isPin = false) {
+      const banner = getEl('gis-draw-guidance');
+      const iconEl = getEl('guidance-icon');
+      const titleEl = getEl('guidance-title');
+      const msgEl = getEl('guidance-msg');
+      const metricEl = getEl('guidance-metric');
+      if (!banner) return;
+      if (iconEl) iconEl.innerText = icon;
+      if (titleEl) titleEl.innerText = title;
+      if (msgEl) msgEl.innerText = msg;
+      if (metricEl) {
+        if (metric) {
+          metricEl.innerText = metric;
+          metricEl.style.display = 'inline-block';
+        } else {
+          metricEl.style.display = 'none';
+        }
+      }
+      banner.classList.toggle('mode-pin', isPin);
+      banner.classList.remove('hidden');
+    }
+
+    function hideGuidanceBanner() {
+      const banner = getEl('gis-draw-guidance');
+      if (banner) banner.classList.add('hidden');
+    }
+
+    function cleanupDangerDrawing() {
+      if (state.dangerDrawState) {
+        if (state.dangerDrawState.previewCircle && state.map) {
+          state.map.removeLayer(state.dangerDrawState.previewCircle);
+        }
+        if (state.dangerDrawState.previewLine && state.map) {
+          state.map.removeLayer(state.dangerDrawState.previewLine);
+        }
+        if (state.dangerDrawState.previewMarker && state.map) {
+          state.map.removeLayer(state.dangerDrawState.previewMarker);
+        }
+        state.dangerDrawState = null;
+      }
+    }
+
+    function cancelActiveGisModes() {
+      cleanupDangerDrawing();
+      state.drawDangerMode = false;
+      state.dropPinMode = false;
+      getEl('gis-map')?.classList.remove('drawing-mode');
+      getEl('draw-danger-zone-btn')?.classList.remove('chip-active');
+      getEl('drop-pin-tool-btn')?.classList.remove('chip-active');
+      hideGuidanceBanner();
+    }
+
+    const cancelGisModeBtn = getEl('cancel-gis-mode-btn');
+    if (cancelGisModeBtn) {
+      cancelGisModeBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cancelActiveGisModes();
+        showToast('Operation Cancelled');
+      };
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (state.drawDangerMode || state.dropPinMode) {
+          cancelActiveGisModes();
+          showToast('Mode Cancelled (ESC)');
+        }
+      }
+    });
+
     const dropPinBtn = getEl('drop-pin-tool-btn');
     if (dropPinBtn) {
       dropPinBtn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
         sound.playClick();
-        state.dropPinMode = !state.dropPinMode;
-        state.drawDangerMode = false;
-        dropPinBtn.classList.toggle('chip-active', state.dropPinMode);
-        getEl('draw-danger-zone-btn')?.classList.remove('chip-active');
-        showToast(state.dropPinMode ? ' Drop Pin Mode: Click on map to drop a pin & route to nearest shelter' : 'Drop Pin Mode: CANCELLED');
+        if (state.dropPinMode) {
+          cancelActiveGisModes();
+          showToast('Drop Pin Mode: CANCELLED');
+        } else {
+          cancelActiveGisModes();
+          state.dropPinMode = true;
+          dropPinBtn.classList.add('chip-active');
+          getEl('gis-map')?.classList.add('drawing-mode');
+          updateGuidanceBanner('📍', 'DROP PIN MODE ACTIVE', 'Click on map to drop tactical pin & auto-route to closest shelter', null, true);
+          showToast('📍 Drop Pin Mode: Click on map to place a pin (Press ESC to cancel)');
+        }
       };
     }
 
@@ -4838,116 +4973,167 @@ function initGISMap() {
         e.preventDefault();
         e.stopPropagation();
         sound.playClick();
-        state.drawDangerMode = !state.drawDangerMode;
-        state.dropPinMode = false;
-        drawDangerBtn.classList.toggle('chip-active', state.drawDangerMode);
-        dropPinBtn?.classList.remove('chip-active');
-        showToast(state.drawDangerMode ? '[CRITICAL] Danger Zone Mode: Click on map to instantly declare a Danger Zone' : 'Danger Zone Mode: CANCELLED');
+        if (state.drawDangerMode) {
+          cancelActiveGisModes();
+          showToast('Danger Zone Drawing: CANCELLED');
+        } else {
+          cancelActiveGisModes();
+          state.drawDangerMode = true;
+          state.dangerDrawState = { step: 'CENTER', center: null, previewCircle: null, previewLine: null, previewMarker: null };
+          drawDangerBtn.classList.add('chip-active');
+          getEl('gis-map')?.classList.add('drawing-mode');
+          updateGuidanceBanner('🔴', 'DANGER ZONE DRAWING ACTIVE', 'Step 1: Click on map to set Circle Center');
+          showToast('🔴 Danger Zone Drawing: Click on map to set circle center (Press ESC to cancel)');
+        }
       };
     }
+
+    map.on('mousemove', (e) => {
+      if (state.drawDangerMode && state.dangerDrawState && state.dangerDrawState.step === 'RADIUS' && state.dangerDrawState.center) {
+        const center = state.dangerDrawState.center;
+        const currentLatLng = e.latlng;
+        const distMeters = center.distanceTo(currentLatLng);
+        const radiusMeters = Math.max(100, Math.round(distMeters));
+        const radiusKm = (radiusMeters / 1000).toFixed(1);
+        const areaSqKm = (Math.PI * Math.pow(radiusMeters / 1000, 2)).toFixed(1);
+
+        if (state.dangerDrawState.previewCircle) {
+          state.dangerDrawState.previewCircle.setRadius(radiusMeters);
+        }
+        if (state.dangerDrawState.previewLine) {
+          state.dangerDrawState.previewLine.setLatLngs([center, currentLatLng]);
+        }
+        updateGuidanceBanner('🔴', 'SET DANGER ZONE RADIUS', 'Step 2: Move mouse to set radius, then click to finalize', `RADIUS: ${radiusKm} KM (${areaSqKm} km²)`);
+      }
+    });
 
     map.on('click', (e) => {
       const { lat, lng } = e.latlng;
 
-      // Direct Danger Zone declaration on map click (no modal required)
+      // Handle Interactive 2-Step Danger Zone Drawing
       if (state.drawDangerMode) {
-        state.drawDangerMode = false;
-        drawDangerBtn?.classList.remove('chip-active');
-        declareDangerZone(lat, lng, 6, 'IMPACT DANGER ZONE', 'CRITICAL', 'Immediate evacuation directive enforced under Disaster Management Act 2005 §30.');
-        map.flyTo([lat, lng], 11, { duration: 0.8 });
-        return;
+        if (!state.dangerDrawState || state.dangerDrawState.step === 'CENTER') {
+          // STEP 1: Center selected
+          const center = e.latlng;
+          state.dangerDrawState = {
+            step: 'RADIUS',
+            center: center,
+            previewMarker: L.circleMarker(center, {
+              radius: 6,
+              color: '#FFFFFF',
+              fillColor: '#DC2626',
+              fillOpacity: 1,
+              weight: 2
+            }).addTo(map),
+            previewCircle: L.circle(center, {
+              radius: 500,
+              color: '#DC2626',
+              fillColor: '#DC2626',
+              fillOpacity: 0.32,
+              weight: 3,
+              dashArray: '6, 6'
+            }).addTo(map),
+            previewLine: L.polyline([center, center], {
+              color: '#F87171',
+              weight: 2,
+              dashArray: '4, 4'
+            }).addTo(map)
+          };
+          sound.playClick();
+          updateGuidanceBanner('🔴', 'SET DANGER ZONE RADIUS', 'Step 2: Move mouse outward to expand radius, then click to confirm', 'RADIUS: 0.5 KM');
+          showToast('Center set! Move mouse to size radius and click to finalize.');
+          return;
+        } else if (state.dangerDrawState.step === 'RADIUS') {
+          // STEP 2: Radius finalized
+          const center = state.dangerDrawState.center;
+          const distMeters = center.distanceTo(e.latlng);
+          const finalRadiusKm = Math.max(0.2, parseFloat((distMeters / 1000).toFixed(1)));
+
+          cleanupDangerDrawing();
+          state.drawDangerMode = false;
+          getEl('gis-map')?.classList.remove('drawing-mode');
+          drawDangerBtn?.classList.remove('chip-active');
+          hideGuidanceBanner();
+
+          declareDangerZone(center.lat, center.lng, finalRadiusKm, 'IMPACT DANGER ZONE', 'CRITICAL', 'Mandatory evacuation enforced under Disaster Management Act 2005 §30.');
+          return;
+        }
       }
 
-      // Drop Pin & Instant Route to Nearest Shelter
-      if (!state.dropPinMode) return;
-      state.dropPinMode = false;
-      dropPinBtn?.classList.remove('chip-active');
-      sound.playCriticalAlert();
+      // Handle Drop Pin Mode
+      if (state.dropPinMode) {
+        cancelActiveGisModes();
+        sound.playCriticalAlert();
 
-      const nearestShelter = findNearestShelter(lat, lng);
-      const nearestAsset = findNearestAsset(lat, lng);
+        const pinId = 'PIN-' + Date.now().toString().slice(-4);
+        const nearestShelter = findNearestShelter(lat, lng);
+        const nearestAsset = findNearestAsset(lat, lng);
 
-      const initialPin = L.divIcon({
-        className: 'custom-map-marker-wrap',
-        html: `<div class="custom-map-pin danger-pin"><span class="pin-icon"></span><span class="pin-name">PINPOINT</span></div>`,
-        iconSize: null
-      });
-
-      const marker = L.marker([lat, lng], { icon: initialPin });
-      state.customPinsGroup.addLayer(marker);
-
-      // Automatically plot shortest driving route to nearest shelter
-      if (nearestShelter) {
-        calculateAndDrawRoute([lat, lng], [nearestShelter.lat, nearestShelter.lng], `Tactical Pin  ${nearestShelter.name}`, 'EVACUATION');
-      }
-
-      marker.bindPopup(`
-        <div class="tactical-popup">
-          <div class="tac-popup-head head-danger">
-            <span class="tac-popup-tag">TACTICAL HOTSPOT PIN</span>
-            <span class="tac-popup-id font-mono">GRID-PIN</span>
-          </div>
-          <div class="tac-popup-body">
-            <div class="tac-popup-title font-bold">Tactical Hotspot Pinpoint</div>
-            <div class="tac-popup-desc">Fetching OpenStreetMap address telemetry for [${lat.toFixed(4)}, ${lng.toFixed(4)}]...</div>
-            <div class="tac-popup-metrics">
-              <div>Coordinates: <strong class="font-mono">${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E</strong></div>
-              ${nearestShelter ? `<div>Nearest Shelter: <strong class="text-saffron">${nearestShelter.name} (${nearestShelter.distanceKm} km)</strong></div>` : ''}
-              ${nearestAsset ? `<div>Nearest NDRF: <strong class="text-emerald">${nearestAsset.name} (${nearestAsset.distanceKm} km)</strong></div>` : ''}
-            </div>
-            ${nearestShelter ? `
-              <div class="tac-popup-actions">
-                <button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${nearestShelter.lat}, ${nearestShelter.lng}, '${escapeHtml(nearestShelter.name)}')">️ Re-Route to Shelter</button>
-              </div>
-            ` : ''}
-          </div>
-        </div>
-      `).openPopup();
-
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
-        headers: { 'Accept': 'application/json' }
-      })
-        .then(res => res.json())
-        .then(data => {
-          const locality = data.address?.village || data.address?.town || data.address?.suburb || data.address?.city || data.address?.county || 'Tactical Sector';
-          const fullAddress = data.display_name || `Grid [${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E]`;
-
-          const updatedIcon = L.divIcon({
-            className: 'custom-map-marker-wrap',
-            html: `<div class="custom-map-pin danger-pin"><span></span><span>${locality.toUpperCase()}</span></div>`,
-            iconSize: null
-          });
-          marker.setIcon(updatedIcon);
-
-          marker.setPopupContent(`
-            <div class="tactical-popup">
-              <div class="tac-popup-head head-danger">
-                <span class="tac-popup-tag">TACTICAL HOTSPOT PIN</span>
-                <span class="tac-popup-id font-mono">GRID-PIN</span>
-              </div>
-              <div class="tac-popup-body">
-                <div class="tac-popup-title font-bold">${locality}</div>
-                <div class="tac-popup-desc">${fullAddress}</div>
-                <div class="tac-popup-metrics">
-                  <div>Coordinates: <strong class="font-mono">${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E</strong></div>
-                  ${nearestShelter ? `<div>Nearest Shelter: <strong class="text-saffron">${nearestShelter.name} (${nearestShelter.distanceKm} km)</strong></div>` : ''}
-                  ${nearestAsset ? `<div>Nearest NDRF: <strong class="text-emerald">${nearestAsset.name} (${nearestAsset.distanceKm} km)</strong></div>` : ''}
-                </div>
-                ${nearestShelter ? `
-                  <div class="tac-popup-actions">
-                    <button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${nearestShelter.lat}, ${nearestShelter.lng}, '${escapeHtml(nearestShelter.name)}')">️ Re-Route to Shelter</button>
-                  </div>
-                ` : ''}
-              </div>
-            </div>
-          `);
-
-          showToast(`OSM Pin: ${locality} [${lat.toFixed(3)}, ${lng.toFixed(3)}]  Route Active`);
-          logActivity('GIS', `Tactical hotspot pinned at ${locality} — Nearest shelter routed`);
-        })
-        .catch(err => {
-          console.warn('Nominatim reverse geocode fallback:', err);
+        const initialPin = L.divIcon({
+          className: 'custom-map-marker-wrap',
+          html: `<div class="custom-map-pin danger-pin"><span class="pin-icon">📍</span><span class="pin-name">PINPOINT</span></div>`,
+          iconSize: null
         });
+
+        const marker = L.marker([lat, lng], { icon: initialPin });
+        marker._pinId = pinId;
+        state.customPinsGroup.addLayer(marker);
+        state.lastDroppedPin = { id: pinId, lat, lng, marker };
+
+        // Automatically plot shortest driving route to nearest shelter
+        if (nearestShelter) {
+          calculateAndDrawRoute([lat, lng], [nearestShelter.lat, nearestShelter.lng], `Tactical Pin ➔ ${nearestShelter.name}`, 'EVACUATION', pinId);
+        }
+
+        const buildPopupHtml = (title, details) => `
+          <div class="tactical-popup">
+            <div class="tac-popup-head head-danger">
+              <span class="tac-popup-tag">TACTICAL HOTSPOT PIN</span>
+              <span class="tac-popup-id font-mono">${pinId}</span>
+            </div>
+            <div class="tac-popup-body">
+              <div class="tac-popup-title font-bold">${escapeHtml(title)}</div>
+              <div class="tac-popup-desc">${escapeHtml(details)}</div>
+              <div class="tac-popup-metrics">
+                <div>Coordinates: <strong class="font-mono">${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E</strong></div>
+                ${nearestShelter ? `<div>Nearest Shelter: <strong class="text-saffron">${escapeHtml(nearestShelter.name)} (${nearestShelter.distanceKm} km)</strong></div>` : ''}
+                ${nearestAsset ? `<div>Nearest NDRF: <strong class="text-emerald">${escapeHtml(nearestAsset.name)} (${nearestAsset.distanceKm} km)</strong></div>` : ''}
+              </div>
+              <div class="tac-popup-actions">
+                ${nearestShelter ? `
+                  <button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${nearestShelter.lat}, ${nearestShelter.lng}, '${escapeHtml(nearestShelter.name)}')">🛣️ Re-Route to Shelter</button>
+                ` : ''}
+                <button class="tac-action-btn btn-danger-action" onclick="window.removeCustomPin('${pinId}')">✕ Remove / Cancel Pin</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        marker.bindPopup(buildPopupHtml('Tactical Hotspot Pinpoint', `Fetching OpenStreetMap address telemetry for [${lat.toFixed(4)}, ${lng.toFixed(4)}]...`)).openPopup();
+
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+          headers: { 'Accept': 'application/json' }
+        })
+          .then(res => res.json())
+          .then(data => {
+            const locality = data.address?.village || data.address?.town || data.address?.suburb || data.address?.city || data.address?.county || 'Tactical Sector';
+            const fullAddress = data.display_name || `Grid [${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E]`;
+
+            const updatedIcon = L.divIcon({
+              className: 'custom-map-marker-wrap',
+              html: `<div class="custom-map-pin danger-pin"><span>📍</span><span>${escapeHtml(locality.toUpperCase())}</span></div>`,
+              iconSize: null
+            });
+            marker.setIcon(updatedIcon);
+            marker.setPopupContent(buildPopupHtml(locality, fullAddress));
+
+            showToast(`OSM Pin: ${locality} [${lat.toFixed(3)}, ${lng.toFixed(3)}] ➔ Route Active`);
+            logActivity('GIS', `Tactical hotspot [${pinId}] pinned at ${locality} — Nearest shelter routed`);
+          })
+          .catch(err => {
+            console.warn('Nominatim reverse geocode fallback:', err);
+          });
+      }
     });
 
     // =======================================================================
@@ -5054,9 +5240,13 @@ function initGISMap() {
       clickMapDangerBtn.onclick = (e) => {
         e.preventDefault();
         closeDangerModal();
+        cancelActiveGisModes();
         state.drawDangerMode = true;
-        drawDangerBtn?.classList.add('active');
-        showToast('Click anywhere on map to position the Danger Zone', 'alert');
+        state.dangerDrawState = { step: 'CENTER', center: null, previewCircle: null, previewLine: null, previewMarker: null };
+        drawDangerBtn?.classList.add('chip-active');
+        getEl('gis-map')?.classList.add('drawing-mode');
+        updateGuidanceBanner('🔴', 'DANGER ZONE DRAWING ACTIVE', 'Step 1: Click on map to set Circle Center');
+        showToast('🔴 Click on map to set Danger Zone Center', 'alert');
       };
     }
 
