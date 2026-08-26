@@ -32,21 +32,21 @@ export const liveIncidentData = {
 };
 
 export const citizenSosQueue = [
-  {
-    id: "SOS-801",
-    region: "Odisha",
-    site: "Kendrapara / Rajnagar",
-    time: "14:28 IST",
-    name: "Subrata Jena (6 family members)",
-    phone: "+91-98612-XXXXX",
-    location: "Satbhaya Coastal Hamlet [20.612° N, 86.914° E]",
-    lat: 20.612,
-    lng: 86.914,
-    urgency: "CRITICAL",
-    msg: "Water level rose 1.5m in 20 mins. Trapped on rooftop with infant. Floodwater entering ground floor.",
-    status: "DISPATCHED",
-    assignedUnit: "NDRF IRB-101"
-  },
+  // {
+  //   id: "SOS-801",
+  //   region: "Odisha",
+  //   site: "Kendrapara / Rajnagar",
+  //   time: "14:28 IST",
+  //   name: "Subrata Jena (6 family members)",
+  //   phone: "+91-98612-XXXXX",
+  //   location: "Satbhaya Coastal Hamlet [20.612° N, 86.914° E]",
+  //   lat: 20.612,
+  //   lng: 86.914,
+  //   urgency: "CRITICAL",
+  //   msg: "Water level rose 1.5m in 20 mins. Trapped on rooftop with infant. Floodwater entering ground floor.",
+  //   status: "DISPATCHED",
+  //   assignedUnit: "NDRF IRB-101"
+  // },
   {
     id: "SOS-802",
     region: "Odisha",
@@ -62,67 +62,67 @@ export const citizenSosQueue = [
     status: "PENDING",
     assignedUnit: "UNASSIGNED"
   },
-  {
-    id: "SOS-803",
-    region: "Odisha",
-    site: "Bhadrak / Dhamra",
-    time: "14:09 IST",
-    name: "Deepak Sahoo (Fisherman)",
-    phone: "+91-97773-XXXXX",
-    location: "Dhamra Jetty South Creek [20.781° N, 86.955° E]",
-    lat: 20.781,
-    lng: 86.955,
-    urgency: "CRITICAL",
-    msg: "Trawler anchor snapped. 3 crew adrift near sandbar in 90 km/h winds.",
-    status: "IN PROGRESS",
-    assignedUnit: "ICG Hovercraft 02"
-  },
-  {
-    id: "SOS-804",
-    region: "West Bengal",
-    site: "Kolkata / Sunderbans",
-    time: "13:58 IST",
-    name: "Ashima Halder (4 family members)",
-    phone: "+91-90513-XXXXX",
-    location: "Gosaba Island Embankment Ward 4 [22.165° N, 88.802° E]",
-    lat: 22.165,
-    lng: 88.802,
-    urgency: "HIGH",
-    msg: "Earthen embankment leaking beside homestead. Family sheltering on school roof, need boat evacuation before high tide.",
-    status: "PENDING",
-    assignedUnit: "UNASSIGNED"
-  }
+  // {
+  //   id: "SOS-803",
+  //   region: "Odisha",
+  //   site: "Bhadrak / Dhamra",
+  //   time: "14:09 IST",
+  //   name: "Deepak Sahoo (Fisherman)",
+  //   phone: "+91-97773-XXXXX",
+  //   location: "Dhamra Jetty South Creek [20.781° N, 86.955° E]",
+  //   lat: 20.781,
+  //   lng: 86.955,
+  //   urgency: "CRITICAL",
+  //   msg: "Trawler anchor snapped. 3 crew adrift near sandbar in 90 km/h winds.",
+  //   status: "IN PROGRESS",
+  //   assignedUnit: "ICG Hovercraft 02"
+  // },
+  // {
+  //   id: "SOS-804",
+  //   region: "West Bengal",
+  //   site: "Kolkata / Sunderbans",
+  //   time: "13:58 IST",
+  //   name: "Ashima Halder (4 family members)",
+  //   phone: "+91-90513-XXXXX",
+  //   location: "Gosaba Island Embankment Ward 4 [22.165° N, 88.802° E]",
+  //   lat: 22.165,
+  //   lng: 88.802,
+  //   urgency: "HIGH",
+  //   msg: "Earthen embankment leaking beside homestead. Family sheltering on school roof, need boat evacuation before high tide.",
+  //   status: "PENDING",
+  //   assignedUnit: "UNASSIGNED"
+  // }
 ];
 
 export const chronoIncidents = [
-  {
-    id: "INC-1092",
-    region: "Odisha",
-    site: "Bhadrak / Dhamra",
-    time: "14:24 IST",
-    section: "OPS",
-    severity: "CRITICAL",
-    title: "Dhamra Port Seawall Overtopped",
-    details: "Tidal surge of +3.2m breached secondary barrier at Dhamra port fishing jetty. NDRF 03 Bn Bravo Team en route with 6 Inflatable Rescue Boats (IRBs).",
-    location: "Dhamra, Bhadrak [20.7937° N, 86.9634° E]",
-    lat: 20.7937,
-    lng: 86.9634,
-    status: "RESPONSE DEPLOYED"
-  },
-  {
-    id: "INC-1091",
-    region: "Odisha",
-    site: "Kendrapara / Rajnagar",
-    time: "14:18 IST",
-    section: "OPS",
-    severity: "HIGH",
-    title: "SDRF Water Rescue Mission - Kendrapara Lowlands",
-    details: "14 villagers stranded on elevated rooftop near Rajnagar creek. High-water evacuation initiated using mechanized dinghies.",
-    location: "Rajnagar, Kendrapara [20.5732° N, 86.8522° E]",
-    lat: 20.5732,
-    lng: 86.8522,
-    status: "IN PROGRESS"
-  },
+  // {
+  //   id: "INC-1092",
+  //   region: "Odisha",
+  //   site: "Bhadrak / Dhamra",
+  //   time: "14:24 IST",
+  //   section: "OPS",
+  //   severity: "CRITICAL",
+  //   title: "Dhamra Port Seawall Overtopped",
+  //   details: "Tidal surge of +3.2m breached secondary barrier at Dhamra port fishing jetty. NDRF 03 Bn Bravo Team en route with 6 Inflatable Rescue Boats (IRBs).",
+  //   location: "Dhamra, Bhadrak [20.7937° N, 86.9634° E]",
+  //   lat: 20.7937,
+  //   lng: 86.9634,
+  //   status: "RESPONSE DEPLOYED"
+  // },
+  // {
+  //   id: "INC-1091",
+  //   region: "Odisha",
+  //   site: "Kendrapara / Rajnagar",
+  //   time: "14:18 IST",
+  //   section: "OPS",
+  //   severity: "HIGH",
+  //   title: "SDRF Water Rescue Mission - Kendrapara Lowlands",
+  //   details: "14 villagers stranded on elevated rooftop near Rajnagar creek. High-water evacuation initiated using mechanized dinghies.",
+  //   location: "Rajnagar, Kendrapara [20.5732° N, 86.8522° E]",
+  //   lat: 20.5732,
+  //   lng: 86.8522,
+  //   status: "IN PROGRESS"
+  // },
   {
     id: "INC-1090",
     region: "Odisha",
@@ -151,84 +151,107 @@ export const chronoIncidents = [
     lng: 86.6687,
     status: "ACTIVE RADAR"
   },
-  {
-    id: "INC-1088",
-    region: "Odisha",
-    site: "Bhadrak / Dhamra",
-    time: "13:35 IST",
-    section: "PLANNING",
-    severity: "INFO",
-    title: "Operational Period 2 IAP Signed",
-    details: "Incident Action Plan for Operational Period 18:00–06:00 approved by State Incident Commander Shri R. Mohanty, IAS.",
-    location: "State EOC Bhubaneswar [20.2961° N, 85.8245° E]",
-    lat: 20.2961,
-    lng: 85.8245,
-    status: "APPROVED"
-  },
-  {
-    id: "INC-1087",
-    region: "Odisha",
-    site: "Kendrapara / Rajnagar",
-    time: "13:12 IST",
-    section: "COMMS",
-    severity: "CRITICAL",
-    title: "CAP-SACHET Emergency Cell Broadcast Dispatched",
-    details: "Cell broadcast siren alert & multi-lingual SMS sent to 1.8M subscribers across coastal sectors with instruction to seek shelter immediately.",
-    location: "Coastal Telco Towers (Geo-targeted)",
-    lat: 20.65,
-    lng: 86.85,
-    status: "BROADCAST COMPLETE"
-  },
-  {
-    id: "INC-1086",
-    region: "West Bengal",
-    site: "Kolkata / Sunderbans",
-    time: "12:58 IST",
-    section: "OPS",
-    severity: "HIGH",
-    title: "Sunderbans Embankment Breach - Gosaba Block",
-    details: "60m earthen embankment breached along the Bidya river at Gosaba. WBDMA Quick Response Team with NDRF 02 Bn deployed 4 country boats for ring-bund sandbagging.",
-    location: "Gosaba, South 24 Parganas [22.1653° N, 88.8021° E]",
-    lat: 22.1653,
-    lng: 88.8021,
-    status: "RESPONSE DEPLOYED"
-  },
-  {
-    id: "INC-1085",
-    region: "West Bengal",
-    site: "Kolkata / Sunderbans",
-    time: "12:40 IST",
-    section: "LOGISTICS",
-    severity: "MEDIUM",
-    title: "Kolkata Urban Waterlogging - Ballygunge Sector",
-    details: "KMC deployed 18 portable pumps after 96mm rainfall in 3 hours. Two uprooted trees cleared from AJC Bose Road by the Disaster Management Group.",
-    location: "Ballygunge, Kolkata [22.5226° N, 88.3639° E]",
-    lat: 22.5226,
-    lng: 88.3639,
-    status: "IN PROGRESS"
-  }
+  // {
+  //   id: "INC-1088",
+  //   region: "Odisha",
+  //   site: "Bhadrak / Dhamra",
+  //   time: "13:35 IST",
+  //   section: "PLANNING",
+  //   severity: "INFO",
+  //   title: "Operational Period 2 IAP Signed",
+  //   details: "Incident Action Plan for Operational Period 18:00–06:00 approved by State Incident Commander Shri R. Mohanty, IAS.",
+  //   location: "State EOC Bhubaneswar [20.2961° N, 85.8245° E]",
+  //   lat: 20.2961,
+  //   lng: 85.8245,
+  //   status: "APPROVED"
+  // },
+  // {
+  //   id: "INC-1087",
+  //   region: "Odisha",
+  //   site: "Kendrapara / Rajnagar",
+  //   time: "13:12 IST",
+  //   section: "COMMS",
+  //   severity: "CRITICAL",
+  //   title: "CAP-SACHET Emergency Cell Broadcast Dispatched",
+  //   details: "Cell broadcast siren alert & multi-lingual SMS sent to 1.8M subscribers across coastal sectors with instruction to seek shelter immediately.",
+  //   location: "Coastal Telco Towers (Geo-targeted)",
+  //   lat: 20.65,
+  //   lng: 86.85,
+  //   status: "BROADCAST COMPLETE"
+  // },
+  // {
+  //   id: "INC-1086",
+  //   region: "West Bengal",
+  //   site: "Kolkata / Sunderbans",
+  //   time: "12:58 IST",
+  //   section: "OPS",
+  //   severity: "HIGH",
+  //   title: "Sunderbans Embankment Breach - Gosaba Block",
+  //   details: "60m earthen embankment breached along the Bidya river at Gosaba. WBDMA Quick Response Team with NDRF 02 Bn deployed 4 country boats for ring-bund sandbagging.",
+  //   location: "Gosaba, South 24 Parganas [22.1653° N, 88.8021° E]",
+  //   lat: 22.1653,
+  //   lng: 88.8021,
+  //   status: "RESPONSE DEPLOYED"
+  // },
+  // {
+  //   id: "INC-1085",
+  //   region: "West Bengal",
+  //   site: "Kolkata / Sunderbans",
+  //   time: "12:40 IST",
+  //   section: "LOGISTICS",
+  //   severity: "MEDIUM",
+  //   title: "Kolkata Urban Waterlogging - Ballygunge Sector",
+  //   details: "KMC deployed 18 portable pumps after 96mm rainfall in 3 hours. Two uprooted trees cleared from AJC Bose Road by the Disaster Management Group.",
+  //   location: "Ballygunge, Kolkata [22.5226° N, 88.3639° E]",
+  //   lat: 22.5226,
+  //   lng: 88.3639,
+  //   status: "IN PROGRESS"
+  // }
 ];
 
 export const fleetAssets = [
   { id: "NDRF-IRB-101", name: "Inflatable Rescue Boat 01", type: "Water Rescue", unit: "NDRF 03 Bn", status: "DEPLOYED", loc: "Dhamra Port Jetty", crew: 6, battery: "94%", lat: 20.78, lng: 86.94, region: "Odisha", site: "Bhadrak / Dhamra" },
-  { id: "NDRF-IRB-102", name: "Inflatable Rescue Boat 02", type: "Water Rescue", unit: "NDRF 03 Bn", status: "DEPLOYED", loc: "Kendrapara Creek", crew: 6, battery: "88%", lat: 20.58, lng: 86.83, region: "Odisha", site: "Kendrapara / Rajnagar" },
-  { id: "NDRF-HWV-04", name: "High-Water Rescue Truck", type: "Heavy Vehicle", unit: "SDRF Odisha", status: "DEPLOYED", loc: "Bhadrak Route 16", crew: 4, fuel: "78%", lat: 21.06, lng: 86.50, region: "Odisha", site: "Bhadrak / Dhamra" },
-  { id: "DRONE-RECON-ALPHA", name: "Surveillance Hexacopter Alpha", type: "UAV Drone", unit: "Coast Guard Air Recon", status: "AIRBORNE", loc: "Paradip Outer Anchorage", crew: 2, battery: "82%", lat: 20.27, lng: 86.70, region: "Odisha", site: "Kendrapara / Rajnagar" },
-  { id: "ICG-ALH-08", name: "Advanced Light Helicopter MK-III", type: "Aviation", unit: "Indian Coast Guard", status: "AVAILABLE", loc: "Bhubaneswar Airfield", crew: 4, fuel: "95%", lat: 20.24, lng: 85.81, region: "Odisha", site: "Bhadrak / Dhamra" },
+  // { id: "NDRF-IRB-102", name: "Inflatable Rescue Boat 02", type: "Water Rescue", unit: "NDRF 03 Bn", status: "DEPLOYED", loc: "Kendrapara Creek", crew: 6, battery: "88%", lat: 20.58, lng: 86.83, region: "Odisha", site: "Kendrapara / Rajnagar" },
+  // { id: "NDRF-HWV-04", name: "High-Water Rescue Truck", type: "Heavy Vehicle", unit: "SDRF Odisha", status: "DEPLOYED", loc: "Bhadrak Route 16", crew: 4, fuel: "78%", lat: 21.06, lng: 86.50, region: "Odisha", site: "Bhadrak / Dhamra" },
+  // { id: "DRONE-RECON-ALPHA", name: "Surveillance Hexacopter Alpha", type: "UAV Drone", unit: "Coast Guard Air Recon", status: "AIRBORNE", loc: "Paradip Outer Anchorage", crew: 2, battery: "82%", lat: 20.27, lng: 86.70, region: "Odisha", site: "Kendrapara / Rajnagar" },
+  // { id: "ICG-ALH-08", name: "Advanced Light Helicopter MK-III", type: "Aviation", unit: "Indian Coast Guard", status: "AVAILABLE", loc: "Bhubaneswar Airfield", crew: 4, fuel: "95%", lat: 20.24, lng: 85.81, region: "Odisha", site: "Bhadrak / Dhamra" },
   { id: "NDRF-BOAT-09", name: "Deep Water Dinghy 09", type: "Water Rescue", unit: "NDRF 02 Bn", status: "OUT_OF_SERVICE", loc: "Cuttack Maintenance Bay", crew: 0, reason: "Propeller fouled with debris", lat: 20.46, lng: 85.88, region: "Odisha", site: "Kendrapara / Rajnagar" },
-  { id: "DEOC-GEN-02", name: "50kVA Mobile Generator Unit", type: "Heavy Vehicle", unit: "State Disaster Logistics", status: "AVAILABLE", loc: "Balasore Collectorate", crew: 2, fuel: "100%", lat: 21.49, lng: 86.92, region: "Odisha", site: "Bhadrak / Dhamra" },
-  { id: "WB-IRB-21", name: "Inflatable Rescue Boat 21", type: "Water Rescue", unit: "NDRF 02 Bn", status: "DEPLOYED", loc: "Sagar Island Ferry Ghat", crew: 6, battery: "91%", lat: 21.65, lng: 88.05, region: "West Bengal", site: "Kolkata / Sunderbans" },
-  { id: "WB-HWV-07", name: "High-Water Rescue Truck 07", type: "Heavy Vehicle", unit: "SDRF West Bengal", status: "AVAILABLE", loc: "Namkhana Block HQ", crew: 4, fuel: "86%", lat: 21.76, lng: 88.23, region: "West Bengal", site: "Kolkata / Sunderbans" }
+  // { id: "DEOC-GEN-02", name: "50kVA Mobile Generator Unit", type: "Heavy Vehicle", unit: "State Disaster Logistics", status: "AVAILABLE", loc: "Balasore Collectorate", crew: 2, fuel: "100%", lat: 21.49, lng: 86.92, region: "Odisha", site: "Bhadrak / Dhamra" },
+  // { id: "WB-IRB-21", name: "Inflatable Rescue Boat 21", type: "Water Rescue", unit: "NDRF 02 Bn", status: "DEPLOYED", loc: "Sagar Island Ferry Ghat", crew: 6, battery: "91%", lat: 21.65, lng: 88.05, region: "West Bengal", site: "Kolkata / Sunderbans" },
+  // { id: "WB-HWV-07", name: "High-Water Rescue Truck 07", type: "Heavy Vehicle", unit: "SDRF West Bengal", status: "AVAILABLE", loc: "Namkhana Block HQ", crew: 4, fuel: "86%", lat: 21.76, lng: 88.23, region: "West Bengal", site: "Kolkata / Sunderbans" }
 ];
 
 export const shelters = [
   { id: "MCS-01", name: "MCS Balasore Central High School", capacity: 500, occupied: 460, status: "NEAR FULL", lat: 21.4934, lng: 86.9135, medical: "Doctor On-Duty", foodRations: "48h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
-  { id: "MCS-02", name: "MCS Kendrapara Cyclone Shelter", capacity: 300, occupied: 285, status: "CRITICAL", lat: 20.5028, lng: 86.4227, medical: "Nurse Station Active", foodRations: "72h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  // { id: "MCS-02", name: "MCS Kendrapara Cyclone Shelter", capacity: 300, occupied: 285, status: "CRITICAL", lat: 20.5028, lng: 86.4227, medical: "Nurse Station Active", foodRations: "72h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
   { id: "MCS-03", name: "MCS Puri Seafront Multi-Purpose Shelter", capacity: 200, occupied: 184, status: "NEAR FULL", lat: 19.8135, lng: 85.8312, medical: "Paramedic Unit", foodRations: "36h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
-  { id: "MCS-04", name: "MCS Bhadrak Government College", capacity: 400, occupied: 120, status: "AVAILABLE", lat: 21.0543, lng: 86.5186, medical: "Doctor On-Duty", foodRations: "96h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
-  { id: "MCS-05", name: "MCS Paradip Port Community Center", capacity: 350, occupied: 340, status: "CRITICAL", lat: 20.2644, lng: 86.6687, medical: "SDRF Medical Team", foodRations: "24h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
-  { id: "MCS-06", name: "MCS Gosaba Sunderbans Cyclone Shelter", capacity: 450, occupied: 412, status: "NEAR FULL", lat: 22.1653, lng: 88.8021, medical: "Nurse Station Active", foodRations: "60h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
-  { id: "MCS-07", name: "MCS Namkhana Coastal Flood Shelter", capacity: 300, occupied: 96, status: "AVAILABLE", lat: 21.7597, lng: 88.2296, medical: "Paramedic Unit", foodRations: "72h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" }
+  // { id: "MCS-04", name: "MCS Bhadrak Government College", capacity: 400, occupied: 120, status: "AVAILABLE", lat: 21.0543, lng: 86.5186, medical: "Doctor On-Duty", foodRations: "96h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
+  // { id: "MCS-05", name: "MCS Paradip Port Community Center", capacity: 350, occupied: 340, status: "CRITICAL", lat: 20.2644, lng: 86.6687, medical: "SDRF Medical Team", foodRations: "24h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  // { id: "MCS-06", name: "MCS Gosaba Sunderbans Cyclone Shelter", capacity: 450, occupied: 412, status: "NEAR FULL", lat: 22.1653, lng: 88.8021, medical: "Nurse Station Active", foodRations: "60h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
+  // { id: "MCS-07", name: "MCS Namkhana Coastal Flood Shelter", capacity: 300, occupied: 96, status: "AVAILABLE", lat: 21.7597, lng: 88.2296, medical: "Paramedic Unit", foodRations: "72h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
+  // { id: "MCS-08", name: "MCS Dhamra Port Evacuation Complex", capacity: 600, occupied: 540, status: "NEAR FULL", lat: 20.7885, lng: 86.9580, medical: "Doctor & Emergency O2", foodRations: "96h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
+  // { id: "MCS-09", name: "MCS Rajnagar Multipurpose Cyclone Shelter", capacity: 350, occupied: 290, status: "NEAR FULL", lat: 20.5732, lng: 86.8522, medical: "Medical Camp Active", foodRations: "48h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  // { id: "MCS-10", name: "MCS Chandbali Riverine Flood Shelter", capacity: 250, occupied: 90, status: "AVAILABLE", lat: 20.7761, lng: 86.7420, medical: "Nurse On-Duty", foodRations: "72h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
+  // { id: "MCS-11", name: "MCS Basudevpur Block Cyclone Center", capacity: 300, occupied: 110, status: "AVAILABLE", lat: 21.1410, lng: 86.7520, medical: "First Aid Station", foodRations: "48h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
+  // { id: "MCS-12", name: "MCS Aul Flood Safe Staging Camp", capacity: 400, occupied: 380, status: "CRITICAL", lat: 20.6680, lng: 86.6430, medical: "Doctor On-Duty", foodRations: "36h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  // { id: "MCS-13", name: "MCS Sagar Island South Embankment Center", capacity: 500, occupied: 310, status: "AVAILABLE", lat: 21.6420, lng: 88.0850, medical: "SDRF Paramedic", foodRations: "60h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
+  // { id: "MCS-14", name: "MCS Kakdwip Marine Flood Shelter", capacity: 350, occupied: 145, status: "AVAILABLE", lat: 21.8750, lng: 88.1880, medical: "Doctor & Pharmacy", foodRations: "84h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
+  // { id: "MCS-15", name: "MCS Digha Coastal Multi-Purpose Shelter", capacity: 450, occupied: 410, status: "NEAR FULL", lat: 21.6260, lng: 87.5070, medical: "Medical Station", foodRations: "72h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
+  // { id: "MCS-16", name: "MCS Guwahati Central Flood Relief Shelter", capacity: 600, occupied: 220, status: "AVAILABLE", lat: 26.1850, lng: 91.7480, medical: "Full Medical Bay", foodRations: "120h Stored", region: "Assam", site: "Guwahati / Brahmaputra" },
+  // { id: "MCS-17", name: "MCS Kaziranga High-Ground Evac Camp", capacity: 300, occupied: 275, status: "NEAR FULL", lat: 26.5780, lng: 93.1710, medical: "Doctor & Vet Unit", foodRations: "48h Stored", region: "Assam", site: "Kaziranga / Golaghat" },
+  // { id: "MCS-18", name: "MCS Joshimath GLOF Safe Staging Base", capacity: 250, occupied: 80, status: "AVAILABLE", lat: 30.5560, lng: 79.5670, medical: "High-Altitude Trauma Kit", foodRations: "96h Stored", region: "Uttarakhand", site: "Chamoli / Joshimath" },
+  // { id: "MCS-19", name: "MCS Chooralmala Landslide Relief Center", capacity: 350, occupied: 310, status: "CRITICAL", lat: 11.5280, lng: 76.1380, medical: "Disaster Medical Team", foodRations: "48h Stored", region: "Kerala", site: "Wayanad / Meppadi" },
+  // { id: "MCS-20", name: "MCS Jagatsinghpur Coastal Relief Hub", capacity: 450, occupied: 260, status: "AVAILABLE", lat: 20.2550, lng: 86.1710, medical: "Doctor On-Duty", foodRations: "72h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  // { id: "MCS-21", name: "MCS Erasama Flood Refuge Center", capacity: 550, occupied: 495, status: "NEAR FULL", lat: 20.1100, lng: 86.3350, medical: "SDRF Medical Team", foodRations: "48h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "MCS-22", name: "MCS Jajpur Road Community Shelter", capacity: 300, occupied: 145, status: "AVAILABLE", lat: 20.8650, lng: 86.3310, medical: "Nurse Station Active", foodRations: "96h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
+  // { id: "MCS-23", name: "MCS Cuttack Municipal Cyclone Complex", capacity: 700, occupied: 420, status: "AVAILABLE", lat: 20.4625, lng: 85.8828, medical: "Full Medical Bay", foodRations: "120h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  // { id: "MCS-24", name: "MCS Bhubaneswar SOC Evacuation Hub", capacity: 500, occupied: 350, status: "AVAILABLE", lat: 20.2961, lng: 85.8245, medical: "Doctor & Emergency O2", foodRations: "84h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  // { id: "MCS-25", name: "MCS Marshaghai Block Cyclone Shelter", capacity: 350, occupied: 95, status: "AVAILABLE", lat: 20.4520, lng: 86.7230, medical: "First Aid Station", foodRations: "48h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  // { id: "MCS-26", name: "MCS Pattamundai Riverbank Refuge", capacity: 400, occupied: 375, status: "NEAR FULL", lat: 20.5810, lng: 86.5740, medical: "Paramedic Unit", foodRations: "36h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  // { id: "MCS-27", name: "MCS Tirtol Coastal Community Center", capacity: 350, occupied: 120, status: "AVAILABLE", lat: 20.1950, lng: 86.5430, medical: "Doctor On-Duty", foodRations: "72h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  // { id: "MCS-28", name: "MCS Mahakalapada Mangrove High Shelter", capacity: 450, occupied: 410, status: "NEAR FULL", lat: 20.4210, lng: 86.6850, medical: "SDRF Paramedic Bay", foodRations: "60h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  // { id: "MCS-29", name: "MCS Chandipur Beach Defense Shelter", capacity: 300, occupied: 110, status: "AVAILABLE", lat: 21.4670, lng: 87.0140, medical: "Military Paramedics", foodRations: "96h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
+  // { id: "MCS-30", name: "MCS Konark Marine Drive Evac Center", capacity: 400, occupied: 230, status: "AVAILABLE", lat: 19.8870, lng: 86.0940, medical: "Doctor & Pharmacy", foodRations: "72h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" }
 ];
 
 export const radioChannels = [
@@ -429,5 +452,213 @@ export const exerciseScenario = {
     { name: "Trainee SP V. Sharma", role: "Ops Section Chief", score: "88%", tasks: "22/25", cert: "ICS-300 Certified", status: "GOOD" },
     { name: "Trainee Logistics Officer N. Patra", role: "Logistics Chief", score: "74%", tasks: "14/19", cert: "ICS-200 Active", status: "NEEDS REVIEW" },
     { name: "Trainee PIO K. Bannerjee", role: "Public Info Officer", score: "92%", tasks: "12/13", cert: "CAP-SACHET Certified", status: "EXCELLENT" }
+  ]
+};
+
+// =========================================================================
+// TACTICAL GIS GEOJSON DISASTER RISK & FLOOD INUNDATION DATASETS
+// =========================================================================
+
+export const cycloneDanaInundationGeoJSON = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      properties: {
+        id: "SURGE-Z1",
+        name: "Extreme Storm Surge (+3.5m Inundation)",
+        severity: "EXTREME",
+        depth: "3.5m - 4.2m",
+        color: "#DC2626",
+        fillColor: "#DC2626",
+        fillOpacity: 0.38,
+        description: "Direct coastal breach zone across Dhamra Port, Satbhaya, and Rajnagar mangrove belt. Mandatory evacuation enforced."
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [86.88, 20.88],
+            [87.05, 20.82],
+            [87.02, 20.58],
+            [86.92, 20.50],
+            [86.80, 20.60],
+            [86.88, 20.88]
+          ]
+        ]
+      }
+    },
+    {
+      type: "Feature",
+      properties: {
+        id: "SURGE-Z2",
+        name: "High Riverine Flood Inundation (+2.0m)",
+        severity: "HIGH",
+        depth: "1.8m - 2.5m",
+        color: "#EA580C",
+        fillColor: "#EA580C",
+        fillOpacity: 0.28,
+        description: "Baitarani & Brahmani estuarine backflow zone. Low-lying agricultural paddies and rural hamlets inundated."
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [86.68, 21.02],
+            [86.88, 20.88],
+            [86.80, 20.60],
+            [86.55, 20.58],
+            [86.50, 20.80],
+            [86.68, 21.02]
+          ]
+        ]
+      }
+    },
+    {
+      type: "Feature",
+      properties: {
+        id: "SURGE-Z3",
+        name: "Moderate Tidal Swell Advisory (+1.0m)",
+        severity: "MODERATE",
+        depth: "0.8m - 1.2m",
+        color: "#EAB308",
+        fillColor: "#EAB308",
+        fillOpacity: 0.18,
+        description: "Coastal buffer zone prone to high spring-tide waterlogging and drainage impedance."
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [86.45, 21.18],
+            [86.80, 21.10],
+            [87.10, 20.75],
+            [87.00, 20.40],
+            [86.40, 20.42],
+            [86.35, 20.85],
+            [86.45, 21.18]
+          ]
+        ]
+      }
+    }
+  ]
+};
+
+export const assamFloodsGeoJSON = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      properties: {
+        id: "ASSAM-Z1",
+        name: "Brahmaputra Active Riverine Breach Zone",
+        severity: "CRITICAL",
+        depth: "2.8m Above Danger Mark",
+        color: "#0284C7",
+        fillColor: "#0284C7",
+        fillOpacity: 0.35,
+        description: "Submergence across Morigaon, Nagaon, and Kaziranga southern flood plains."
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [92.50, 26.35],
+            [93.45, 26.65],
+            [93.65, 26.50],
+            [92.80, 26.15],
+            [92.50, 26.35]
+          ]
+        ]
+      }
+    },
+    {
+      type: "Feature",
+      properties: {
+        id: "ASSAM-Z2",
+        name: "Majuli Island Lowland Inundation Zone",
+        severity: "HIGH",
+        depth: "1.5m - 2.2m",
+        color: "#06B6D4",
+        fillColor: "#06B6D4",
+        fillOpacity: 0.25,
+        description: "Erosion hotspot and river island embankment breach sector."
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [94.00, 26.90],
+            [94.35, 27.05],
+            [94.40, 26.85],
+            [94.05, 26.75],
+            [94.00, 26.90]
+          ]
+        ]
+      }
+    }
+  ]
+};
+
+export const chamoliGlofGeoJSON = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      properties: {
+        id: "GLOF-Z1",
+        name: "Rishiganga - Dhauliganga Flash Surge Corridor",
+        severity: "EXTREME",
+        depth: "High Velocity Debris Wave",
+        color: "#DC2626",
+        fillColor: "#DC2626",
+        fillOpacity: 0.40,
+        description: "Glacial lake outburst flood torrent path downstream of Nanda Devi sanctuary."
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [79.50, 30.58],
+            [79.62, 30.56],
+            [79.72, 30.48],
+            [79.65, 30.44],
+            [79.52, 30.52],
+            [79.50, 30.58]
+          ]
+        ]
+      }
+    }
+  ]
+};
+
+export const wayanadLandslideGeoJSON = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      properties: {
+        id: "LANDSLIDE-Z1",
+        name: "Chooralmala - Meppadi Debris Flow Runout Corridor",
+        severity: "EXTREME",
+        depth: "Slope Failure & Heavy Siltation",
+        color: "#B91C1C",
+        fillColor: "#B91C1C",
+        fillOpacity: 0.42,
+        description: "High hazard debris torrent chute across tea plantations and river bridge nexus."
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [76.10, 11.54],
+            [76.16, 11.55],
+            [76.18, 11.49],
+            [76.12, 11.48],
+            [76.10, 11.54]
+          ]
+        ]
+      }
+    }
   ]
 };

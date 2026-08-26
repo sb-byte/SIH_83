@@ -1,18 +1,22 @@
 <!DOCTYPE html>
 <html lang="en" class="light">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>National Disaster Command Center | Unity EOC India (NDMA / MHA)</title>
-  
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
 
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="./src/style.css" />
 </head>
+
 <body class="gov-theme light antialiased">
 
   <!-- ========================================================================= -->
@@ -47,7 +51,8 @@
             <span class="lang-current font-bold">English</span> / हिन्दी
           </button>
           <span class="gov-sep">|</span>
-          <button id="theme-toggle-btn" class="access-btn theme-toggle-btn" title="Toggle Light / Dark Theme">THEME</button>
+          <button id="theme-toggle-btn" class="access-btn theme-toggle-btn"
+            title="Toggle Light / Dark Theme">THEME</button>
         </div>
       </div>
     </div>
@@ -65,7 +70,7 @@
   <!-- ========================================================================= -->
   <header id="global-header" class="master-header">
     <div class="header-main-row">
-      
+
       <!-- Brand & National Emblem -->
       <div class="brand-group" id="nav-brand-btn" role="button" title="Return to Command Center">
         <div class="emblem-wrapper">
@@ -91,11 +96,13 @@
 
         <!-- Sleek Segmented Mode Switcher -->
         <div class="dual-mode-switch compact">
-          <button id="mode-live-btn" class="mode-toggle-btn active" data-mode="LIVE" title="Operational Real-Time Feeds">
+          <button id="mode-live-btn" class="mode-toggle-btn active" data-mode="LIVE"
+            title="Operational Real-Time Feeds">
             <span class="mode-dot live-dot"></span>
             <span class="mode-text">LIVE</span>
           </button>
-          <button id="mode-exercise-btn" class="mode-toggle-btn" data-mode="EXERCISE" title="Sandboxed Virtual Drill & Training">
+          <button id="mode-exercise-btn" class="mode-toggle-btn" data-mode="EXERCISE"
+            title="Sandboxed Virtual Drill & Training">
             <span class="mode-dot exercise-dot"></span>
             <span class="mode-text">EXERCISE</span>
           </button>
@@ -104,16 +111,18 @@
 
       <!-- Telemetry & Active Officer Security Group -->
       <div class="header-tools">
-        
+
         <!-- Active User Profile & Tier Security Pill -->
-        <div id="auth-header-pill" class="auth-header-pill" role="button" title="View Security Credentials / Switch Profile">
+        <div id="auth-header-pill" class="auth-header-pill" role="button"
+          title="View Security Credentials / Switch Profile">
           <div class="auth-avatar-circle" id="header-user-avatar">🏛️</div>
           <div class="auth-pill-text">
             <div class="flex items-center gap-1.5">
               <span id="header-user-name" class="font-bold text-xs">Shri Rajesh Verma, IAS</span>
               <span id="header-tier-chip" class="tier-pill-badge tier1-badge">T1 • AUTHORITY</span>
             </div>
-            <div class="text-xs text-muted" id="header-jurisdiction" style="display: none;">National Command (NDMA)</div>
+            <div class="text-xs text-muted" id="header-jurisdiction" style="display: none;">National Command (NDMA)
+            </div>
           </div>
           <span class="auth-switch-arrow">▾</span>
         </div>
@@ -126,7 +135,8 @@
 
         <!-- Compact Tool Actions -->
         <div class="tool-buttons">
-          <button id="audio-toggle-btn" class="btn btn-outline btn-sm font-bold" title="Toggle Sound Alerts">AUDIO</button>
+          <button id="audio-toggle-btn" class="btn btn-outline btn-sm font-bold"
+            title="Toggle Sound Alerts">AUDIO</button>
           <button id="quick-alert-btn" class="btn btn-saffron btn-sm font-bold" title="Armed CAP Alert System">
             SACHET ALERT
           </button>
@@ -184,9 +194,11 @@
       <div class="clearance-left">
         <span class="clearance-badge" id="hud-clearance-badge">T1 • NATIONAL COMMAND AUTHORITY</span>
         <span class="clearance-sep">•</span>
-        <span class="clearance-scope" id="hud-clearance-scope">Jurisdiction: <strong>National (Unrestricted)</strong></span>
+        <span class="clearance-scope" id="hud-clearance-scope">Jurisdiction: <strong>National
+            (Unrestricted)</strong></span>
         <span class="clearance-sep">•</span>
-        <span class="clearance-rights" id="hud-clearance-rights">Authorized: <strong>Full IAP Sign-off, Gazette Declarations, Live SACHET Broadcast</strong></span>
+        <span class="clearance-rights" id="hud-clearance-rights">Authorized: <strong>Full IAP Sign-off, Gazette
+            Declarations, Live SACHET Broadcast</strong></span>
       </div>
       <div class="clearance-actions">
         <button type="button" class="btn-clearance-hub" id="btn-jump-tier-hub">
@@ -206,14 +218,15 @@
     <!-- ========================================================================= -->
     <section id="view-login" class="view-section active">
       <div class="auth-login-wrap">
-        
+
         <!-- Sovereign Executive Security Ribbon -->
         <div class="auth-sovereign-banner">
           <div class="auth-banner-left">
             <div class="auth-emblem-badge">🏛️</div>
             <div>
               <div class="auth-banner-title">राष्ट्रीय आपदा प्रबंधन प्राधिकरण (NDMA)</div>
-              <div class="auth-banner-sub">National Disaster Management Authority • Integrated Crisis Operations Portal</div>
+              <div class="auth-banner-sub">National Disaster Management Authority • Integrated Crisis Operations Portal
+              </div>
             </div>
           </div>
           <div class="auth-security-badge">
@@ -232,7 +245,8 @@
           <div class="volunteer-recruit-text">
             <span class="volunteer-recruit-kicker">🙋 आपदा मित्र • JOIN THE RELIEF NETWORK</span>
             <span class="volunteer-recruit-title">Not an officer? Register as an Aapda Mitra Volunteer</span>
-            <span class="volunteer-recruit-sub">Water rescue, first aid, shelter management, radio comms &amp; general support — no prior credential needed.</span>
+            <span class="volunteer-recruit-sub">Water rescue, first aid, shelter management, radio comms &amp; general
+              support — no prior credential needed.</span>
           </div>
           <button type="button" id="btn-login-reg-vol" class="btn btn-saffron font-bold btn-lg volunteer-recruit-cta">
             REGISTER AS A VOLUNTEER →
@@ -240,7 +254,7 @@
         </div>
 
         <div class="auth-grid-layout">
-          
+
           <!-- Left Column: Official Agency Credential Login Form -->
           <div class="auth-card-panel">
             <div class="panel-header-clean">
@@ -260,7 +274,8 @@
                   <span class="text-alert">*</span>
                 </label>
                 <div class="input-with-icon">
-                  <input type="text" id="auth-input-id" class="field-input font-bold mono" placeholder="e.g. NDMA-AUTH-01" required value="NDMA-AUTH-01" autocomplete="username" />
+                  <input type="text" id="auth-input-id" class="field-input font-bold mono"
+                    placeholder="e.g. NDMA-AUTH-01" required value="NDMA-AUTH-01" autocomplete="username" />
                 </div>
                 <span class="field-hint">Enter your designated NDMA / SDMA / DDMA / NDRF officer credential ID.</span>
               </div>
@@ -271,7 +286,8 @@
                   <span class="text-alert">*</span>
                 </label>
                 <div class="input-with-icon">
-                  <input type="password" id="auth-input-password" class="field-input font-bold" placeholder="••••••••••••" value="Unity@2026" required autocomplete="current-password" />
+                  <input type="password" id="auth-input-password" class="field-input font-bold"
+                    placeholder="••••••••••••" value="Unity@2026" required autocomplete="current-password" />
                 </div>
                 <span class="field-hint">Verified server-side via scrypt cryptographic hash.</span>
               </div>
@@ -283,12 +299,15 @@
                     <span>Two-Factor Authentication (2FA) Mandatory</span>
                     <span class="tfa-chip">RFC 6238 TOTP</span>
                   </div>
-                  <span class="text-xs text-muted">Mandatory for Tier 1 National &amp; Tier 2 State executive accounts. Code rotates every 30s.</span>
+                  <span class="text-xs text-muted">Mandatory for Tier 1 National &amp; Tier 2 State executive accounts.
+                    Code rotates every 30s.</span>
                 </div>
                 <div class="form-field my-2">
                   <label class="field-lbl">ENTER 6-DIGIT ROTATING TOTP CODE</label>
                   <div class="input-with-icon">
-                    <input type="text" id="auth-input-otp" maxlength="6" class="field-input font-bold text-center mono otp-input" placeholder="000000" autocomplete="one-time-code" inputmode="numeric" />
+                    <input type="text" id="auth-input-otp" maxlength="6"
+                      class="field-input font-bold text-center mono otp-input" placeholder="000000"
+                      autocomplete="one-time-code" inputmode="numeric" />
                   </div>
                   <div class="demo-otp-helper mt-1">
                     <button type="button" class="btn-link text-xs font-bold text-navy" id="btn-fill-demo-otp">
@@ -306,7 +325,8 @@
                 </div>
                 <div class="captcha-flex-row">
                   <div class="captcha-badge-display mono font-bold" id="captcha-display-text">7 + 5 = ?</div>
-                  <input type="text" id="captcha-input-val" class="field-input mono font-bold text-center" placeholder="Answer" style="max-width: 110px;" value="12" />
+                  <input type="text" id="captcha-input-val" class="field-input mono font-bold text-center"
+                    placeholder="Answer" style="max-width: 110px;" value="12" />
                 </div>
               </div>
 
@@ -321,7 +341,9 @@
               <!-- Official Government Legal Notice -->
               <div class="auth-legal-footer">
                 <p>
-                  <strong>RESTRICTED GOVERNMENT SYSTEM:</strong> Access is restricted to authorized disaster management officers. Unauthorized access attempts are logged with client IP and prosecuted under Section 66 of the IT Act, 2000 &amp; Section 51 of the Disaster Management Act, 2005.
+                  <strong>RESTRICTED GOVERNMENT SYSTEM:</strong> Access is restricted to authorized disaster management
+                  officers. Unauthorized access attempts are logged with client IP and prosecuted under Section 66 of
+                  the IT Act, 2000 &amp; Section 51 of the Disaster Management Act, 2005.
                 </p>
               </div>
             </form>
@@ -329,7 +351,7 @@
 
           <!-- Right Column: Official Bulletins, SOPs & Emergency Help Desk -->
           <div class="auth-info-panel">
-            
+
             <!-- Live Government Operational Notice Board -->
             <div class="gov-bulletin-card">
               <div class="card-head-compact">
@@ -340,19 +362,22 @@
                 <div class="bulletin-item">
                   <span class="bulletin-time mono">14:15 IST</span>
                   <div class="bulletin-content">
-                    <strong>IMD Cyclone Dana Warning #14:</strong> Severe Cyclonic Storm crossing Odisha-WB coasts between Dhamra &amp; Sagar Island. Sustained wind 120-130 kmph.
+                    <strong>IMD Cyclone Dana Warning #14:</strong> Severe Cyclonic Storm crossing Odisha-WB coasts
+                    between Dhamra &amp; Sagar Island. Sustained wind 120-130 kmph.
                   </div>
                 </div>
                 <div class="bulletin-item">
                   <span class="bulletin-time mono">13:40 IST</span>
                   <div class="bulletin-content">
-                    <strong>MHA NDMA Order 08/2026:</strong> 18 NDRF Battalions deployed in coastal Odisha districts. Coastal evacuation target 276,000+ citizens underway.
+                    <strong>MHA NDMA Order 08/2026:</strong> 18 NDRF Battalions deployed in coastal Odisha districts.
+                    Coastal evacuation target 276,000+ citizens underway.
                   </div>
                 </div>
                 <div class="bulletin-item">
                   <span class="bulletin-time mono">12:00 IST</span>
                   <div class="bulletin-content">
-                    <strong>CAP-SACHET System Armed:</strong> Multi-lingual cell broadcast enabled for coastal geofenced sectors.
+                    <strong>CAP-SACHET System Armed:</strong> Multi-lingual cell broadcast enabled for coastal geofenced
+                    sectors.
                   </div>
                 </div>
               </div>
@@ -422,7 +447,8 @@
               <span>LIVE ACCESS AUDIT TRAIL (IMMUTABLE LOG)</span>
             </div>
             <div class="flex items-center gap-3">
-              <span class="crumb-lbl mono">TOTAL SESSIONS LOGGED: <span id="audit-session-count" class="font-bold text-navy">1</span></span>
+              <span class="crumb-lbl mono">TOTAL SESSIONS LOGGED: <span id="audit-session-count"
+                  class="font-bold text-navy">1</span></span>
               <button type="button" id="btn-refresh-audit" class="btn btn-xs btn-outline font-bold">REFRESH LOG</button>
             </div>
           </div>
@@ -453,25 +479,34 @@
     <!-- VIEW: VOLUNTEER STATION (AAPDA MITRA)                                     -->
     <!-- ========================================================================= -->
     <section id="view-landing" class="view-section">
-      <div class="volunteer-portal-card" style="max-width: 960px; margin: 30px auto; background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
+      <div class="volunteer-portal-card"
+        style="max-width: 960px; margin: 30px auto; background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div
+          style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
           <div style="display: flex; align-items: center; gap: 14px;">
             <div style="font-size: 2rem;">🏛️</div>
             <div>
-              <h2 style="margin: 0; font-size: 1.3rem; color: var(--navy-primary);">आपदा मित्र स्वयंसेवक स्टेशन | Aapda Mitra Volunteer Station</h2>
-              <div style="font-size: 0.85rem; color: var(--text-muted);">National Disaster Management Authority • Ground Volunteer Operations &amp; Radio Net</div>
+              <h2 style="margin: 0; font-size: 1.3rem; color: var(--navy-primary);">आपदा मित्र स्वयंसेवक स्टेशन | Aapda
+                Mitra Volunteer Station</h2>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">National Disaster Management Authority • Ground
+                Volunteer Operations &amp; Radio Net</div>
             </div>
           </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 18px;">
-          <div style="background: var(--bg-card); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
+          <div
+            style="background: var(--bg-card); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
             <h4 style="margin: 0 0 10px 0; color: var(--text-main);">Tactical Radio Net</h4>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Assigned Channel: <strong>CH-05 (Aapda Mitra Net - 146.520 MHz)</strong></p>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Assigned Channel:
+              <strong>CH-05 (Aapda Mitra Net - 146.520 MHz)</strong>
+            </p>
             <div class="status-chip online">● TRANSMITTER ACTIVE</div>
           </div>
-          <div style="background: var(--bg-card); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
+          <div
+            style="background: var(--bg-card); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
             <h4 style="margin: 0 0 10px 0; color: var(--text-main);">Assigned Jurisdiction</h4>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Local District Sector • Emergency Operations Roster</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Local District Sector •
+              Emergency Operations Roster</p>
             <span class="tier-pill-badge tier5-badge">T5 • VOLUNTEER CLEARANCE</span>
           </div>
         </div>
@@ -483,7 +518,7 @@
     <!-- ========================================================================= -->
     <section id="view-command" class="view-section">
       <div class="command-grid-layout">
-        
+
         <!-- LEFT COLUMN: CHRONO INCIDENT STREAM & CITIZEN SOS (26% Width) -->
         <aside class="panel incident-panel">
           <div class="panel-head">
@@ -495,7 +530,8 @@
 
           <!-- Filter Strip & Search Input -->
           <div class="incident-search-box">
-            <input type="text" id="incident-search-input" class="search-input" placeholder="Search incidents &amp; SOS by keyword..." />
+            <input type="text" id="incident-search-input" class="search-input"
+              placeholder="Search incidents &amp; SOS by keyword..." />
           </div>
 
           <div class="filter-strip">
@@ -519,7 +555,8 @@
               <span class="font-bold text-xs">AAPDA MITRA GROUND INTEL</span>
             </div>
             <p class="intel-body mono text-xs" id="ground-intel-text">
-              <span class="text-alert font-bold">[VERIFIED SOS]:</span> Satbhaya creek breached. 14 families relocated to Kendrapara MCS. High-water dinghies requested.
+              <span class="text-alert font-bold">[VERIFIED SOS]:</span> Satbhaya creek breached. 14 families relocated
+              to Kendrapara MCS. High-water dinghies requested.
             </p>
           </div>
         </aside>
@@ -532,20 +569,36 @@
             </div>
             <!-- Map Layers & Tool Palette -->
             <div class="map-layers-group">
-              <button id="drop-pin-tool-btn" class="chip" title="Click on map to drop tactical hotspot pin">DROP PIN</button>
-              <button id="toggle-radar-btn" class="chip chip-active">DOPPLER RADAR</button>
-              <button id="toggle-evac-btn" class="chip chip-active">EVAC ZONES</button>
-              <button id="toggle-assets-btn" class="chip chip-active">NDRF FLEET</button>
-              <button id="toggle-shelters-btn" class="chip chip-active">SHELTERS</button>
+              <button id="drop-pin-tool-btn" class="chip" title="Click on map to drop tactical hotspot pin">DROP
+                PIN</button>
+              <button id="toggle-radar-btn" class="chip chip-active"
+                title="Toggle IMD Doppler Radar storm bands">RADAR</button>
+              <button id="toggle-flood-btn" class="chip chip-active"
+                title="Toggle GeoJSON storm surge & flood inundation risk polygons">FLOOD RISK</button>
+              <button id="toggle-evac-btn" class="chip chip-active" title="Toggle mandatory evacuation polygon">EVAC
+                ZONES</button>
+              <button id="toggle-assets-btn" class="chip chip-active" title="Toggle NDRF & Coast Guard assets">NDRF
+                FLEET</button>
+              <button id="toggle-shelters-btn" class="chip chip-active"
+                title="Toggle Multi-Purpose Cyclone Shelters">SHELTERS</button>
+              <button id="toggle-incidents-btn" class="chip chip-active"
+                title="Toggle chrono incident markers">INCIDENTS</button>
+              <button id="toggle-sos-btn" class="chip chip-active"
+                title="Toggle citizen distress SOS markers">SOS QUEUE</button>
+              <button id="add-shelter-gis-btn" class="chip chip-action"
+                title="Register a new cyclone/flood shelter on the GIS map">+ ADD SHELTER</button>
+              <button id="draw-danger-zone-btn" class="chip chip-danger-action"
+                title="Declare a red danger or impact zone on the map">DANGER ZONE</button>
             </div>
           </div>
 
-          <!-- Map & Drone Feeds Viewport -->
-          <div class="map-container-rel">
-            <div id="gis-map" class="gis-map-canvas"></div>
-
-            <!-- Floating Map HUD -->
-            <div class="map-hud-box">
+          <!-- Top Tactical Telemetry Ribbon (Positioned above map canvas so it never blocks pins/controls) -->
+          <div class="map-telemetry-bar">
+            <div class="telemetry-bar-left">
+              <span class="pulse-beacon-dot"></span>
+              <span class="telemetry-label">IMD LIVE TELEMETRY &amp; EVAC TRACKER</span>
+            </div>
+            <div class="telemetry-bar-metrics">
               <div class="hud-stat">
                 <span class="hud-lbl">EST. LANDFALL</span>
                 <span class="hud-data text-alert font-bold" id="hud-landfall">T-02:45:00</span>
@@ -561,43 +614,123 @@
                 <span class="hud-data text-emerald font-bold" id="hud-evac">86.4% (276K)</span>
               </div>
             </div>
+          </div>
 
-            <!-- Drone Feeds Dock -->
-            <div class="drone-dock-wrap">
-              <div class="drone-dock-header">
-                <span class="font-bold text-xs">LIVE RECON FEEDS (WEBRTC 0.12s)</span>
-                <span class="mono text-xs text-saffron">3 FEEDS ACTIVE • CLICK TO INSPECT FLIR</span>
+          <!-- Map Viewport -->
+          <div class="map-container-rel">
+            <!-- OpenStreetMap Nominatim Location Search Bar -->
+            <div class="gis-search-wrapper" id="gis-search-container">
+              <div class="gis-search-bar">
+                <span class="gis-search-icon">🔍</span>
+                <input type="text" id="gis-search-input"
+                  placeholder="Search OpenStreetMap location (e.g. Kendrapara, Dhamra, Puri)..." autocomplete="off" />
+                <button id="gis-search-clear" class="gis-search-clear-btn" title="Clear search"
+                  style="display: none;">✕</button>
+                <div class="gis-search-spinner" id="gis-search-spinner" style="display: none;"></div>
               </div>
-              <div class="drone-cards-row">
-                <div class="drone-card active" data-cam="1">
-                  <div class="drone-card-top">
-                    <span>CAM 01 | PURI SEAFRONT</span>
-                    <span class="rec-indicator">● REC</span>
-                  </div>
-                  <div class="drone-sim-window video-puri">
-                    <div class="scanlines"></div>
-                    <span class="cam-data">GALE SURGE 3.2M</span>
-                  </div>
+              <div id="gis-search-results" class="gis-search-dropdown hidden"></div>
+            </div>
+
+            <!-- Main Leaflet Map Canvas -->
+            <div id="gis-map" class="gis-map-canvas"></div>
+
+            <!-- Floating Active OSRM Route HUD Card (Hidden until route calculated) -->
+            <div id="gis-route-hud" class="gis-route-hud-card hidden">
+              <div class="route-hud-top">
+                <div class="route-hud-badge">
+                  <span class="pulse-beacon-dot"></span>
+                  <span class="mono font-bold" id="route-hud-type">TACTICAL ROAD EVACUATION ROUTE</span>
                 </div>
-                <div class="drone-card" data-cam="2">
-                  <div class="drone-card-top">
-                    <span>CAM 02 | NDRF DRONE ALPHA</span>
-                    <span class="rec-indicator">● REC</span>
-                  </div>
-                  <div class="drone-sim-window video-drone">
-                    <div class="scanlines"></div>
-                    <span class="cam-data">DHAMRA JETTY | ALT 120M</span>
-                  </div>
+                <button id="clear-route-btn" class="btn btn-outline-danger btn-xs font-bold"
+                  title="Clear current route">✕ CLEAR ROUTE</button>
+              </div>
+              <div class="route-hud-title font-bold" id="route-hud-title">Satbhaya SOS ➔ MCS Kendrapara</div>
+              <div class="route-hud-metrics">
+                <div class="route-metric-item">
+                  <span class="route-lbl">EST. DISTANCE</span>
+                  <span class="route-val text-saffron font-mono font-bold" id="route-hud-dist">-- KM</span>
                 </div>
-                <div class="drone-card" data-cam="3">
-                  <div class="drone-card-top">
-                    <span>CAM 03 | KENDRAPARA MCS</span>
-                    <span class="rec-indicator">● REC</span>
+                <div class="route-metric-item">
+                  <span class="route-lbl">DRIVING ETA</span>
+                  <span class="route-val text-emerald font-mono font-bold" id="route-hud-eta">-- MIN</span>
+                </div>
+                <div class="route-metric-item">
+                  <span class="route-lbl">ROUTING ENGINE</span>
+                  <span class="route-val text-cyan font-mono" id="route-hud-engine">OSRM Road Network</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Floating Tactical GIS Legend Widget (Collapsible & Compact) -->
+            <div id="gis-legend-panel" class="gis-legend-box">
+              <div class="gis-legend-header" id="gis-legend-toggle" title="Toggle Legend">
+                <span class="legend-title">🗺️ GIS SYMBOLOGY</span>
+                <span class="legend-chevron" id="legend-chevron">▾</span>
+              </div>
+              <div class="gis-legend-content" id="gis-legend-body">
+                <div class="legend-row"><span class="legend-symb symb-core"></span><span>Gale Core (&gt;120 km/h)</span></div>
+                <div class="legend-row"><span class="legend-symb symb-squall"></span><span>Squall Band (90-110 km/h)</span></div>
+                <div class="legend-row"><span class="legend-symb symb-surge-extreme"></span><span>Storm Surge +3.5m</span></div>
+                <div class="legend-row"><span class="legend-symb symb-surge-high"></span><span>River Flood +2.0m</span></div>
+                <div class="legend-row"><span class="legend-symb symb-evac"></span><span>Evac Zone Polygon</span></div>
+                <div class="legend-row"><span class="legend-symb symb-shelter">🏢</span><span>Cyclone Shelter (MCS)</span></div>
+                <div class="legend-row"><span class="legend-symb symb-ndrf">🚤</span><span>NDRF Fleet Asset</span></div>
+                <div class="legend-row"><span class="legend-symb symb-sos">🆘</span><span>Citizen Distress SOS</span></div>
+                <div class="legend-row"><span class="legend-symb symb-route"></span><span>OSRM Road Route</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Tactical Drone Feeds Dock (Positioned below map) -->
+          <div class="drone-dock-wrap">
+            <div class="drone-dock-header">
+              <div class="drone-dock-title-group">
+                <span class="pulse-beacon-dot"></span>
+                <span class="font-bold text-xs">LIVE TACTICAL RECON FEEDS (WEBRTC LOW-LATENCY 0.12s)</span>
+              </div>
+              <span class="mono text-xs text-saffron">3 FEEDS STREAMING • CLICK CARD TO INSPECT FLIR THERMAL</span>
+            </div>
+            <div class="drone-cards-row">
+              <div class="drone-card active" data-cam="1">
+                <div class="drone-card-top">
+                  <span>CAM 01 | PURI SEAFRONT (CCTV-04)</span>
+                  <span class="rec-indicator">● LIVE</span>
+                </div>
+                <div class="drone-sim-window video-puri">
+                  <div class="scanlines"></div>
+                  <div class="drone-overlay-grid">
+                    <span class="drone-hud-tag">SURGE: +3.2M | WIND: 118 KM/H</span>
+                    <span class="drone-hud-coords">19.813° N, 85.831° E</span>
                   </div>
-                  <div class="drone-sim-window video-shelter">
-                    <div class="scanlines"></div>
-                    <span class="cam-data">QUEUE: 42 PERSONS</span>
+                  <span class="cam-data">GALE SWELL SURGE STAGE 2</span>
+                </div>
+              </div>
+              <div class="drone-card" data-cam="2">
+                <div class="drone-card-top">
+                  <span>CAM 02 | NDRF UAV FALCON-9 (DHAMRA)</span>
+                  <span class="rec-indicator">● LIVE</span>
+                </div>
+                <div class="drone-sim-window video-drone">
+                  <div class="scanlines"></div>
+                  <div class="drone-overlay-grid">
+                    <span class="drone-hud-tag">ALT: 145M | BATT: 88% | FLIR ON</span>
+                    <span class="drone-hud-coords">20.788° N, 86.958° E</span>
                   </div>
+                  <span class="cam-data">JETTY CREEK SAR SWEEP</span>
+                </div>
+              </div>
+              <div class="drone-card" data-cam="3">
+                <div class="drone-card-top">
+                  <span>CAM 03 | KENDRAPARA MCS GATE-02</span>
+                  <span class="rec-indicator">● LIVE</span>
+                </div>
+                <div class="drone-sim-window video-shelter">
+                  <div class="scanlines"></div>
+                  <div class="drone-overlay-grid">
+                    <span class="drone-hud-tag">IR NIGHT-OPTIC | HEADCOUNT: 42</span>
+                    <span class="drone-hud-coords">20.502° N, 86.422° E</span>
+                  </div>
+                  <span class="cam-data">EVAC ENTRY QUEUE NOMINAL</span>
                 </div>
               </div>
             </div>
@@ -606,7 +739,7 @@
 
         <!-- RIGHT COLUMN: IMD TELEMETRY, SHELTERS & NDRF READINESS (26% Width) -->
         <aside class="panel readiness-panel">
-          
+
           <!-- IMD Weather Telemetry Card -->
           <div class="readiness-card">
             <div class="card-head-compact">
@@ -616,23 +749,32 @@
             <div class="gauge-grid-2x2">
               <div class="gauge-card">
                 <span class="gauge-lbl">SUSTAINED WIND</span>
-                <span class="gauge-digit text-saffron" id="gauge-wind-val">125 <small class="text-xs">km/h</small></span>
-                <div class="gauge-progress"><div class="gauge-bar bg-saffron" id="gauge-wind-bar" style="width: 82%;"></div></div>
+                <span class="gauge-digit text-saffron" id="gauge-wind-val">125 <small
+                    class="text-xs">km/h</small></span>
+                <div class="gauge-progress">
+                  <div class="gauge-bar bg-saffron" id="gauge-wind-bar" style="width: 82%;"></div>
+                </div>
               </div>
               <div class="gauge-card">
                 <span class="gauge-lbl">24H RAINFALL</span>
                 <span class="gauge-digit text-navy" id="gauge-rain-val">210 <small class="text-xs">mm</small></span>
-                <div class="gauge-progress"><div class="gauge-bar bg-navy" id="gauge-rain-bar" style="width: 70%;"></div></div>
+                <div class="gauge-progress">
+                  <div class="gauge-bar bg-navy" id="gauge-rain-bar" style="width: 70%;"></div>
+                </div>
               </div>
               <div class="gauge-card">
                 <span class="gauge-lbl">TIDAL SURGE</span>
                 <span class="gauge-digit text-alert" id="gauge-surge-val">+3.8 <small class="text-xs">m</small></span>
-                <div class="gauge-progress"><div class="gauge-bar bg-alert" id="gauge-surge-bar" style="width: 90%;"></div></div>
+                <div class="gauge-progress">
+                  <div class="gauge-bar bg-alert" id="gauge-surge-bar" style="width: 90%;"></div>
+                </div>
               </div>
               <div class="gauge-card">
                 <span class="gauge-lbl">POWER GRID RISK</span>
                 <span class="gauge-digit text-alert">CRITICAL</span>
-                <div class="gauge-progress"><div class="gauge-bar bg-alert" style="width: 95%;"></div></div>
+                <div class="gauge-progress">
+                  <div class="gauge-bar bg-alert" style="width: 95%;"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -681,7 +823,8 @@
         <div class="marquee-tag font-bold">URGENT EOC BROADCAST</div>
         <div class="marquee-track">
           <div class="marquee-content" id="live-broadcast-text">
-            RED ALERT: Coastal sectors of Balasore, Kendrapara, Bhadrak, and Jagatsinghpur under Mandatory Evacuation. Move to designated Cyclone Shelters immediately. Call State Helpline 1070 for emergency rescue.
+            RED ALERT: Coastal sectors of Balasore, Kendrapara, Bhadrak, and Jagatsinghpur under Mandatory Evacuation.
+            Move to designated Cyclone Shelters immediately. Call State Helpline 1070 for emergency rescue.
           </div>
         </div>
       </div>
@@ -692,7 +835,7 @@
     <!-- ========================================================================= -->
     <section id="view-ics" class="view-section">
       <div class="ics-page-wrap">
-        
+
         <!-- Header Bar -->
         <div class="ics-head-bar">
           <div>
@@ -710,7 +853,7 @@
         </div>
 
         <div class="ics-grid-layout">
-          
+
           <!-- Command Organization Tree -->
           <div class="panel ics-tree-panel">
             <div class="panel-head">
@@ -739,7 +882,8 @@
             <!-- Task Tracker Footer -->
             <div class="task-tracker-footer">
               <div class="task-tracker-meta">
-                <span class="font-bold text-xs" id="task-progress-txt">SECTION TASKS COMPLETION (5/7 COMPLETED - 71.4%)</span>
+                <span class="font-bold text-xs" id="task-progress-txt">SECTION TASKS COMPLETION (5/7 COMPLETED -
+                  71.4%)</span>
                 <span class="mono text-xs text-saffron">NEXT BRIEFING: 01:29:45</span>
               </div>
               <div class="brutal-progress-bar">
@@ -756,7 +900,7 @@
     <!-- ========================================================================= -->
     <section id="view-logistics" class="view-section">
       <div class="logistics-layout-grid">
-        
+
         <!-- Left Column: NDRF Asset Table & Tactical Radio Net -->
         <div class="panel fleet-panel">
           <div class="panel-head">
@@ -767,7 +911,8 @@
           </div>
 
           <div class="asset-search-row">
-            <input type="text" id="asset-search-input" class="search-input" placeholder="Search asset by name or ID..." />
+            <input type="text" id="asset-search-input" class="search-input"
+              placeholder="Search asset by name or ID..." />
           </div>
 
           <div class="asset-filter-bar">
@@ -806,7 +951,7 @@
                 <span class="mono text-xs text-emerald" id="radio-signal-badge">SIGNAL: 99% HIGH-GAIN</span>
               </div>
             </div>
-            
+
             <div class="tactical-deck-wrap">
               <div class="deck-left">
                 <div class="form-field">
@@ -835,7 +980,8 @@
                     <span class="vu-bar v4"></span>
                     <span class="vu-bar v5"></span>
                   </div>
-                  <button id="ptt-broadcast-btn" class="tactical-ptt-trigger-btn font-bold" title="Press &amp; Hold or Click to Transmit Voice on Selected Net">
+                  <button id="ptt-broadcast-btn" class="tactical-ptt-trigger-btn font-bold"
+                    title="Press &amp; Hold or Click to Transmit Voice on Selected Net">
                     <span class="ptt-lbl">PUSH TO TALK</span>
                     <span class="ptt-sub mono">TRANSMIT (PTT)</span>
                   </button>
@@ -908,12 +1054,14 @@
 
             <div class="form-field">
               <label class="field-lbl">TARGET GEOFENCE AREA</label>
-              <input type="text" id="sachet-geofence" class="field-input" value="Bhadrak, Kendrapara, Balasore Coastal Sectors (Est. 1.84M population)" />
+              <input type="text" id="sachet-geofence" class="field-input"
+                value="Bhadrak, Kendrapara, Balasore Coastal Sectors (Est. 1.84M population)" />
             </div>
 
             <div class="form-field">
               <label class="field-lbl">MULTILINGUAL BROADCAST MESSAGE</label>
-              <textarea id="sachet-msg-body" class="field-input mono" rows="3">EMERGENCY ALERT [NDMA / SDMA]: Severe Cyclone DANA landfall imminent. Move immediately to nearest Multipurpose Cyclone Shelter. Do not approach shoreline. Call 1070 for rescue help.</textarea>
+              <textarea id="sachet-msg-body" class="field-input mono"
+                rows="3">EMERGENCY ALERT [NDMA / SDMA]: Severe Cyclone DANA landfall imminent. Move immediately to nearest Multipurpose Cyclone Shelter. Do not approach shoreline. Call 1070 for rescue help.</textarea>
             </div>
 
             <div class="form-field">
@@ -1007,8 +1155,10 @@
               <h2 class="head-text">AAPDA MITRA VOLUNTEER POOL</h2>
             </div>
             <div class="flex items-center gap-2">
-              <button id="add-volunteer-btn" class="btn btn-xs btn-outline font-bold" title="Open Official Google Form Registration">GOOGLE FORM ↗</button>
-              <button id="btn-open-vol-register-modal" class="btn btn-xs btn-saffron font-bold" title="Register New Volunteer Direct In-App">+ REGISTER VOLUNTEER</button>
+              <button id="add-volunteer-btn" class="btn btn-xs btn-outline font-bold"
+                title="Open Official Google Form Registration">GOOGLE FORM ↗</button>
+              <button id="btn-open-vol-register-modal" class="btn btn-xs btn-saffron font-bold"
+                title="Register New Volunteer Direct In-App">+ REGISTER VOLUNTEER</button>
             </div>
           </div>
 
@@ -1061,7 +1211,7 @@
             <span class="badge badge-gold">TRAINING &amp; STOCHASTIC STRESS TESTING</span>
           </div>
         </div>
-        
+
         <!-- SUB-TAB 1: MSEL DRILL TIMELINE -->
         <div id="sim-tab-msel" class="sim-tab-content active">
           <!-- Master Time Machine Scrubber Card -->
@@ -1127,7 +1277,7 @@
 
         <!-- SUB-TAB 2: HAZARD CLUSTER DEPENDENCY CASCADE & COMPOUND FAILURE SIMULATOR -->
         <div id="sim-tab-dependency" class="sim-tab-content">
-          
+
           <div class="dep-cluster-engine-wrap" id="dep-cluster-engine">
             <!-- Cluster Picker Grid -->
             <div class="cluster-picker">
@@ -1154,7 +1304,8 @@
 
             <!-- Cluster Blurb Bar -->
             <div class="cluster-blurb-bar" id="cluster-blurb-bar">
-              Existing cascade engine (hop-1 / hop-2), extended with threat-zone geometry — radial, directional, or point-then-radiating.
+              Existing cascade engine (hop-1 / hop-2), extended with threat-zone geometry — radial, directional, or
+              point-then-radiating.
             </div>
 
             <!-- Subbar: Specific Crisis & Crisis Scale Slider -->
@@ -1173,7 +1324,8 @@
                   <span>Crisis scale</span>
                 </div>
                 <div class="severity-row">
-                  <input type="range" min="1" max="10" step="1" value="5" class="severity-slider" id="dep-severity-slider" />
+                  <input type="range" min="1" max="10" step="1" value="5" class="severity-slider"
+                    id="dep-severity-slider" />
                   <span class="severity-readout mono" id="dep-severity-readout">5/10</span>
                 </div>
                 <div class="severity-scale-labels">
@@ -1186,7 +1338,8 @@
 
             <!-- Advisory Warning Banner -->
             <div class="advisory-banner" id="dep-advisory-banner" style="display:none;">
-              <span id="dep-advisory-text">Crisis scale 6/10 — at this level, hazard behavior tends to diverge enough that picking the exact crisis above gives a materially better model.</span>
+              <span id="dep-advisory-text">Crisis scale 6/10 — at this level, hazard behavior tends to diverge enough
+                that picking the exact crisis above gives a materially better model.</span>
             </div>
 
             <!-- Mode Banner (Exercise vs Live) -->
@@ -1196,7 +1349,7 @@
 
             <!-- READY ENGINE INTERFACE (For Evacuation & Containment) -->
             <div id="dep-engine-view" class="eoc-layout">
-              
+
               <!-- LEFT: Controls & Injects -->
               <div class="eoc-panel">
                 <div class="panel-title">Inject Failure</div>
@@ -1207,14 +1360,16 @@
 
                 <div class="panel-title" style="margin-top: 22px;">Leverage</div>
                 <div class="leverage-note" id="dep-leverage-note">
-                  Protecting <strong id="dep-top-leverage-name" style="margin: 0 3px;">Power Grid</strong> prevents the most downstream cascade right now.
+                  Protecting <strong id="dep-top-leverage-name" style="margin: 0 3px;">Power Grid</strong> prevents the
+                  most downstream cascade right now.
                 </div>
               </div>
 
               <!-- CENTER: Readiness Overview & SVG Graph -->
               <div class="eoc-panel">
                 <div class="overall-card">
-                  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                  <div
+                    style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                       <span class="tpl-badge full" id="dep-tpl-badge">Full Template</span>
                     </div>
@@ -1232,7 +1387,8 @@
 
                 <!-- Interactive SVG Graph Viewport -->
                 <div class="graph-wrap">
-                  <svg id="dep-graph-svg" viewBox="0 0 800 470" width="100%" style="max-width: 700px; display: block;"></svg>
+                  <svg id="dep-graph-svg" viewBox="0 0 800 470" width="100%"
+                    style="max-width: 700px; display: block;"></svg>
                 </div>
               </div>
 
@@ -1257,7 +1413,8 @@
                   <div class="blocked-title">Sustained-Load / Threshold — new engine mode required</div>
                 </div>
                 <div class="blocked-body" id="dep-threshold-body-text">
-                  This cluster has no discrete trigger event to inject — capacity erodes under sustained demand instead of failing all at once.
+                  This cluster has no discrete trigger event to inject — capacity erodes under sustained demand instead
+                  of failing all at once.
                 </div>
               </div>
             </div>
@@ -1286,7 +1443,7 @@
     <!-- ========================================================================= -->
     <section id="view-reports" class="view-section">
       <div class="aar-page-wrap">
-        
+
         <div class="aar-head-bar">
           <div>
             <h2 class="aar-title">AFTER-ACTION REVIEW (AAR) &amp; DAMAGE ASSESSMENT</h2>
@@ -1316,17 +1473,23 @@
           <div class="aar-sec-block">
             <h4 class="aar-sec-heading">1. EXECUTIVE SUMMARY &amp; BENCHMARKS</h4>
             <p class="aar-text">
-              The EOC successfully coordinated the mass evacuation of 276,480 citizens across coastal Odisha &amp; West Bengal districts within the 12-hour window prior to landfall. The CAP-SACHET cell broadcast network achieved sub-second latency (0.38s), resulting in zero civilian casualties in high-risk coastal zones.
+              The EOC successfully coordinated the mass evacuation of 276,480 citizens across coastal Odisha &amp; West
+              Bengal districts within the 12-hour window prior to landfall. The CAP-SACHET cell broadcast network
+              achieved sub-second latency (0.38s), resulting in zero civilian casualties in high-risk coastal zones.
             </p>
           </div>
 
           <div class="aar-sec-block">
             <h4 class="aar-sec-heading">2. KEY OPERATIONAL METRICS</h4>
             <div class="aar-metrics-quad">
-              <div class="aar-m-card"><span class="m-val text-saffron">276,480</span><span class="m-tag">CITIZENS EVACUATED</span></div>
-              <div class="aar-m-card"><span class="m-val text-emerald">18</span><span class="m-tag">NDRF TEAMS DEPLOYED</span></div>
-              <div class="aar-m-card"><span class="m-val text-navy">1.84M</span><span class="m-tag">SACHET ALERTS SENT</span></div>
-              <div class="aar-m-card"><span class="m-val text-alert">0</span><span class="m-tag">CIVILIAN FATALITIES</span></div>
+              <div class="aar-m-card"><span class="m-val text-saffron">276,480</span><span class="m-tag">CITIZENS
+                  EVACUATED</span></div>
+              <div class="aar-m-card"><span class="m-val text-emerald">18</span><span class="m-tag">NDRF TEAMS
+                  DEPLOYED</span></div>
+              <div class="aar-m-card"><span class="m-val text-navy">1.84M</span><span class="m-tag">SACHET ALERTS
+                  SENT</span></div>
+              <div class="aar-m-card"><span class="m-val text-alert">0</span><span class="m-tag">CIVILIAN
+                  FATALITIES</span></div>
             </div>
           </div>
 
@@ -1434,7 +1597,8 @@
       </div>
 
       <div class="demo-drawer-notice">
-        <span><strong>Quick Testing:</strong> Click any officer account below to automatically load its agency credential, test password (<code>Unity@2026</code>), and live rotating 2FA code.</span>
+        <span><strong>Quick Testing:</strong> Click any officer account below to automatically load its agency
+          credential, test password (<code>Unity@2026</code>), and live rotating 2FA code.</span>
       </div>
 
       <div class="demo-drawer-body">
@@ -1452,7 +1616,8 @@
   </div>
 
   <!-- FLOATING QUICK LAUNCH BUTTON FOR DEMO ROSTER -->
-  <button type="button" id="floating-demo-roster-btn" class="floating-demo-roster-btn" title="Open Demo Testing Accounts Roster">
+  <button type="button" id="floating-demo-roster-btn" class="floating-demo-roster-btn"
+    title="Open Demo Testing Accounts Roster">
     <span class="f-text">Demo Roster (10 Accounts)</span>
   </button>
 
@@ -1470,7 +1635,8 @@
       <div class="modal-content">
         <div class="form-field">
           <label class="field-lbl">INCIDENT TITLE</label>
-          <input type="text" id="new-inc-title" class="field-input" placeholder="e.g. Baitarani River embankment erosion" />
+          <input type="text" id="new-inc-title" class="field-input"
+            placeholder="e.g. Baitarani River embankment erosion" />
         </div>
         <div class="form-row-2">
           <div class="form-field">
@@ -1495,11 +1661,13 @@
         </div>
         <div class="form-field">
           <label class="field-lbl">LOCATION &amp; GEO COORDINATES</label>
-          <input type="text" id="new-inc-loc" class="field-input" placeholder="e.g. Dhamra Sector 4 [20.79° N, 86.96° E]" />
+          <input type="text" id="new-inc-loc" class="field-input"
+            placeholder="e.g. Dhamra Sector 4 [20.79° N, 86.96° E]" />
         </div>
         <div class="form-field">
           <label class="field-lbl">EVENT DETAILS &amp; DISPATCH ACTIONS</label>
-          <textarea id="new-inc-details" class="field-input" rows="3" placeholder="Describe the ground truth situation and tactical dispatch..."></textarea>
+          <textarea id="new-inc-details" class="field-input" rows="3"
+            placeholder="Describe the ground truth situation and tactical dispatch..."></textarea>
         </div>
       </div>
       <div class="modal-actions">
@@ -1523,11 +1691,13 @@
         </div>
         <div class="form-field">
           <label class="field-lbl">OFFICER NAME &amp; DESIGNATION</label>
-          <input type="text" id="assign-officer-name" class="field-input" placeholder="e.g. Wing Commander S. Roy, IAF" />
+          <input type="text" id="assign-officer-name" class="field-input"
+            placeholder="e.g. Wing Commander S. Roy, IAF" />
         </div>
         <div class="form-field">
           <label class="field-lbl">AGENCY / DEPARTMENT</label>
-          <input type="text" id="assign-officer-agency" class="field-input" placeholder="e.g. Indian Air Force Liaison" />
+          <input type="text" id="assign-officer-agency" class="field-input"
+            placeholder="e.g. Indian Air Force Liaison" />
         </div>
         <div class="form-field">
           <label class="field-lbl">TACTICAL RADIO NET</label>
@@ -1601,7 +1771,8 @@
         <div class="form-row-2">
           <div class="form-field">
             <label class="field-lbl">LOCATION / BLOCK / DISTRICT *</label>
-            <input type="text" id="new-vol-loc" class="field-input" placeholder="e.g. Kendrapara / Rajnagar Block" required />
+            <input type="text" id="new-vol-loc" class="field-input" placeholder="e.g. Kendrapara / Rajnagar Block"
+              required />
           </div>
           <div class="form-field">
             <label class="field-lbl">ASSIGNED REGION</label>
@@ -1668,32 +1839,112 @@
   <div id="modal-shelter" class="modal-backdrop hidden">
     <div class="modal-card">
       <div class="modal-head">
-        <h3 class="modal-title font-bold">REGISTER SHELTER</h3>
+        <h3 class="modal-title font-bold">REGISTER MULTI-PURPOSE SHELTER</h3>
         <button class="modal-x-btn" id="close-shelter-modal">✕</button>
       </div>
       <div class="modal-content">
         <div class="form-field">
           <label class="field-lbl">SHELTER NAME</label>
-          <input type="text" id="new-shelter-name" class="field-input" placeholder="e.g. MCS Chandbali Community Hall" />
+          <input type="text" id="new-shelter-name" class="field-input"
+            placeholder="e.g. MCS Chandbali Community Hall" />
         </div>
         <div class="form-row-2">
           <div class="form-field">
             <label class="field-lbl">TOTAL CAPACITY</label>
-            <input type="number" id="new-shelter-capacity" class="field-input" placeholder="e.g. 250" min="1" />
+            <input type="number" id="new-shelter-capacity" class="field-input" placeholder="e.g. 350" min="1" />
           </div>
           <div class="form-field">
-            <label class="field-lbl">MEDICAL COVERAGE</label>
-            <input type="text" id="new-shelter-medical" class="field-input" placeholder="e.g. Doctor On-Duty" />
+            <label class="field-lbl">REGION / JURISDICTION</label>
+            <select id="new-shelter-region" class="field-input">
+              <option value="Odisha">Odisha Coastal Belt</option>
+              <option value="West Bengal">West Bengal Coastal Belt</option>
+              <option value="Assam">Assam Riverine Basin</option>
+              <option value="Uttarakhand">Uttarakhand Hill District</option>
+              <option value="Kerala">Kerala Western Ghats</option>
+            </select>
           </div>
         </div>
-        <div class="form-field">
-          <label class="field-lbl">FOOD RATIONS</label>
-          <input type="text" id="new-shelter-food" class="field-input" placeholder="e.g. 48h Stored" />
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-lbl">LATITUDE (°N)</label>
+            <input type="number" id="new-shelter-lat" class="field-input font-mono" placeholder="e.g. 20.7885"
+              step="0.0001" value="20.7885" />
+          </div>
+          <div class="form-field">
+            <label class="field-lbl">LONGITUDE (°E)</label>
+            <input type="number" id="new-shelter-lng" class="field-input font-mono" placeholder="e.g. 86.9580"
+              step="0.0001" value="86.9580" />
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-lbl">MEDICAL COVERAGE</label>
+            <input type="text" id="new-shelter-medical" class="field-input"
+              placeholder="e.g. Doctor On-Duty & First Aid" value="Doctor On-Duty" />
+          </div>
+          <div class="form-field">
+            <label class="field-lbl">FOOD RATIONS</label>
+            <input type="text" id="new-shelter-food" class="field-input" placeholder="e.g. 48h Stored"
+              value="72h Stored" />
+          </div>
         </div>
       </div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancel-shelter-btn">CANCEL</button>
         <button class="btn btn-saffron font-bold" id="save-shelter-btn">REGISTER SHELTER</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DECLARE DANGER / IMPACT ZONE -->
+  <div id="modal-danger-zone" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-head head-danger">
+        <h3 class="modal-title font-bold">🔴 DECLARE DANGER / IMPACT ZONE</h3>
+        <button class="modal-x-btn" id="close-danger-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-field">
+          <label class="field-lbl">ZONE TITLE / INCIDENT</label>
+          <input type="text" id="new-danger-title" class="field-input"
+            placeholder="e.g. Dhamra Port Surge Breach Sector" value="SURGE INUNDATION RED ZONE" />
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-lbl">HAZARD SEVERITY</label>
+            <select id="new-danger-severity" class="field-input">
+              <option value="CRITICAL">CRITICAL (Level 1 Evacuation)</option>
+              <option value="EXTREME">EXTREME (Direct Gale / Wave Breach)</option>
+              <option value="HIGH">HIGH (Severe Swell Buffer)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="field-lbl">IMPACT RADIUS (KM)</label>
+            <input type="number" id="new-danger-radius" class="field-input font-mono" placeholder="Radius in km"
+              value="5" min="0.5" max="50" step="0.5" />
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-lbl">LATITUDE (°N)</label>
+            <input type="number" id="new-danger-lat" class="field-input font-mono" placeholder="e.g. 20.78"
+              step="0.0001" value="20.78" />
+          </div>
+          <div class="form-field">
+            <label class="field-lbl">LONGITUDE (°E)</label>
+            <input type="number" id="new-danger-lng" class="field-input font-mono" placeholder="e.g. 86.95"
+              step="0.0001" value="86.95" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">MANDATORY EVACUATION DIRECTIVE (DMA §30)</label>
+          <textarea id="new-danger-directive" class="field-input"
+            rows="2">Immediate civilian evacuation order under DMA 2005 §30. Entry restricted to NDRF/SDRF SAR personnel only.</textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancel-danger-modal-btn">CANCEL</button>
+        <button class="btn btn-outline-danger font-bold" id="save-danger-zone-btn">🔴 DECLARE IMPACT ZONE</button>
       </div>
     </div>
   </div>
@@ -1708,11 +1959,13 @@
       <div class="modal-content">
         <div class="form-field">
           <label class="field-lbl">REQUESTING AGENCY</label>
-          <input type="text" id="new-mutual-aid-agency" class="field-input" placeholder="e.g. Jagatsinghpur District EOC" />
+          <input type="text" id="new-mutual-aid-agency" class="field-input"
+            placeholder="e.g. Jagatsinghpur District EOC" />
         </div>
         <div class="form-field">
           <label class="field-lbl">RESOURCE REQUESTED</label>
-          <input type="text" id="new-mutual-aid-resource" class="field-input" placeholder="e.g. High-Water Rescue Trucks" />
+          <input type="text" id="new-mutual-aid-resource" class="field-input"
+            placeholder="e.g. High-Water Rescue Trucks" />
         </div>
         <div class="form-row-2">
           <div class="form-field">
@@ -1746,15 +1999,18 @@
       <div class="modal-content">
         <div class="form-field">
           <label class="field-lbl">CLAIM BEING CIRCULATED</label>
-          <textarea id="new-rumor-claim" class="field-input" rows="2" placeholder="e.g. Shelter Kendrapara is turning away incoming evacuees."></textarea>
+          <textarea id="new-rumor-claim" class="field-input" rows="2"
+            placeholder="e.g. Shelter Kendrapara is turning away incoming evacuees."></textarea>
         </div>
         <div class="form-field">
           <label class="field-lbl">OFFICIAL CLARIFICATION</label>
-          <textarea id="new-rumor-clarification" class="field-input" rows="2" placeholder="e.g. Shelter Kendrapara has capacity for 40 more evacuees as of this hour."></textarea>
+          <textarea id="new-rumor-clarification" class="field-input" rows="2"
+            placeholder="e.g. Shelter Kendrapara has capacity for 40 more evacuees as of this hour."></textarea>
         </div>
         <div class="form-field">
           <label class="field-lbl">VERIFIED BY</label>
-          <input type="text" id="new-rumor-verifier" class="field-input" placeholder="e.g. District PIO &amp; Health Dept" />
+          <input type="text" id="new-rumor-verifier" class="field-input"
+            placeholder="e.g. District PIO &amp; Health Dept" />
         </div>
       </div>
       <div class="modal-actions">
@@ -1820,7 +2076,8 @@
       <div class="modal-content">
         <div class="form-field">
           <label class="field-lbl">INJECT TITLE</label>
-          <input type="text" id="new-inject-title" class="field-input" placeholder="e.g. Major Highway Bridge Washout" />
+          <input type="text" id="new-inject-title" class="field-input"
+            placeholder="e.g. Major Highway Bridge Washout" />
         </div>
         <div class="form-row-2">
           <div class="form-field">
@@ -1844,7 +2101,8 @@
         </div>
         <div class="form-field">
           <label class="field-lbl">INJECT DETAILS &amp; SITUATION</label>
-          <textarea id="new-inject-desc" class="field-input" rows="2" placeholder="Explain the simulated breakdown or emergency..."></textarea>
+          <textarea id="new-inject-desc" class="field-input" rows="2"
+            placeholder="Explain the simulated breakdown or emergency..."></textarea>
         </div>
       </div>
       <div class="modal-actions">
@@ -1896,4 +2154,5 @@
   <!-- Module Entry Script -->
   <script type="module" src="./src/main.js"></script>
 </body>
+
 </html>

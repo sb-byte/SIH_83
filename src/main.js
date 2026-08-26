@@ -1,4 +1,7 @@
 import L from 'leaflet';
+window.L = L;
+import 'leaflet.heat';
+import * as turf from '@turf/turf';
 import { sound } from './audio.js';
 import { openRegistrationForm, startAutoSync, filterRemovedVolunteers, removeVolunteer } from './volunteerSync.js';
 import {
@@ -34,7 +37,11 @@ import {
   rumorDebunking,
   damageAssessments,
   mutualAidRequests,
-  volunteerPool
+  volunteerPool,
+  cycloneDanaInundationGeoJSON,
+  assamFloodsGeoJSON,
+  chamoliGlofGeoJSON,
+  wayanadLandslideGeoJSON
 } from './data.js';
 
 // Global Application State
@@ -76,12 +83,24 @@ const state = {
   evacPolygon: null,
   assetMarkers: [],
   shelterMarkers: [],
+  incidentMarkers: [],
+  sosMarkers: [],
   customMarkers: [],
   selectedRoleForAssign: null
 };
 
 // Safe DOM retrieval
 const getEl = (id) => document.getElementById(id);
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 // =========================================================================
 // FLEET & SACHET ALERT ACTIVITY LOG (feeds AAR Reports section 6)
@@ -176,6 +195,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initVolunteerRegistrationModal();
   initSachetAlerting();
   initTelemetryTicker();
+  initGISMap();
 });
 
 // Clock Display (IST)
@@ -911,6 +931,13 @@ function loadScenario(key) {
     if (state.map) state.map.flyTo([11.5200, 76.1300], 11);
     showToast('SCENARIO LOADED: Wayanad Landslide Rescue');
   }
+
+  if (typeof renderScenarioRiskPolygons === 'function') {
+    renderScenarioRiskPolygons(key);
+  }
+  if (typeof updateHeatmapLayer === 'function') {
+    updateHeatmapLayer();
+  }
 }
 
 // =========================================================================
@@ -1016,6 +1043,9 @@ function renderIncidents() {
         sound.playClick();
         if (state.map && sos.lat && sos.lng) {
           state.map.flyTo([sos.lat, sos.lng], 13, { animate: true, duration: 1 });
+          if (sos._marker) {
+            setTimeout(() => sos._marker.openPopup(), 600);
+          }
           showToast(`Centered on SOS: ${sos.name}`);
         }
       });
@@ -1088,6 +1118,9 @@ function renderIncidents() {
       sound.playClick();
       if (state.map && inc.lat && inc.lng) {
         state.map.flyTo([inc.lat, inc.lng], 12, { animate: true, duration: 1 });
+        if (inc._marker) {
+          setTimeout(() => inc._marker.openPopup(), 600);
+        }
         showToast(`Map Centered on: ${inc.title}`);
       }
     });
@@ -1382,34 +1415,52 @@ if (saveShelterBtn) {
   saveShelterBtn.addEventListener('click', () => {
     const name = getEl('new-shelter-name')?.value.trim();
     const capacity = parseInt(getEl('new-shelter-capacity')?.value, 10);
-    const medical = getEl('new-shelter-medical')?.value.trim() || 'Not Yet Staffed';
-    const foodRations = getEl('new-shelter-food')?.value.trim() || 'Pending Stock';
+    const region = getEl('new-shelter-region')?.value || 'Odisha';
+    const lat = parseFloat(getEl('new-shelter-lat')?.value) || 20.7885;
+    const lng = parseFloat(getEl('new-shelter-lng')?.value) || 86.9580;
+    const medical = getEl('new-shelter-medical')?.value.trim() || 'Doctor On-Duty';
+    const foodRations = getEl('new-shelter-food')?.value.trim() || '72h Stored';
 
     if (!name) { showToast('Shelter name is required'); return; }
     if (!capacity || capacity <= 0) { showToast('Enter a valid capacity'); return; }
 
-    state.sheltersData.push({
+    const newShelter = {
       id: `MCS-${String(state.sheltersData.length + 1).padStart(2, '0')}`,
       name,
       capacity,
       occupied: 0,
       status: 'AVAILABLE',
-      lat: 20.5,
-      lng: 86.5,
+      region,
+      lat,
+      lng,
       medical,
       foodRations
-    });
+    };
+
+    state.sheltersData.push(newShelter);
+
+    if (typeof addShelterToGIS === 'function') {
+      addShelterToGIS(newShelter);
+    }
 
     sound.playClick();
     renderShelterMatrix();
     renderShelters();
     closeShelterModal();
+
+    if (state.map) {
+      state.map.flyTo([lat, lng], 13, { duration: 1.2 });
+      if (newShelter._marker) {
+        setTimeout(() => newShelter._marker.openPopup(), 1300);
+      }
+    }
+
     getEl('new-shelter-name').value = '';
     getEl('new-shelter-capacity').value = '';
     getEl('new-shelter-medical').value = '';
     getEl('new-shelter-food').value = '';
-    showToast(`Shelter registered: ${name}`);
-    logActivity('SHELTER', `New shelter registered: ${name} (capacity ${capacity})`);
+    showToast(`Shelter registered on GIS Map: ${name}`);
+    logActivity('SHELTER', `New shelter registered: ${name} (capacity ${capacity}) at [${lat}, ${lng}]`);
   });
 }
 
@@ -2563,14 +2614,636 @@ function renderTrainees() {
 }
 
 // =========================================================================
-// TACTICAL LEAFLET GIS MAP & DRAWING TOOLS
+// TACTICAL GIS SPATIAL ENGINE & TURF.JS UTILITIES
+// =========================================================================
+
+function findNearestShelter(lat, lng) {
+  const sheltersList = state.sheltersData && state.sheltersData.length ? state.sheltersData : shelters;
+  if (!sheltersList || !sheltersList.length) return null;
+  const fromPt = turf.point([lng, lat]);
+  let nearest = null;
+  let minDistance = Infinity;
+
+  sheltersList.forEach(s => {
+    if (!s.lat || !s.lng) return;
+    const toPt = turf.point([s.lng, s.lat]);
+    const dist = turf.distance(fromPt, toPt, { units: 'kilometers' });
+    if (dist < minDistance) {
+      minDistance = dist;
+      nearest = { ...s, distanceKm: dist.toFixed(1) };
+    }
+  });
+  return nearest;
+}
+
+function findNearestAsset(lat, lng, preferredType = null) {
+  const assetList = state.assets && state.assets.length ? state.assets : fleetAssets;
+  if (!assetList || !assetList.length) return null;
+  const fromPt = turf.point([lng, lat]);
+  let nearest = null;
+  let minDistance = Infinity;
+
+  assetList.forEach(a => {
+    if (!a.lat || !a.lng || a.status === 'OUT_OF_SERVICE') return;
+    if (preferredType && a.type !== preferredType) return;
+    const toPt = turf.point([a.lng, a.lat]);
+    const dist = turf.distance(fromPt, toPt, { units: 'kilometers' });
+    if (dist < minDistance) {
+      minDistance = dist;
+      nearest = { ...a, distanceKm: dist.toFixed(1) };
+    }
+  });
+  return nearest;
+}
+
+function findNearestSosOrIncident(lat, lng) {
+  const allTargets = [];
+  const sosList = state.sosList && state.sosList.length ? state.sosList : citizenSosQueue;
+  sosList.forEach(s => {
+    if (s.lat && s.lng) allTargets.push({ id: s.id, name: s.name, lat: s.lat, lng: s.lng, type: 'SOS' });
+  });
+  const incList = state.incidents && state.incidents.length ? state.incidents : chronoIncidents;
+  incList.forEach(inc => {
+    if (inc.lat && inc.lng && inc.severity === 'CRITICAL') allTargets.push({ id: inc.id, name: inc.title, lat: inc.lat, lng: inc.lng, type: 'INCIDENT' });
+  });
+
+  if (!allTargets.length) return null;
+  const fromPt = turf.point([lng, lat]);
+  let nearest = null;
+  let minDistance = Infinity;
+
+  allTargets.forEach(t => {
+    const toPt = turf.point([t.lng, t.lat]);
+    const dist = turf.distance(fromPt, toPt, { units: 'kilometers' });
+    if (dist < minDistance) {
+      minDistance = dist;
+      nearest = { ...t, distanceKm: dist.toFixed(1) };
+    }
+  });
+  return nearest;
+}
+
+// =========================================================================
+// OSRM ROUTING ENGINE & ACTIVE ROUTE HUD
+// =========================================================================
+
+async function calculateAndDrawRoute(startCoords, endCoords, title, routeType = 'EVACUATION') {
+  if (!state.map) return;
+  sound.playClick();
+  showToast(`Calculating road route: ${title}...`);
+
+  const [startLat, startLng] = startCoords;
+  const [endLat, endLng] = endCoords;
+
+  try {
+    if (state.routeLayer) {
+      state.map.removeLayer(state.routeLayer);
+      state.routeLayer = null;
+    }
+
+    const routeGroup = L.featureGroup();
+    let coordinates = [];
+    let distanceKm = '0';
+    let etaMinutes = 0;
+    let engine = 'OSRM Road Network';
+
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
+    try {
+      const response = await fetch(osrmUrl);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.routes && data.routes.length > 0) {
+          const route = data.routes[0];
+          distanceKm = (route.distance / 1000).toFixed(1);
+          etaMinutes = Math.max(1, Math.round(route.duration / 60));
+          coordinates = route.geometry.coordinates.map(c => [c[1], c[0]]);
+        }
+      }
+    } catch (fetchErr) {
+      console.warn('OSRM API fetch failed, using geodesic fallback:', fetchErr);
+    }
+
+    if (!coordinates.length) {
+      engine = 'Geodesic Waypoint (Offline Fallback)';
+      const directDist = turf.distance(turf.point([startLng, startLat]), turf.point([endLng, endLat]), { units: 'kilometers' });
+      distanceKm = directDist.toFixed(1);
+      etaMinutes = Math.max(1, Math.round((directDist / 35) * 60));
+      coordinates = [[startLat, startLng], [endLat, endLng]];
+    }
+
+    const glowLine = L.polyline(coordinates, {
+      color: routeType === 'DISPATCH' ? '#059669' : '#0284C7',
+      weight: 8,
+      opacity: 0.45,
+      lineCap: 'round',
+      lineJoin: 'round'
+    });
+    routeGroup.addLayer(glowLine);
+
+    const innerLine = L.polyline(coordinates, {
+      color: routeType === 'DISPATCH' ? '#34D399' : '#38BDF8',
+      weight: 3.5,
+      opacity: 0.95,
+      dashArray: routeType === 'DISPATCH' ? '8, 6' : null
+    });
+    routeGroup.addLayer(innerLine);
+
+    const startPin = L.circleMarker([startLat, startLng], {
+      radius: 6,
+      fillColor: '#38BDF8',
+      color: '#FFFFFF',
+      weight: 2,
+      fillOpacity: 1
+    }).bindPopup(`<div class="tactical-popup"><div class="tac-popup-head"><span>ROUTE ORIGIN</span></div><div class="tac-popup-body"><div class="tac-popup-title font-bold">${title.split('➔')[0] || 'Origin'}</div></div></div>`);
+    routeGroup.addLayer(startPin);
+
+    const endPin = L.circleMarker([endLat, endLng], {
+      radius: 7,
+      fillColor: '#F59E0B',
+      color: '#FFFFFF',
+      weight: 2,
+      fillOpacity: 1
+    }).bindPopup(`<div class="tactical-popup"><div class="tac-popup-head head-saffron"><span>ROUTE DESTINATION</span></div><div class="tac-popup-body"><div class="tac-popup-title font-bold">${title.split('➔')[1] || 'Destination'}</div></div></div>`);
+    routeGroup.addLayer(endPin);
+
+    routeGroup.addTo(state.map);
+    state.routeLayer = routeGroup;
+
+    const routeHud = getEl('gis-route-hud');
+    const hudTitle = getEl('route-hud-title');
+    const hudDist = getEl('route-hud-dist');
+    const hudEta = getEl('route-hud-eta');
+    const hudType = getEl('route-hud-type');
+    const hudEngine = getEl('route-hud-engine');
+
+    if (routeHud) {
+      if (hudTitle) hudTitle.innerText = title;
+      if (hudDist) hudDist.innerText = `${distanceKm} KM`;
+      if (hudEta) hudEta.innerText = `${etaMinutes} MINS`;
+      if (hudType) hudType.innerText = routeType === 'DISPATCH' ? 'TACTICAL ASSET DISPATCH ROUTE' : 'TACTICAL ROAD EVACUATION ROUTE';
+      if (hudEngine) hudEngine.innerText = engine;
+      routeHud.classList.remove('hidden');
+    }
+
+    state.map.fitBounds(routeGroup.getBounds(), { padding: [60, 60], maxZoom: 13 });
+    sound.playModeToggle();
+    showToast(`Active Route Plotted: ${distanceKm} km (ETA: ${etaMinutes} mins)`, 'alert');
+    logActivity('GIS', `Active route calculated [${title}]: ${distanceKm} km, ETA ${etaMinutes}m`);
+
+  } catch (err) {
+    console.error('OSRM Routing Error:', err);
+    showToast('Routing calculation error.');
+  }
+}
+
+function clearActiveRoute() {
+  if (state.routeLayer && state.map) {
+    state.map.removeLayer(state.routeLayer);
+    state.routeLayer = null;
+  }
+  const routeHud = getEl('gis-route-hud');
+  if (routeHud) routeHud.classList.add('hidden');
+  showToast('Active Tactical Route Cleared');
+}
+
+// Global popup action hooks
+window.routeFromPointToShelter = (fromLat, fromLng, shelterLat, shelterLng, shelterName) => {
+  calculateAndDrawRoute([fromLat, fromLng], [shelterLat, shelterLng], `Dropped Pin ➔ ${shelterName}`, 'EVACUATION');
+};
+
+window.routeToShelter = (shelterLat, shelterLng, shelterName) => {
+  let startLat = 20.78, startLng = 86.95;
+  if (state.lastDroppedPin) {
+    startLat = state.lastDroppedPin.lat;
+    startLng = state.lastDroppedPin.lng;
+  } else if (state.map) {
+    const center = state.map.getCenter();
+    startLat = center.lat;
+    startLng = center.lng;
+  }
+  calculateAndDrawRoute([startLat, startLng], [shelterLat, shelterLng], `Tactical Location ➔ ${shelterName}`, 'EVACUATION');
+};
+
+window.dispatchToSos = (sosId, sosLat, sosLng) => {
+  const asset = findNearestAsset(sosLat, sosLng);
+  if (!asset) {
+    showToast('No available NDRF asset in operational radius', 'alert');
+    return;
+  }
+  calculateAndDrawRoute([asset.lat, asset.lng], [sosLat, sosLng], `${asset.name} (${asset.id}) ➔ ${sosId}`, 'DISPATCH');
+  showToast(`DISPATCHED ${asset.id} to ${sosId}`, 'alert');
+  logActivity('OPS', `Asset ${asset.id} dispatched to ${sosId} at [${sosLat}, ${sosLng}]`);
+};
+
+window.routeSosToShelter = (sosLat, sosLng, sosId) => {
+  const shelter = findNearestShelter(sosLat, sosLng);
+  if (!shelter) {
+    showToast('No cyclone shelter found in radius', 'alert');
+    return;
+  }
+  calculateAndDrawRoute([sosLat, sosLng], [shelter.lat, shelter.lng], `${sosId} ➔ ${shelter.name}`, 'EVACUATION');
+};
+
+// =========================================================================
+// DYNAMIC GEOJSON DISASTER RISK POLYGONS
+// =========================================================================
+
+function renderScenarioRiskPolygons(scenarioKey) {
+  if (!state.floodGroup) return;
+  state.floodGroup.clearLayers();
+
+  let geoJsonData = cycloneDanaInundationGeoJSON;
+  if (scenarioKey === 'assam') geoJsonData = assamFloodsGeoJSON;
+  else if (scenarioKey === 'chamoli') geoJsonData = chamoliGlofGeoJSON;
+  else if (scenarioKey === 'wayanad') geoJsonData = wayanadLandslideGeoJSON;
+
+  if (!geoJsonData) return;
+
+  const geoJsonLayer = L.geoJSON(geoJsonData, {
+    style: function (feature) {
+      return {
+        color: feature.properties.color || '#DC2626',
+        fillColor: feature.properties.fillColor || '#DC2626',
+        fillOpacity: feature.properties.fillOpacity || 0.35,
+        weight: 2,
+        dashArray: '4, 4'
+      };
+    },
+    onEachFeature: function (feature, layer) {
+      const p = feature.properties;
+      layer.bindPopup(`
+        <div class="tactical-popup">
+          <div class="tac-popup-head ${p.severity === 'EXTREME' || p.severity === 'CRITICAL' ? 'head-danger' : 'head-saffron'}">
+            <span class="tac-popup-tag">GEOJSON HAZARD LAYER</span>
+            <span class="tac-popup-id font-mono">${p.id}</span>
+          </div>
+          <div class="tac-popup-body">
+            <div class="tac-popup-title font-bold">${p.name}</div>
+            <div class="tac-popup-desc">${p.description}</div>
+            <div class="tac-popup-metrics">
+              <div>Severity Level: <strong class="${p.severity === 'EXTREME' || p.severity === 'CRITICAL' ? 'text-alert' : 'text-saffron'}">${p.severity}</strong></div>
+              <div>Water / Surge Depth: <strong>${p.depth}</strong></div>
+            </div>
+            <div class="tac-popup-coords font-mono text-xs">📍 ISRO Bhuvan & CWC Hydro-Spatial Model</div>
+          </div>
+        </div>
+      `);
+    }
+  });
+
+  state.floodGroup.addLayer(geoJsonLayer);
+}
+
+// =========================================================================
+// DECLARE / DRAW RED DANGER & IMPACT ZONES (DMA §30)
+// =========================================================================
+
+function declareDangerZone(lat, lng, radiusKm, title, severity = 'CRITICAL', directive = 'Mandatory evacuation enforced under DMA 2005 §30.') {
+  if (!state.map || !state.dangerZonesGroup) return;
+
+  const radiusMeters = (radiusKm || 5) * 1000;
+  const zoneId = `DZ-${Date.now().toString().slice(-4)}`;
+
+  // Outer red pulsing circle
+  const dangerCircle = L.circle([lat, lng], {
+    radius: radiusMeters,
+    color: '#DC2626',
+    fillColor: '#DC2626',
+    fillOpacity: 0.30,
+    weight: 3,
+    dashArray: '6, 6'
+  });
+
+  // Inner core warning marker
+  const centerMarker = L.marker([lat, lng], {
+    icon: L.divIcon({
+      className: 'custom-map-marker-wrap',
+      html: `<div class="danger-zone-center-pin" title="${title}"><span>⚠️</span><span>${title} (${radiusKm}km)</span></div>`,
+      iconSize: null
+    })
+  });
+
+  const zoneFeatureGroup = L.featureGroup([dangerCircle, centerMarker]);
+
+  const popupContent = `
+    <div class="tactical-popup">
+      <div class="tac-popup-head head-danger">
+        <span class="tac-popup-tag">🔴 DECLARED IMPACT ZONE</span>
+        <span class="tac-popup-id font-mono">${zoneId}</span>
+      </div>
+      <div class="tac-popup-body">
+        <div class="tac-popup-title font-bold">${title}</div>
+        <div class="tac-popup-desc">${directive}</div>
+        <div class="tac-popup-metrics">
+          <div>Hazard Level: <strong class="text-alert">${severity}</strong></div>
+          <div>Impact Radius: <strong class="text-alert">${radiusKm} KM (${(radiusKm * 2).toFixed(1)} km dia)</strong></div>
+          <div>Center Coordinates: <strong class="font-mono">${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E</strong></div>
+          <div>Legal Authority: <strong>Disaster Management Act 2005 §30</strong></div>
+        </div>
+        <div class="tac-popup-actions">
+          <button class="tac-action-btn btn-saffron-action" onclick="window.removeDangerZone('${zoneId}')">✕ Remove Hazard Zone</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  dangerCircle.bindPopup(popupContent);
+  centerMarker.bindPopup(popupContent);
+
+  zoneFeatureGroup._zoneId = zoneId;
+  state.dangerZonesGroup.addLayer(zoneFeatureGroup);
+
+  if (!state.map.hasLayer(state.dangerZonesGroup)) {
+    state.map.addLayer(state.dangerZonesGroup);
+  }
+
+  sound.playCriticalAlert();
+  showToast(`🔴 DANGER ZONE DECLARED: ${title} (${radiusKm} km radius)`, 'alert');
+  logActivity('GIS', `Declared danger/impact zone [${zoneId}]: ${title} (${radiusKm}km) at [${lat}, ${lng}]`);
+  centerMarker.openPopup();
+}
+
+window.removeDangerZone = (zoneId) => {
+  if (!state.dangerZonesGroup) return;
+  state.dangerZonesGroup.eachLayer(layer => {
+    if (layer._zoneId === zoneId) {
+      state.dangerZonesGroup.removeLayer(layer);
+    }
+  });
+  showToast(`Danger Zone ${zoneId} removed`);
+  logActivity('GIS', `Danger zone ${zoneId} de-escalated`);
+};
+
+// =========================================================================
+// ADD SHELTER TO GIS MAP & APP STATE
+// =========================================================================
+
+function addShelterToGIS(s) {
+  const pct = Math.round((s.occupied / s.capacity) * 100);
+  const isCritical = pct >= 90;
+
+  const icon = L.divIcon({
+    className: 'custom-map-marker-wrap',
+    html: `<div class="custom-map-pin shelter-pin" title="${s.name}">
+      <span>🏢</span>
+      <span>${s.name.replace('MCS ', '')}</span>
+      <span class="pin-badge ${isCritical ? 'badge-crit' : ''}">${pct}%</span>
+    </div>`,
+    iconSize: null
+  });
+
+  const nearestNDRF = findNearestAsset(s.lat, s.lng);
+
+  const marker = L.marker([s.lat, s.lng], { icon });
+  marker.bindPopup(`
+    <div class="tactical-popup">
+      <div class="tac-popup-head head-saffron">
+        <span class="tac-popup-tag">CYCLONE SHELTER (MCS)</span>
+        <span class="tac-popup-id font-mono">${s.id}</span>
+      </div>
+      <div class="tac-popup-body">
+        <div class="tac-popup-title font-bold">${s.name}</div>
+        <div class="tac-popup-metrics">
+          <div>Occupancy: <strong>${s.occupied} / ${s.capacity}</strong> (${pct}%)</div>
+          <div>Medical Station: <strong>${s.medical}</strong></div>
+          <div>Food Rations: <strong>${s.foodRations || '48h Stored'}</strong></div>
+          <div>Status: <strong class="${isCritical ? 'text-alert' : 'text-emerald'}">${s.status}</strong></div>
+          ${nearestNDRF ? `<div>Nearest NDRF: <strong class="text-emerald">${nearestNDRF.name} (${nearestNDRF.distanceKm} km)</strong></div>` : ''}
+        </div>
+        <div class="tac-popup-coords font-mono text-xs">📍 ${s.lat.toFixed(4)}° N, ${s.lng.toFixed(4)}° E</div>
+        <div class="tac-popup-actions">
+          <button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${s.lat}, ${s.lng}, '${escapeHtml(s.name)}')">🛣️ Route to Shelter</button>
+        </div>
+      </div>
+    </div>
+  `);
+
+  s._marker = marker;
+  if (state.sheltersGroup) state.sheltersGroup.addLayer(marker);
+  if (!state.shelterMarkers) state.shelterMarkers = [];
+  state.shelterMarkers.push(marker);
+}
+
+// =========================================================================
+// NOMINATIM & LOCAL HYBRID LOCATION SEARCH ENGINE
+// =========================================================================
+
+function initGisSearch() {
+  const searchContainer = getEl('gis-search-container');
+  const searchInput = getEl('gis-search-input');
+  const searchResults = getEl('gis-search-results');
+  const clearBtn = getEl('gis-search-clear');
+  const spinner = getEl('gis-search-spinner');
+
+  if (!searchInput || !searchResults) return;
+
+  // Prevent map from capturing clicks or drags inside the search box
+  if (searchContainer && window.L && L.DomEvent) {
+    L.DomEvent.disableClickPropagation(searchContainer);
+    L.DomEvent.disableScrollPropagation(searchContainer);
+  }
+
+  // Pre-indexed tactical locations for instant offline search
+  const builtInLocations = [
+    { name: "Dhamra Port Coastal Jetty", sub: "Bhadrak District, Odisha", lat: 20.7885, lon: 86.9580, type: "coastal" },
+    { name: "Satbhaya Coastal Hamlet", sub: "Kendrapara District, Odisha", lat: 20.6120, lon: 86.9140, type: "coastal" },
+    { name: "Rajnagar Mangrove Sector", sub: "Kendrapara District, Odisha", lat: 20.5732, lon: 86.8522, type: "district" },
+    { name: "Bhadrak Government Transit Depot", sub: "Bhadrak District, Odisha", lat: 21.0543, lon: 86.5186, type: "depot" },
+    { name: "Paradip Port Coastal Radar Base", sub: "Jagatsinghpur District, Odisha", lat: 20.2644, lon: 86.6687, type: "radar" },
+    { name: "Puri Seafront Multi-Purpose Shelter", sub: "Puri District, Odisha", lat: 19.8135, lon: 85.8312, type: "shelter" },
+    { name: "Balasore Central Collectorate", sub: "Balasore District, Odisha", lat: 21.4934, lon: 86.9135, type: "district" },
+    { name: "Cuttack Mahanadi Embankment Base", sub: "Cuttack District, Odisha", lat: 20.4625, lon: 85.8828, type: "base" },
+    { name: "Bhubaneswar State EOC Headquarters", sub: "Khurda District, Odisha", lat: 20.2961, lon: 85.8245, type: "eoc" },
+    { name: "Gosaba Island Embankment", sub: "South 24 Parganas, West Bengal", lat: 22.1653, lon: 88.8021, type: "coastal" },
+    { name: "Namkhana Marine SAR Post", sub: "South 24 Parganas, West Bengal", lat: 21.7597, lon: 88.2296, type: "coastal" },
+    { name: "Sagar Island Southern Tip", sub: "South 24 Parganas, West Bengal", lat: 21.6420, lon: 88.0850, type: "coastal" },
+    { name: "Digha Sea Beach Coastal Post", sub: "Purba Medinipur, West Bengal", lat: 21.6260, lon: 87.5070, type: "coastal" },
+    { name: "Kolkata State DMA Control Room", sub: "Kolkata, West Bengal", lat: 22.5726, lon: 88.3639, type: "eoc" },
+    { name: "Guwahati Brahmaputra Flood Base", sub: "Kamrup Metropolitan, Assam", lat: 26.1850, lon: 91.7480, type: "flood" },
+    { name: "Kaziranga South Flood Relief Camp", sub: "Golaghat, Assam", lat: 26.5780, lon: 93.1710, type: "camp" },
+    { name: "Joshimath GLOF Surge Base", sub: "Chamoli District, Uttarakhand", lat: 30.5560, lon: 79.5670, type: "glof" },
+    { name: "Chooralmala River Bridge SAR Base", sub: "Wayanad District, Kerala", lat: 11.5280, lon: 76.1380, type: "landslide" }
+  ];
+
+  let searchTimeout = null;
+
+  function performSearch(q) {
+    const term = q.toLowerCase().trim();
+    if (!term) {
+      searchResults.classList.add('hidden');
+      searchResults.innerHTML = '';
+      return;
+    }
+
+    // 1. Instant local index search
+    const localMatches = [];
+
+    // Search shelters
+    (state.sheltersData || shelters).forEach(s => {
+      if (s.name.toLowerCase().includes(term) || (s.region && s.region.toLowerCase().includes(term))) {
+        localMatches.push({ name: s.name, sub: `Cyclone Shelter • Capacity: ${s.capacity} • ${s.region}`, lat: s.lat, lon: s.lng, icon: '🏢' });
+      }
+    });
+
+    // Search assets
+    (state.assets || fleetAssets).forEach(a => {
+      if (a.name.toLowerCase().includes(term) || a.id.toLowerCase().includes(term) || (a.loc && a.loc.toLowerCase().includes(term))) {
+        localMatches.push({ name: `${a.name} (${a.id})`, sub: `${a.unit} • ${a.loc}`, lat: a.lat, lon: a.lng, icon: '🚤' });
+      }
+    });
+
+    // Search built-in disaster cities & points
+    builtInLocations.forEach(loc => {
+      if (loc.name.toLowerCase().includes(term) || loc.sub.toLowerCase().includes(term)) {
+        localMatches.push({ name: loc.name, sub: loc.sub, lat: loc.lat, lon: loc.lon, icon: '📍' });
+      }
+    });
+
+    // Render instant local matches first
+    if (localMatches.length > 0) {
+      renderSearchResults(localMatches.slice(0, 6));
+    }
+
+    // 2. Query OSM Nominatim in background
+    if (searchTimeout) clearTimeout(searchTimeout);
+    if (spinner) spinner.style.display = 'block';
+
+    searchTimeout = setTimeout(async () => {
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(term)}&countrycodes=in&limit=5`;
+        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        if (res.ok) {
+          const apiPlaces = await res.json();
+          const combined = [...localMatches];
+          apiPlaces.forEach(p => {
+            const parts = p.display_name.split(',');
+            combined.push({
+              name: parts[0],
+              sub: parts.slice(1, 4).join(', '),
+              lat: parseFloat(p.lat),
+              lon: parseFloat(p.lon),
+              icon: '🌐'
+            });
+          });
+          renderSearchResults(combined.slice(0, 7));
+        }
+      } catch (err) {
+        console.warn('Nominatim network query skipped, using local index:', err);
+      } finally {
+        if (spinner) spinner.style.display = 'none';
+      }
+    }, 300);
+  }
+
+  searchInput.addEventListener('input', (e) => {
+    const q = e.target.value;
+    if (clearBtn) clearBtn.style.display = q.length > 0 ? 'block' : 'none';
+    performSearch(q);
+  });
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const firstItem = searchResults.querySelector('.gis-search-item');
+      if (firstItem) firstItem.click();
+    }
+  });
+
+  function renderSearchResults(places) {
+    if (!places || places.length === 0) {
+      searchResults.innerHTML = `<div class="gis-search-item"><span class="text-xs text-muted">No tactical locations found</span></div>`;
+      searchResults.classList.remove('hidden');
+      return;
+    }
+
+    searchResults.innerHTML = places.map(p => `
+      <div class="gis-search-item" data-lat="${p.lat}" data-lng="${p.lon}" data-name="${escapeHtml(p.name)}">
+        <span class="gis-search-item-icon">${p.icon || '📍'}</span>
+        <div class="gis-search-item-main">
+          <div class="gis-search-item-name">${p.name}</div>
+          <div class="gis-search-item-sub">${p.sub}</div>
+        </div>
+      </div>
+    `).join('');
+
+    searchResults.classList.remove('hidden');
+
+    searchResults.querySelectorAll('.gis-search-item').forEach(item => {
+      item.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const lat = parseFloat(item.dataset.lat);
+        const lng = parseFloat(item.dataset.lng);
+        const name = item.dataset.name;
+
+        if (state.map && !isNaN(lat) && !isNaN(lng)) {
+          state.map.flyTo([lat, lng], 13, { duration: 1.5 });
+
+          const nearestShelter = findNearestShelter(lat, lng);
+          const nearestAsset = findNearestAsset(lat, lng);
+
+          const searchMarker = L.marker([lat, lng], {
+            icon: L.divIcon({
+              className: 'custom-map-marker-wrap',
+              html: `<div class="custom-map-pin danger-pin"><span>📍</span><span>${name.toUpperCase()}</span></div>`,
+              iconSize: null
+            })
+          }).addTo(state.map).bindPopup(`
+            <div class="tactical-popup">
+              <div class="tac-popup-head head-emerald">
+                <span class="tac-popup-tag">SEARCH PINPOINT</span>
+                <span class="tac-popup-id font-mono">GRID-LOC</span>
+              </div>
+              <div class="tac-popup-body">
+                <div class="tac-popup-title font-bold">${name}</div>
+                <div class="tac-popup-metrics">
+                  <div>Grid Coordinates: <strong class="font-mono">${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E</strong></div>
+                  ${nearestShelter ? `<div>Nearest Shelter: <strong class="text-saffron">${nearestShelter.name} (${nearestShelter.distanceKm} km)</strong></div>` : ''}
+                  ${nearestAsset ? `<div>Nearest NDRF: <strong class="text-emerald">${nearestAsset.name} (${nearestAsset.distanceKm} km)</strong></div>` : ''}
+                </div>
+                <div class="tac-popup-actions">
+                  ${nearestShelter ? `<button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${nearestShelter.lat}, ${nearestShelter.lng}, '${escapeHtml(nearestShelter.name)}')">🛣️ Route to Shelter</button>` : ''}
+                </div>
+              </div>
+            </div>
+          `).openPopup();
+
+          if (state.customPinsGroup) state.customPinsGroup.addLayer(searchMarker);
+          searchResults.classList.add('hidden');
+          showToast(`Location Selected: ${name} [${lat.toFixed(3)}, ${lng.toFixed(3)}]`);
+          logActivity('GIS', `Search fly-to: ${name} [${lat.toFixed(4)}, ${lng.toFixed(4)}]`);
+        }
+      };
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      searchInput.value = '';
+      clearBtn.style.display = 'none';
+      searchResults.classList.add('hidden');
+      searchInput.focus();
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#gis-search-container')) {
+      searchResults.classList.add('hidden');
+    }
+  });
+}
+
+// =========================================================================
+// MAIN TACTICAL LEAFLET GIS MAP INITIALIZATION
 // =========================================================================
 function initGISMap() {
   const mapElement = getEl('gis-map');
   if (!mapElement || state.mapInitialized) return;
 
   try {
-    // Fix Leaflet Default Icon path issues in bundlers with SVG data URIs
     delete L.Icon.Default.prototype._getIconUrl;
     L.Icon.Default.mergeOptions({
       iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36"><path fill="%23E53935" stroke="%23000" stroke-width="2" d="M12 0C5.37 0 0 5.37 0 12c0 9 12 24 12 24s12-15 12-24c0-6.63-5.37-12-12-12z"/><circle fill="%23FFF" cx="12" cy="12" r="5"/></svg>',
@@ -2584,27 +3257,147 @@ function initGISMap() {
     const map = L.map('gis-map', {
       center: [20.65, 86.85],
       zoom: 9,
-      zoomControl: false
+      zoomControl: false,
+      attributionControl: true
     });
 
     state.map = map;
     state.mapInitialized = true;
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; ISRO Bhuvan / IMD / CartoDB',
-      maxZoom: 18
+    // =======================================================================
+    // 1. BASE MAP TILE LAYERS
+    // =======================================================================
+    const osmStandard = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors | NDMA GIS / IMD Telemetry',
+      maxZoom: 19,
+      crossOrigin: true
     }).addTo(map);
 
+    const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+      maxZoom: 19,
+      crossOrigin: true
+    });
+
+    const osmHumanitarian = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors, Humanitarian OSM',
+      maxZoom: 19,
+      crossOrigin: true
+    });
+
+    const openTopo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map: &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors, SRTM | Style: &copy; OpenTopoMap',
+      maxZoom: 17,
+      crossOrigin: true
+    });
+
+    state.baseMaps = {
+      "OpenStreetMap (Standard)": osmStandard,
+      "ESRI Satellite (World Imagery)": esriSatellite,
+      "OSM Humanitarian (HOT)": osmHumanitarian,
+      "OpenTopoMap (Topography)": openTopo
+    };
+
+    L.control.layers(state.baseMaps, null, { position: 'topright', collapsed: true }).addTo(map);
+    L.control.scale({ position: 'bottomleft', imperial: false, metric: true }).addTo(map);
+
+    // =======================================================================
+    // 2. LAYER GROUPS INITIALIZATION
+    // =======================================================================
+    state.radarGroup = L.layerGroup().addTo(map);
+    state.floodGroup = L.layerGroup().addTo(map);
+    state.evacGroup = L.layerGroup().addTo(map);
+    state.sheltersGroup = L.layerGroup().addTo(map);
+    state.assetsGroup = L.layerGroup().addTo(map);
+    state.sosGroup = L.layerGroup().addTo(map);
+    state.incidentsGroup = L.layerGroup().addTo(map);
+    state.dangerZonesGroup = L.layerGroup().addTo(map);
+    state.customPinsGroup = L.layerGroup().addTo(map);
+
+    // =======================================================================
+    // 3. DOPPLER RADAR CONCENTRIC STORM BANDS
+    // =======================================================================
     const stormCenter = [20.2, 87.2];
 
-    const radarRing1 = L.circle(stormCenter, { radius: 35000, color: '#E53935', fillColor: '#E53935', fillOpacity: 0.25, weight: 3 }).addTo(map)
-      .bindPopup('<b>CYCLONE DANA (CORE GALE ZONE)</b><br>Sustained Winds: 125 km/h<br>Central Pressure: 978 hPa');
+    const radarRing1 = L.circle(stormCenter, {
+      radius: 35000,
+      color: '#E53935',
+      fillColor: '#E53935',
+      fillOpacity: 0.25,
+      weight: 3
+    }).bindPopup(`
+      <div class="tactical-popup">
+        <div class="tac-popup-head head-danger">
+          <span class="tac-popup-tag">DOPPLER RADAR TELEMETRY</span>
+          <span class="tac-popup-id font-mono">DANA-CORE</span>
+        </div>
+        <div class="tac-popup-body">
+          <div class="tac-popup-title font-bold">CYCLONE DANA (CORE GALE ZONE)</div>
+          <div class="tac-popup-metrics">
+            <div>Sustained Core Winds: <strong class="text-alert">125 km/h</strong></div>
+            <div>Peak Gusts: <strong class="text-alert">145 km/h</strong></div>
+            <div>Central Pressure: <strong>978 hPa</strong></div>
+            <div>Doppler Station: Paradip Coastal Radar</div>
+          </div>
+          <div class="tac-popup-coords font-mono text-xs">📍 20.2000° N, 87.2000° E</div>
+        </div>
+      </div>
+    `);
 
-    const radarRing2 = L.circle(stormCenter, { radius: 70000, color: '#FF6F00', fillColor: '#FF6F00', fillOpacity: 0.12, weight: 2 }).addTo(map);
-    const radarRing3 = L.circle(stormCenter, { radius: 110000, color: '#FFD600', fillColor: '#FFD600', fillOpacity: 0.05, weight: 1 }).addTo(map);
-    state.radarLayers.push(radarRing1, radarRing2, radarRing3);
+    const radarRing2 = L.circle(stormCenter, {
+      radius: 70000,
+      color: '#FF6F00',
+      fillColor: '#FF6F00',
+      fillOpacity: 0.14,
+      weight: 2
+    }).bindPopup(`
+      <div class="tactical-popup">
+        <div class="tac-popup-head head-saffron">
+          <span class="tac-popup-tag">DOPPLER RADAR TELEMETRY</span>
+          <span class="tac-popup-id font-mono">DANA-SQUALL</span>
+        </div>
+        <div class="tac-popup-body">
+          <div class="tac-popup-title font-bold">CYCLONE DANA (HIGH SQUALL ZONE)</div>
+          <div class="tac-popup-metrics">
+            <div>Squall Winds: <strong class="text-saffron">90 - 110 km/h</strong></div>
+            <div>Rainfall Rate: <strong>35 mm/hr</strong></div>
+            <div>Radius: 70 km Coastal Swell Band</div>
+          </div>
+        </div>
+      </div>
+    `);
 
+    const radarRing3 = L.circle(stormCenter, {
+      radius: 110000,
+      color: '#FFD600',
+      fillColor: '#FFD600',
+      fillOpacity: 0.06,
+      weight: 1
+    }).bindPopup(`
+      <div class="tactical-popup">
+        <div class="tac-popup-head">
+          <span class="tac-popup-tag">DOPPLER RADAR TELEMETRY</span>
+          <span class="tac-popup-id font-mono">DANA-OUTER</span>
+        </div>
+        <div class="tac-popup-body">
+          <div class="tac-popup-title font-bold">CYCLONE DANA (OUTER SPIRAL RAINBAND)</div>
+          <div class="tac-popup-metrics">
+            <div>Outer Winds: <strong>65 - 80 km/h</strong></div>
+            <div>Rainfall: Moderate to Heavy Inundation</div>
+            <div>Radius: 110 km Synoptic Swath</div>
+          </div>
+        </div>
+      </div>
+    `);
+
+    state.radarGroup.addLayer(radarRing1);
+    state.radarGroup.addLayer(radarRing2);
+    state.radarGroup.addLayer(radarRing3);
+
+    // =======================================================================
+    // 4. MANDATORY EVACUATION ZONE POLYGON
+    // =======================================================================
     const evacPolygonCoords = [
       [20.85, 86.85],
       [20.90, 87.05],
@@ -2612,105 +3405,458 @@ function initGISMap() {
       [20.45, 86.80],
       [20.55, 86.65]
     ];
-    state.evacPolygon = L.polygon(evacPolygonCoords, {
-      color: '#E53935',
-      fillColor: '#E53935',
-      fillOpacity: 0.35,
+    const evacPoly = L.polygon(evacPolygonCoords, {
+      color: '#DC2626',
+      fillColor: '#DC2626',
+      fillOpacity: 0.30,
       weight: 3,
       dashArray: '6, 6'
-    }).addTo(map).bindPopup('<b>MANDATORY EVACUATION ZONE (SECTOR 4 & 5)</b><br>Est. Population: 43,000<br>Status: 86.4% Evacuated');
+    }).bindPopup(`
+      <div class="tactical-popup">
+        <div class="tac-popup-head head-danger">
+          <span class="tac-popup-tag">MANDATORY EVACUATION ZONE</span>
+          <span class="tac-popup-id font-mono">SECTOR 4 & 5</span>
+        </div>
+        <div class="tac-popup-body">
+          <div class="tac-popup-title font-bold">Coastal Sectors 4 & 5 (Dhamra / Rajnagar)</div>
+          <div class="tac-popup-desc">Evacuation enforced under Disaster Management Act 2005. High storm surge vulnerability.</div>
+          <div class="tac-popup-metrics">
+            <div>Target Population: <strong>43,000</strong></div>
+            <div>Evacuated to MCS: <strong class="text-emerald">86.4% (37,150)</strong></div>
+            <div>Remaining in Zone: <strong class="text-alert">5,850</strong></div>
+          </div>
+        </div>
+      </div>
+    `);
+    state.evacGroup.addLayer(evacPoly);
 
-    // Shelter Markers with responsive custom styled divIcons
-    shelters.forEach(s => {
+    // =======================================================================
+    // 5. GEOJSON DISASTER RISK POLYGONS
+    // =======================================================================
+    renderScenarioRiskPolygons(state.scenario);
+
+    // =======================================================================
+    // 6. MULTI-PURPOSE CYCLONE SHELTERS
+    // =======================================================================
+    const sheltersToRender = state.sheltersData && state.sheltersData.length ? state.sheltersData : shelters;
+    sheltersToRender.forEach(s => addShelterToGIS(s));
+
+    // =======================================================================
+    // 7. NDRF & COAST GUARD FLEET ASSET MARKERS
+    // =======================================================================
+    const assetsToRender = state.assets && state.assets.length ? state.assets : fleetAssets;
+    assetsToRender.forEach(asset => {
+      if (!asset.lat || !asset.lng) return;
+
+      let iconEmoji = '🚤';
+      let pinClass = 'boat-pin';
+      if (asset.type === 'Water Rescue') iconEmoji = '🚤';
+      else if (asset.type === 'Heavy Vehicle') { iconEmoji = '🚛'; pinClass = 'truck-pin'; }
+      else if (asset.type === 'UAV Drone') { iconEmoji = '🛸'; pinClass = 'drone-pin'; }
+      else if (asset.type === 'Aviation') { iconEmoji = '🚁'; pinClass = 'helo-pin'; }
+
+      const nearestSos = findNearestSosOrIncident(asset.lat, asset.lng);
+
       const icon = L.divIcon({
         className: 'custom-map-marker-wrap',
-        html: `<div class="custom-map-pin shelter-pin">🏢 ${s.name}</div>`,
+        html: `<div class="custom-map-pin ${pinClass}" title="${asset.name}">
+          <span>${iconEmoji}</span>
+          <span>${asset.id}</span>
+        </div>`,
         iconSize: null
       });
-      const marker = L.marker([s.lat, s.lng], { icon }).addTo(map)
-        .bindPopup(`<b>${s.name}</b><br>Occupancy: ${s.occupied}/${s.capacity} (${Math.round(s.occupied / s.capacity * 100)}%)<br>Medical: ${s.medical}`);
-      state.shelterMarkers.push(marker);
+
+      const marker = L.marker([asset.lat, asset.lng], { icon }).bindPopup(`
+        <div class="tactical-popup">
+          <div class="tac-popup-head head-emerald">
+            <span class="tac-popup-tag">NDRF / RESCUE ASSET</span>
+            <span class="tac-popup-id font-mono">${asset.id}</span>
+          </div>
+          <div class="tac-popup-body">
+            <div class="tac-popup-title font-bold">${asset.name}</div>
+            <div class="tac-popup-metrics">
+              <div>Unit: <strong>${asset.unit}</strong></div>
+              <div>Operational Status: <strong class="text-emerald">${asset.status}</strong></div>
+              <div>Stationed Base: <strong>${asset.loc}</strong></div>
+              <div>Crew: <strong>${asset.crew} Personnel</strong></div>
+              ${asset.battery ? `<div>Telemetry Battery: <strong>${asset.battery}</strong></div>` : ''}
+              ${asset.fuel ? `<div>Fuel Level: <strong>${asset.fuel}</strong></div>` : ''}
+              ${nearestSos ? `<div>Nearest Incident/SOS: <strong class="text-alert">${nearestSos.id} (${nearestSos.distanceKm} km)</strong></div>` : ''}
+            </div>
+            <div class="tac-popup-coords font-mono text-xs">📍 ${asset.lat.toFixed(4)}° N, ${asset.lng.toFixed(4)}° E</div>
+            ${nearestSos ? `
+              <div class="tac-popup-actions">
+                <button class="tac-action-btn btn-emerald-action" onclick="window.dispatchToSos('${nearestSos.id}', ${nearestSos.lat}, ${nearestSos.lng})">🚨 Dispatch to ${nearestSos.id}</button>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `);
+
+      asset._marker = marker;
+      state.assetsGroup.addLayer(marker);
     });
 
-    // NDRF Boat Rescue Assets with responsive green divIcons
-    const boatIcon1 = L.divIcon({
-      className: 'custom-map-marker-wrap',
-      html: `<div class="custom-map-pin boat-pin">NDRF Boat 01</div>`,
-      iconSize: null
-    });
-    const boat1 = L.marker([20.78, 86.94], { icon: boatIcon1 }).addTo(map)
-      .bindPopup('<b>NDRF Rescue Boat 01</b><br>Unit: 03 Bn<br>Status: Active Search & Rescue at Dhamra Jetty');
+    // =======================================================================
+    // 8. CITIZEN SOS DISTRESS QUEUE MARKERS
+    // =======================================================================
+    const sosToRender = state.sosList && state.sosList.length ? state.sosList : citizenSosQueue;
+    sosToRender.forEach(sos => {
+      if (!sos.lat || !sos.lng) return;
 
-    const boatIcon2 = L.divIcon({
-      className: 'custom-map-marker-wrap',
-      html: `<div class="custom-map-pin boat-pin">NDRF Boat 02</div>`,
-      iconSize: null
-    });
-    const boat2 = L.marker([20.58, 86.83], { icon: boatIcon2 }).addTo(map)
-      .bindPopup('<b>NDRF Rescue Boat 02</b><br>Unit: 03 Bn<br>Status: Evacuating stranded families at Rajnagar creek');
-    state.assetMarkers.push(boat1, boat2);
+      const nearestShelter = findNearestShelter(sos.lat, sos.lng);
+      const nearestNDRF = findNearestAsset(sos.lat, sos.lng);
 
-    // Interactive Drop Pin Mode
+      const icon = L.divIcon({
+        className: 'custom-map-marker-wrap',
+        html: `<div class="custom-map-pin sos-pin" title="Citizen SOS: ${sos.name}">
+          <span>🆘</span>
+          <span>${sos.id} • ${sos.name.split(' ')[0]}</span>
+        </div>`,
+        iconSize: null
+      });
+
+      const marker = L.marker([sos.lat, sos.lng], { icon }).bindPopup(`
+        <div class="tactical-popup">
+          <div class="tac-popup-head head-danger">
+            <span class="tac-popup-tag">CITIZEN SOS QUEUE</span>
+            <span class="tac-popup-id font-mono">${sos.id} • ${sos.time}</span>
+          </div>
+          <div class="tac-popup-body">
+            <div class="tac-popup-title font-bold">${sos.name}</div>
+            <div class="tac-popup-desc">"${sos.msg}"</div>
+            <div class="tac-popup-metrics">
+              <div>Location: <strong>${sos.location}</strong></div>
+              <div>Urgency: <strong class="text-alert">${sos.urgency}</strong></div>
+              <div>Assigned Unit: <strong>${sos.assignedUnit}</strong></div>
+              ${nearestShelter ? `<div>Nearest Shelter: <strong class="text-saffron">${nearestShelter.name} (${nearestShelter.distanceKm} km)</strong></div>` : ''}
+              ${nearestNDRF ? `<div>Nearest NDRF: <strong class="text-emerald">${nearestNDRF.name} (${nearestNDRF.distanceKm} km)</strong></div>` : ''}
+            </div>
+            <div class="tac-popup-coords font-mono text-xs">📍 ${sos.lat.toFixed(4)}° N, ${sos.lng.toFixed(4)}° E</div>
+            <div class="tac-popup-actions">
+              <button class="tac-action-btn btn-emerald-action" onclick="window.dispatchToSos('${sos.id}', ${sos.lat}, ${sos.lng})">🚨 Dispatch NDRF</button>
+              <button class="tac-action-btn btn-saffron-action" onclick="window.routeSosToShelter(${sos.lat}, ${sos.lng}, '${sos.id}')">🏃 Evac Route</button>
+            </div>
+          </div>
+        </div>
+      `);
+
+      sos._marker = marker;
+      state.sosGroup.addLayer(marker);
+    });
+
+    // =======================================================================
+    // 9. CHRONO INCIDENT HOTSPOT MARKERS
+    // =======================================================================
+    const incidentsToRender = state.incidents && state.incidents.length ? state.incidents : chronoIncidents;
+    incidentsToRender.forEach(inc => {
+      if (!inc.lat || !inc.lng) return;
+
+      const nearestShelter = findNearestShelter(inc.lat, inc.lng);
+      const nearestNDRF = findNearestAsset(inc.lat, inc.lng);
+
+      const icon = L.divIcon({
+        className: 'custom-map-marker-wrap',
+        html: `<div class="custom-map-pin incident-pin" title="${inc.title}">
+          <span>⚠️</span>
+          <span>${inc.id}</span>
+        </div>`,
+        iconSize: null
+      });
+
+      const marker = L.marker([inc.lat, inc.lng], { icon }).bindPopup(`
+        <div class="tactical-popup">
+          <div class="tac-popup-head ${inc.severity === 'CRITICAL' ? 'head-danger' : 'head-saffron'}">
+            <span class="tac-popup-tag">${inc.section} INCIDENT</span>
+            <span class="tac-popup-id font-mono">${inc.id} • ${inc.time}</span>
+          </div>
+          <div class="tac-popup-body">
+            <div class="tac-popup-title font-bold">${inc.title}</div>
+            <div class="tac-popup-desc">${inc.details}</div>
+            <div class="tac-popup-metrics">
+              <div>Location: <strong>${inc.location}</strong></div>
+              <div>Severity: <strong class="${inc.severity === 'CRITICAL' ? 'text-alert' : 'text-saffron'}">${inc.severity}</strong></div>
+              <div>Status: <strong class="text-emerald">${inc.status}</strong></div>
+              ${nearestShelter ? `<div>Nearest Shelter: <strong class="text-saffron">${nearestShelter.name} (${nearestShelter.distanceKm} km)</strong></div>` : ''}
+              ${nearestNDRF ? `<div>Nearest NDRF: <strong class="text-emerald">${nearestNDRF.name} (${nearestNDRF.distanceKm} km)</strong></div>` : ''}
+            </div>
+            <div class="tac-popup-coords font-mono text-xs">📍 ${inc.lat.toFixed(4)}° N, ${inc.lng.toFixed(4)}° E</div>
+          </div>
+        </div>
+      `);
+
+      inc._marker = marker;
+      state.incidentsGroup.addLayer(marker);
+    });
+
+    // =======================================================================
+    // 10. INTERACTIVE DROP PIN & DANGER ZONE MAP CLICK LISTENER
+    // =======================================================================
     const dropPinBtn = getEl('drop-pin-tool-btn');
     if (dropPinBtn) {
-      dropPinBtn.addEventListener('click', () => {
+      dropPinBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         sound.playClick();
         state.dropPinMode = !state.dropPinMode;
+        state.drawDangerMode = false;
         dropPinBtn.classList.toggle('chip-active', state.dropPinMode);
-        showToast(state.dropPinMode ? 'Click anywhere on the map to drop an incident hotspot pin' : 'Drop Pin Mode: CANCELLED');
-      });
+        getEl('draw-danger-zone-btn')?.classList.remove('chip-active');
+        showToast(state.dropPinMode ? '📍 Drop Pin Mode: Click on map to drop a pin & route to nearest shelter' : 'Drop Pin Mode: CANCELLED');
+      };
+    }
+
+    const drawDangerBtn = getEl('draw-danger-zone-btn');
+    if (drawDangerBtn) {
+      drawDangerBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        sound.playClick();
+        state.drawDangerMode = !state.drawDangerMode;
+        state.dropPinMode = false;
+        drawDangerBtn.classList.toggle('chip-active', state.drawDangerMode);
+        dropPinBtn?.classList.remove('chip-active');
+        showToast(state.drawDangerMode ? '🔴 Danger Zone Mode: Click on map to instantly declare a Danger Zone' : 'Danger Zone Mode: CANCELLED');
+      };
     }
 
     map.on('click', (e) => {
-      if (!state.dropPinMode) return;
-      sound.playCriticalAlert();
       const { lat, lng } = e.latlng;
-      const pinIcon = L.divIcon({
+
+      // Direct Danger Zone declaration on map click (no modal required)
+      if (state.drawDangerMode) {
+        state.drawDangerMode = false;
+        drawDangerBtn?.classList.remove('chip-active');
+        declareDangerZone(lat, lng, 6, 'IMPACT DANGER ZONE', 'CRITICAL', 'Immediate evacuation directive enforced under Disaster Management Act 2005 §30.');
+        map.flyTo([lat, lng], 11, { duration: 0.8 });
+        return;
+      }
+
+      // Drop Pin & Instant Route to Nearest Shelter
+      if (!state.dropPinMode) return;
+      state.dropPinMode = false;
+      dropPinBtn?.classList.remove('chip-active');
+      sound.playCriticalAlert();
+
+      const nearestShelter = findNearestShelter(lat, lng);
+      const nearestAsset = findNearestAsset(lat, lng);
+
+      const initialPin = L.divIcon({
         className: 'custom-map-marker-wrap',
-        html: `<div class="custom-map-pin danger-pin">DANGER PIN</div>`,
+        html: `<div class="custom-map-pin danger-pin"><span class="pin-icon">📍</span><span class="pin-name">PINPOINT</span></div>`,
         iconSize: null
       });
-      const marker = L.marker([lat, lng], { icon: pinIcon }).addTo(map)
-        .bindPopup(`<b>FIELD DANGER HOTSPOT</b><br>Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}<br>Status: Dispatched`)
-        .openPopup();
-      state.customMarkers.push(marker);
-      state.dropPinMode = false;
-      dropPinBtn.classList.remove('chip-active');
-      showToast(`Field danger hotspot marked at [${lat.toFixed(3)}, ${lng.toFixed(3)}]`);
-    });
 
-    getEl('toggle-radar-btn')?.addEventListener('click', (e) => {
-      sound.playClick();
-      e.target.classList.toggle('chip-active');
-      state.radarLayers.forEach(l => map.hasLayer(l) ? map.removeLayer(l) : map.addLayer(l));
-      showToast('Doppler Radar Layer toggled');
-    });
+      const marker = L.marker([lat, lng], { icon: initialPin });
+      state.customPinsGroup.addLayer(marker);
 
-    getEl('toggle-evac-btn')?.addEventListener('click', (e) => {
-      sound.playClick();
-      e.target.classList.toggle('chip-active');
-      if (state.evacPolygon) {
-        map.hasLayer(state.evacPolygon) ? map.removeLayer(state.evacPolygon) : map.addLayer(state.evacPolygon);
+      // Automatically plot shortest driving route to nearest shelter
+      if (nearestShelter) {
+        calculateAndDrawRoute([lat, lng], [nearestShelter.lat, nearestShelter.lng], `Tactical Pin ➔ ${nearestShelter.name}`, 'EVACUATION');
       }
-      showToast('Evacuation Polygon toggled');
+
+      marker.bindPopup(`
+        <div class="tactical-popup">
+          <div class="tac-popup-head head-danger">
+            <span class="tac-popup-tag">TACTICAL HOTSPOT PIN</span>
+            <span class="tac-popup-id font-mono">GRID-PIN</span>
+          </div>
+          <div class="tac-popup-body">
+            <div class="tac-popup-title font-bold">Tactical Hotspot Pinpoint</div>
+            <div class="tac-popup-desc">Fetching OpenStreetMap address telemetry for [${lat.toFixed(4)}, ${lng.toFixed(4)}]...</div>
+            <div class="tac-popup-metrics">
+              <div>Coordinates: <strong class="font-mono">${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E</strong></div>
+              ${nearestShelter ? `<div>Nearest Shelter: <strong class="text-saffron">${nearestShelter.name} (${nearestShelter.distanceKm} km)</strong></div>` : ''}
+              ${nearestAsset ? `<div>Nearest NDRF: <strong class="text-emerald">${nearestAsset.name} (${nearestAsset.distanceKm} km)</strong></div>` : ''}
+            </div>
+            ${nearestShelter ? `
+              <div class="tac-popup-actions">
+                <button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${nearestShelter.lat}, ${nearestShelter.lng}, '${escapeHtml(nearestShelter.name)}')">🛣️ Re-Route to Shelter</button>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `).openPopup();
+
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+        headers: { 'Accept': 'application/json' }
+      })
+        .then(res => res.json())
+        .then(data => {
+          const locality = data.address?.village || data.address?.town || data.address?.suburb || data.address?.city || data.address?.county || 'Tactical Sector';
+          const fullAddress = data.display_name || `Grid [${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E]`;
+
+          const updatedIcon = L.divIcon({
+            className: 'custom-map-marker-wrap',
+            html: `<div class="custom-map-pin danger-pin"><span>📍</span><span>${locality.toUpperCase()}</span></div>`,
+            iconSize: null
+          });
+          marker.setIcon(updatedIcon);
+
+          marker.setPopupContent(`
+            <div class="tactical-popup">
+              <div class="tac-popup-head head-danger">
+                <span class="tac-popup-tag">TACTICAL HOTSPOT PIN</span>
+                <span class="tac-popup-id font-mono">GRID-PIN</span>
+              </div>
+              <div class="tac-popup-body">
+                <div class="tac-popup-title font-bold">${locality}</div>
+                <div class="tac-popup-desc">${fullAddress}</div>
+                <div class="tac-popup-metrics">
+                  <div>Coordinates: <strong class="font-mono">${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E</strong></div>
+                  ${nearestShelter ? `<div>Nearest Shelter: <strong class="text-saffron">${nearestShelter.name} (${nearestShelter.distanceKm} km)</strong></div>` : ''}
+                  ${nearestAsset ? `<div>Nearest NDRF: <strong class="text-emerald">${nearestAsset.name} (${nearestAsset.distanceKm} km)</strong></div>` : ''}
+                </div>
+                ${nearestShelter ? `
+                  <div class="tac-popup-actions">
+                    <button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${nearestShelter.lat}, ${nearestShelter.lng}, '${escapeHtml(nearestShelter.name)}')">🛣️ Re-Route to Shelter</button>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `);
+
+          showToast(`OSM Pin: ${locality} [${lat.toFixed(3)}, ${lng.toFixed(3)}] ➔ Route Active`);
+          logActivity('GIS', `Tactical hotspot pinned at ${locality} — Nearest shelter routed`);
+        })
+        .catch(err => {
+          console.warn('Nominatim reverse geocode fallback:', err);
+        });
     });
 
-    getEl('toggle-assets-btn')?.addEventListener('click', (e) => {
-      sound.playClick();
-      e.target.classList.toggle('chip-active');
-      state.assetMarkers.forEach(m => map.hasLayer(m) ? map.removeLayer(m) : map.addLayer(m));
-      showToast('NDRF Fleet Markers toggled');
-    });
+    // =======================================================================
+    // 11. NOMINATIM SEARCH BAR INITIALIZATION
+    // =======================================================================
+    initGisSearch();
 
-    getEl('toggle-shelters-btn')?.addEventListener('click', (e) => {
-      sound.playClick();
-      e.target.classList.toggle('chip-active');
-      state.shelterMarkers.forEach(m => map.hasLayer(m) ? map.removeLayer(m) : map.addLayer(m));
-      showToast('Shelter Markers toggled');
-    });
+    // =======================================================================
+    // 12. ACTIVE ROUTE CLEAR BUTTON
+    // =======================================================================
+    const clearRouteBtn = getEl('clear-route-btn');
+    if (clearRouteBtn) {
+      clearRouteBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        sound.playClick();
+        clearActiveRoute();
+      };
+    }
+
+    // =======================================================================
+    // 13. TACTICAL GIS LEGEND COLLAPSIBLE CONTROLLER & CLICK PROPAGATION
+    // =======================================================================
+    const legendPanel = getEl('gis-legend-panel');
+    const legendToggle = getEl('gis-legend-toggle');
+    const legendBody = getEl('gis-legend-body');
+    const legendChevron = getEl('legend-chevron');
+
+    if (legendPanel && window.L && L.DomEvent) {
+      L.DomEvent.disableClickPropagation(legendPanel);
+      L.DomEvent.disableScrollPropagation(legendPanel);
+    }
+
+    if (legendToggle && legendBody) {
+      legendToggle.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        sound.playClick();
+        const isCollapsed = legendBody.classList.toggle('collapsed');
+        if (legendChevron) legendChevron.innerText = isCollapsed ? '▸' : '▾';
+      };
+    }
+
+    // =======================================================================
+    // 14. LAYER TOGGLES CONTROLLER (SYNCHRONOUS LAYERGROUPS)
+    // =======================================================================
+    function setupLayerToggle(btnId, layerGroup, label) {
+      const btn = getEl(btnId);
+      if (!btn) return;
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        sound.playClick();
+        if (map.hasLayer(layerGroup)) {
+          map.removeLayer(layerGroup);
+          btn.classList.remove('chip-active');
+          showToast(`${label}: OFF`);
+        } else {
+          map.addLayer(layerGroup);
+          btn.classList.add('chip-active');
+          showToast(`${label}: ON`);
+        }
+      };
+    }
+
+    setupLayerToggle('toggle-radar-btn', state.radarGroup, 'Doppler Radar Storm Bands');
+    setupLayerToggle('toggle-flood-btn', state.floodGroup, 'GeoJSON Flood Risk Layer');
+    setupLayerToggle('toggle-evac-btn', state.evacGroup, 'Evacuation Zones');
+    setupLayerToggle('toggle-assets-btn', state.assetsGroup, 'NDRF / Rescue Fleet');
+    setupLayerToggle('toggle-shelters-btn', state.sheltersGroup, 'Multi-Purpose Shelters');
+    setupLayerToggle('toggle-incidents-btn', state.incidentsGroup, 'Chrono Incidents');
+    setupLayerToggle('toggle-sos-btn', state.sosGroup, 'Citizen SOS Queue');
+
+    // =======================================================================
+    // 15. ADD SHELTER & DANGER ZONE MODAL TRIGGERS
+    // =======================================================================
+    const addShelterGisBtn = getEl('add-shelter-gis-btn');
+    if (addShelterGisBtn) {
+      addShelterGisBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        sound.playClick();
+        const center = map.getCenter();
+        const latInput = getEl('new-shelter-lat');
+        const lngInput = getEl('new-shelter-lng');
+        if (latInput) latInput.value = center.lat.toFixed(4);
+        if (lngInput) lngInput.value = center.lng.toFixed(4);
+        getEl('modal-shelter')?.classList.remove('hidden');
+      };
+    }
+
+    // Modal close & save handlers for Danger Zone
+    const dangerModal = getEl('modal-danger-zone');
+    const closeDangerBtn = getEl('close-danger-modal');
+    const cancelDangerBtn = getEl('cancel-danger-modal-btn');
+    const saveDangerBtn = getEl('save-danger-zone-btn');
+    const clickMapDangerBtn = getEl('click-map-danger-btn');
+
+    const closeDangerModal = () => dangerModal?.classList.add('hidden');
+    if (closeDangerBtn) closeDangerBtn.onclick = closeDangerModal;
+    if (cancelDangerBtn) cancelDangerBtn.onclick = closeDangerModal;
+
+    if (clickMapDangerBtn) {
+      clickMapDangerBtn.onclick = (e) => {
+        e.preventDefault();
+        closeDangerModal();
+        state.drawDangerMode = true;
+        drawDangerBtn?.classList.add('active');
+        showToast('Click anywhere on map to position the Danger Zone', 'alert');
+      };
+    }
+
+    if (saveDangerBtn) {
+      saveDangerBtn.onclick = (e) => {
+        e.preventDefault();
+        const title = getEl('new-danger-title')?.value.trim() || 'IMPACT DANGER ZONE';
+        const severity = getEl('new-danger-severity')?.value || 'CRITICAL';
+        const radius = parseFloat(getEl('new-danger-radius')?.value) || 5;
+        const lat = parseFloat(getEl('new-danger-lat')?.value);
+        const lng = parseFloat(getEl('new-danger-lng')?.value);
+        const directive = getEl('new-danger-directive')?.value.trim() || 'Immediate evacuation order under DMA 2005 §30.';
+
+        if (isNaN(lat) || isNaN(lng)) {
+          showToast('Please specify valid latitude and longitude coordinates');
+          return;
+        }
+
+        declareDangerZone(lat, lng, radius, title, severity, directive);
+        closeDangerModal();
+        map.flyTo([lat, lng], 11, { duration: 1 });
+      };
+    }
 
   } catch (err) {
-    console.error('Leaflet Map Init Error:', err);
+    console.error('Leaflet OpenStreetMap Map Init Error:', err);
   }
 }
 
