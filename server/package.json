@@ -13,5 +13,10 @@
     "test": "node test/break-tests.js"
   },
   "engines": { "node": ">=18" },
-  "//": "CommonJS island: the parent Vite app is ESM (\"type\":\"module\"), so this folder declares its own module system. Zero runtime deps by design."
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "pg": "^8.13.3",
+    "ws": "^8.18.0"
+  }
 }

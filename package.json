@@ -25,8 +25,12 @@
   },
   "dependencies": {
     "@turf/turf": "^7.4.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",
-    "lucide": "^0.439.0"
+    "lucide": "^0.439.0",
+    "pg": "^8.23.0",
+    "ws": "^8.21.3"
   }
 }
