@@ -1705,11 +1705,14 @@ function initVolunteerRegistrationModal() {
 
   // Pre-login "I'm new here" entry point sends people to the public Google
   // Form, not this in-app modal — there's no session yet to attach an
-  // internal enrollment to.
-  getEl('btn-login-reg-vol')?.addEventListener('click', () => {
+  // internal enrollment to. Both the prominent banner CTA and the small
+  // secondary link in the tier list trigger the same handler.
+  const goToPublicForm = () => {
     sound.playClick();
     openRegistrationForm();
-  });
+  };
+  getEl('btn-login-reg-vol')?.addEventListener('click', goToPublicForm);
+  getEl('btn-login-reg-vol-mini')?.addEventListener('click', goToPublicForm);
 
   // Close handlers
   if (closeBtn) closeBtn.addEventListener('click', closeModal);

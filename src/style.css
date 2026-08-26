@@ -866,6 +866,52 @@ body.font-scale-lg { font-size: 110%; }
 .badge-gold { background: var(--gold-light); color: var(--gold); border: 1px solid var(--gold-border); }
 .badge-emerald { background: var(--emerald-light); color: var(--emerald); border: 1px solid var(--emerald-border); }
 
+/* Volunteer recruitment banner — login screen */
+.volunteer-recruit-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: linear-gradient(135deg, var(--saffron-light) 0%, #FFFFFF 100%);
+  border: 1.5px solid var(--saffron-border);
+  border-radius: 8px;
+  padding: 18px 24px;
+  margin: 0 0 20px 0;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.08);
+}
+.volunteer-recruit-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.volunteer-recruit-kicker {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--saffron);
+  text-transform: uppercase;
+}
+.volunteer-recruit-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--navy);
+}
+.volunteer-recruit-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.volunteer-recruit-cta {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  padding: 12px 22px;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.3);
+}
+@media (max-width: 768px) {
+  .volunteer-recruit-banner { flex-direction: column; align-items: stretch; text-align: center; }
+  .volunteer-recruit-cta { width: 100%; }
+}
+
 /* ========================================================================= */
 /* 3. VIEW 0: OFFICIAL GOVERNMENT SSO LOGIN GATEWAY                          */
 /* ========================================================================= */
