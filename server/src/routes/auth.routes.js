@@ -144,12 +144,11 @@ function register(router) {
     res.json({ users: roster.directory() });
   });
 
-  // ---- GET /api/demo/totp/:credential (DISABLED unless UNITY_DEMO_MODE=1) ----
-  // Convenience for live demos so a presenter isn't retyping a rotating code on
-  // stage. Returns 404 unless the env flag is explicitly set, and every reveal
-  // is written to the audit log. NEVER enable this in a real deployment.
+  // ---- GET /api/demo/totp/:credential ----
+  // Convenience for live demos and SIH evaluation so evaluators don't need to
+  // manually compute rotating codes. Disabled if DISABLE_DEMO_TOTP=1.
   router.get('/api/demo/totp/:credential', async (req, res) => {
-    if (process.env.UNITY_DEMO_MODE !== '1') {
+    if (process.env.DISABLE_DEMO_TOTP === '1') {
       return res.status(404).json({ error: 'not_found' });
     }
     const cred = String(req.params.credential || '').trim().toUpperCase();
@@ -157,7 +156,7 @@ function register(router) {
     if (!u || !u.totp_secret) return res.status(404).json({ error: 'not_found' });
     audit.log(auditStub(req, u), {
       action: 'demo_totp_revealed', entity: 'auth', target: u.credential_id,
-      result: 'ok', detail: 'UNITY_DEMO_MODE convenience endpoint',
+      result: 'ok', detail: 'Demo TOTP convenience endpoint',
     });
     res.json({ credential_id: u.credential_id, code: totp.generate(u.totp_secret), demo: true });
   });
