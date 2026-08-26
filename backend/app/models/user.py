@@ -9,7 +9,7 @@ class User(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     credential_id = Column(String(50), unique=True, index=True, nullable=False)
     name = Column(String(100), nullable=False)
-    avatar = Column(String(10), default="🏛️")
+    avatar = Column(String(10), default="NDMA")
     role = Column(String(10), nullable=False)  # 'T1', 'T2', 'T3', 'T4', 'T5'
     tier_name = Column(String(100), nullable=False)
     tier_level = Column(Integer, nullable=False)

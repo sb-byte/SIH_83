@@ -6,7 +6,7 @@ SEEDED_USERS = [
     {
         "credential_id": "NDMA-AUTH-01",
         "name": "Shri Rajesh Verma, IAS",
-        "avatar": "🏛️",
+        "avatar": "NDMA",
         "role": "T1",
         "tier_name": "Tier 1 — Authority",
         "tier_level": 1,
@@ -21,7 +21,7 @@ SEEDED_USERS = [
     {
         "credential_id": "NDMA-AUTH-02",
         "name": "Smt. Sunita Rao, IPS",
-        "avatar": "🛡️",
+        "avatar": "SEC",
         "role": "T1",
         "tier_name": "Tier 1 — Authority",
         "tier_level": 1,
@@ -36,7 +36,7 @@ SEEDED_USERS = [
     {
         "credential_id": "ODISHA-SEOC-01",
         "name": "Shri R. Mohanty, IAS",
-        "avatar": "🌊",
+        "avatar": "OD",
         "role": "T2",
         "tier_name": "Tier 2 — Strategist",
         "tier_level": 2,
@@ -51,7 +51,7 @@ SEEDED_USERS = [
     {
         "credential_id": "WB-SEOC-01",
         "name": "Dr. Anirban Sen, WBCS",
-        "avatar": "🌿",
+        "avatar": "WB",
         "role": "T2",
         "tier_name": "Tier 2 — Strategist",
         "tier_level": 2,
@@ -66,7 +66,7 @@ SEEDED_USERS = [
     {
         "credential_id": "BHADRAK-DIST-01",
         "name": "Ms. P. Dash, OAS",
-        "avatar": "⚓",
+        "avatar": "BHD",
         "role": "T3",
         "tier_name": "Tier 3 — Coordinator",
         "tier_level": 3,
@@ -81,7 +81,7 @@ SEEDED_USERS = [
     {
         "credential_id": "KENDRAPARA-DIST-01",
         "name": "Shri S. K. Rout, OAS",
-        "avatar": "🛶",
+        "avatar": "KND",
         "role": "T3",
         "tier_name": "Tier 3 — Coordinator",
         "tier_level": 3,
@@ -96,7 +96,7 @@ SEEDED_USERS = [
     {
         "credential_id": "NDRF-STRIKE-01",
         "name": "Inspector Vikram Singh",
-        "avatar": "🚤",
+        "avatar": "NDRF",
         "role": "T4",
         "tier_name": "Tier 4 — Frontline",
         "tier_level": 4,
@@ -111,7 +111,7 @@ SEEDED_USERS = [
     {
         "credential_id": "SDRF-SAR-01",
         "name": "Sub-Inspector Debashis Roy",
-        "avatar": "🛟",
+        "avatar": "SAR",
         "role": "T4",
         "tier_name": "Tier 4 — Frontline",
         "tier_level": 4,
@@ -126,7 +126,7 @@ SEEDED_USERS = [
     {
         "credential_id": "AM-VOL-01",
         "name": "Alok Panda",
-        "avatar": "🤝",
+        "avatar": "VOL",
         "role": "T5",
         "tier_name": "Tier 5 — Volunteer",
         "tier_level": 5,
@@ -141,7 +141,7 @@ SEEDED_USERS = [
     {
         "credential_id": "AM-VOL-02",
         "name": "Rasmita Jena",
-        "avatar": "🩹",
+        "avatar": "MED",
         "role": "T5",
         "tier_name": "Tier 5 — Volunteer",
         "tier_level": 5,

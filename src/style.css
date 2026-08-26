@@ -45,36 +45,37 @@
   --bg-header: #FFFFFF;
   --bg-panel: #FFFFFF;
   --bg-panel-subtle: #F1F5F9;
-  --bg-panel-hover: #F8FAFC;
+  --bg-panel-hover: #E2E8F0;
   --bg-input: #FFFFFF;
 
-  --border-color: #CBD5E1;
-  --border-subtle: #E2E8F0;
+  --border-color: #94A3B8;
+  --border-subtle: #CBD5E1;
   --border-focus: #1D4ED8;
 
   --text-main: #0F172A;
-  --text-muted: #475569;
-  --text-dim: #64748B;
+  --text-muted: #334155;
+  --text-dim: #475569;
   --text-inverse: #FFFFFF;
+  --text-navy: #0F2942;
 
-  /* Tier Color Accents */
+  /* Tier Color Accents (High Contrast) */
   --tier1-color: #1E3A8A;
-  --tier1-bg: #EFF6FF;
-  --tier2-color: #C2410C;
-  --tier2-bg: #FFF7ED;
-  --tier3-color: #047857;
-  --tier3-bg: #ECFDF5;
-  --tier4-color: #7C2D12;
-  --tier4-bg: #FEF3C7;
-  --tier5-color: #0284C7;
-  --tier5-bg: #F0F9FF;
+  --tier1-bg: #DBEAFE;
+  --tier2-color: #9A3412;
+  --tier2-bg: #FFEDD5;
+  --tier3-color: #065F46;
+  --tier3-bg: #D1FAE5;
+  --tier4-color: #854D0E;
+  --tier4-bg: #FEF08A;
+  --tier5-color: #0369A1;
+  --tier5-bg: #E0F2FE;
 
   /* Elevation Shadows */
-  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -1px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
-  --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.12), 0 1px 2px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.12), 0 2px 4px -1px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.15), 0 10px 10px -5px rgba(15, 23, 42, 0.06);
 
   /* Compatibility aliases */
   --shadow-brutal: var(--shadow-sm);
@@ -94,29 +95,41 @@ html.dark {
   --bg-header: #0F172A;
   --bg-panel: #0F172A;
   --bg-panel-subtle: #1E293B;
-  --bg-panel-hover: #162032;
+  --bg-panel-hover: #273549;
   --bg-input: #1E293B;
 
-  --border-color: #334155;
-  --border-subtle: #1E293B;
-  --border-focus: #3B82F6;
+  --border-color: #475569;
+  --border-subtle: #334155;
+  --border-focus: #60A5FA;
 
-  --text-main: #F1F5F9;
-  --text-muted: #94A3B8;
-  --text-dim: #64748B;
+  --text-main: #F8FAFC;
+  --text-muted: #CBD5E1;
+  --text-dim: #94A3B8;
   --text-inverse: #0F172A;
+  --text-navy: #93C5FD;
 
-  --saffron-light: rgba(234, 88, 12, 0.2);
-  --navy-light: rgba(59, 130, 246, 0.2);
-  --emerald-light: rgba(5, 150, 105, 0.2);
-  --alert-light: rgba(220, 38, 38, 0.2);
-  --gold-light: rgba(217, 119, 6, 0.2);
-  --cyan-light: rgba(8, 145, 178, 0.2);
+  --tier1-color: #93C5FD;
+  --tier1-bg: rgba(30, 58, 138, 0.45);
+  --tier2-color: #FDBA74;
+  --tier2-bg: rgba(154, 52, 18, 0.45);
+  --tier3-color: #6EE7B7;
+  --tier3-bg: rgba(6, 95, 70, 0.45);
+  --tier4-color: #FDE047;
+  --tier4-bg: rgba(133, 77, 14, 0.45);
+  --tier5-color: #7DD3FC;
+  --tier5-bg: rgba(3, 105, 161, 0.45);
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 6px 12px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.7);
+  --saffron-light: rgba(234, 88, 12, 0.3);
+  --navy-light: rgba(59, 130, 246, 0.3);
+  --emerald-light: rgba(5, 150, 105, 0.3);
+  --alert-light: rgba(220, 38, 38, 0.3);
+  --gold-light: rgba(217, 119, 6, 0.3);
+  --cyan-light: rgba(8, 145, 178, 0.3);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 6px 12px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.8);
 }
 
 /* ========================================================================= */
@@ -184,7 +197,7 @@ body.font-scale-lg {
 }
 
 .text-navy {
-  color: var(--navy);
+  color: var(--text-navy);
 }
 
 .text-emerald {
@@ -1260,7 +1273,7 @@ body.font-scale-lg {
 .panel-title-text {
   font-size: 0.95rem;
   font-weight: 800;
-  color: var(--navy);
+  color: var(--text-navy);
 }
 
 .panel-sub-text {
@@ -1413,7 +1426,7 @@ body.font-scale-lg {
 }
 
 .tier-mini-info strong {
-  color: var(--navy);
+  color: var(--text-navy);
 }
 
 .tier-mini-info span {
@@ -1434,6 +1447,11 @@ body.font-scale-lg {
   transition: transform 0.15s ease;
 }
 
+html.dark .demo-roster-callout {
+  background: #1E293B;
+  border-color: #3B82F6;
+}
+
 .demo-roster-callout:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-sm);
@@ -1447,16 +1465,16 @@ body.font-scale-lg {
   display: flex;
   flex-direction: column;
   flex: 1;
+  font-size: 0.75rem;
 }
 
 .demo-callout-text strong {
-  font-size: 0.78rem;
-  color: var(--navy);
+  color: var(--text-navy);
 }
 
 .demo-callout-text span {
-  font-size: 0.68rem;
   color: var(--text-muted);
+  font-size: 0.68rem;
 }
 
 /* Live Access Audit Trail */

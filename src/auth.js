@@ -221,7 +221,7 @@ function hydrate(user, permissions, token) {
     team: user.team,
     jurisdiction: user.jurisdiction,
     jurisdictionLabel: user.jurisdictionLabel || user.jurisdiction,
-    avatar: user.avatar || '🏛️',
+    avatar: user.avatar || 'NDMA',
     designation: user.designation || '',
     scopeLabel: user.scopeLabel,
     permissions: permissions || {},

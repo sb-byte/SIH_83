@@ -639,7 +639,7 @@ function lockTerminal() {
   const tierChipEl = getEl('header-tier-chip');
   const jurEl = getEl('header-jurisdiction');
   const avatarEl = getEl('header-user-avatar');
-  if (avatarEl) avatarEl.innerText = '🏛️';
+  if (avatarEl) avatarEl.innerText = 'NDMA';
   if (nameEl) nameEl.innerText = 'OFFICIAL GATEWAY';
   if (tierChipEl) { tierChipEl.className = 'tier-pill-badge'; tierChipEl.innerText = 'NIC PARICHAY'; }
   if (jurEl) jurEl.innerText = 'Awaiting agency credential';
@@ -2177,11 +2177,11 @@ export function renderKanban() {
       actionsHtml = `
         <div class="kanban-card-actions">
           <div>
-            ${currentStatus !== 'open' ? `<button class="kanban-move-btn" data-action="to-open" data-task-id="${task.id}" title="Move to Open">◀ Open</button>` : ''}
-            ${currentStatus !== 'in_progress' ? `<button class="kanban-move-btn" data-action="to-progress" data-task-id="${task.id}" title="Move to In Progress">⚡ Active</button>` : ''}
-            ${currentStatus !== 'completed' ? `<button class="kanban-move-btn" data-action="to-complete" data-task-id="${task.id}" title="Mark Complete">✔ Done ▶</button>` : ''}
+            ${currentStatus !== 'open' ? `<button class="kanban-move-btn" data-action="to-open" data-task-id="${task.id}" title="Move to Open">< Open</button>` : ''}
+            ${currentStatus !== 'in_progress' ? `<button class="kanban-move-btn" data-action="to-progress" data-task-id="${task.id}" title="Move to In Progress">ACTIVE Active</button>` : ''}
+            ${currentStatus !== 'completed' ? `<button class="kanban-move-btn" data-action="to-complete" data-task-id="${task.id}" title="Mark Complete">DONE Done ></button>` : ''}
           </div>
-          <button class="kanban-move-btn btn-assign-task" data-task-id="${task.id}" data-task-title="${(task.task || task.title).replace(/"/g, '&quot;')}" style="color: #0284c7;">Assign 👤</button>
+          <button class="kanban-move-btn btn-assign-task" data-task-id="${task.id}" data-task-title="${(task.task || task.title).replace(/"/g, '&quot;')}" style="color: #0284c7;">Assign OFFICER</button>
         </div>
       `;
     } else if (isT1) {
@@ -2199,7 +2199,7 @@ export function renderKanban() {
       </div>
       <div class="kanban-card-title">${task.task || task.title}</div>
       <div class="kanban-card-meta">
-        <span>👤 ${task.assignee || task.assigned_to || 'Unassigned'}</span>
+        <span>OFFICER ${task.assignee || task.assigned_to || 'Unassigned'}</span>
         ${task.due ? `<span>⏰ ${task.due}</span>` : ''}
       </div>
       ${actionsHtml}
@@ -2587,7 +2587,7 @@ export function initFieldHub() {
       }
       renderKanban();
       initFieldHub();
-      showToast('✅ Assignment Marked COMPLETE & Reported Up to Command');
+      showToast('[VERIFIED] Assignment Marked COMPLETE & Reported Up to Command');
       logActivity('STRIKE TEAM', `Task marked complete by frontline team: ${activeTask ? (activeTask.task || activeTask.title) : 'Active Mission'}`);
     };
   }
@@ -2635,7 +2635,7 @@ export function initFieldHub() {
       });
 
       renderIncidents();
-      showToast('⚠️ Critical Hazard Alert Broadcast to Incident Stream!', 'alert');
+      showToast('[WARNING] Critical Hazard Alert Broadcast to Incident Stream!', 'alert');
       logActivity('HAZARD', `Frontline team flagged critical hazard at ${session.site || 'sector'}`);
     };
   }
@@ -2709,9 +2709,9 @@ export async function renderEscalationInbox() {
   }
 
   if (inboxTitle) {
-    if (['T1', 'T2'].includes(session.tier)) inboxTitle.innerText = '📥 Actionable Escalation Inbox (Approval Authority)';
-    else if (session.tier === 'T3') inboxTitle.innerText = '📥 District Triage Inbox (Forward to T2)';
-    else inboxTitle.innerText = '📤 My Submitted Escalations';
+    if (['T1', 'T2'].includes(session.tier)) inboxTitle.innerText = ' Actionable Escalation Inbox (Approval Authority)';
+    else if (session.tier === 'T3') inboxTitle.innerText = ' District Triage Inbox (Forward to T2)';
+    else inboxTitle.innerText = ' My Submitted Escalations';
   }
 
   try {
@@ -3563,7 +3563,7 @@ async function calculateAndDrawRoute(startCoords, endCoords, title, routeType = 
       color: '#FFFFFF',
       weight: 2,
       fillOpacity: 1
-    }).bindPopup(`<div class="tactical-popup"><div class="tac-popup-head"><span>ROUTE ORIGIN</span></div><div class="tac-popup-body"><div class="tac-popup-title font-bold">${title.split('➔')[0] || 'Origin'}</div></div></div>`);
+    }).bindPopup(`<div class="tactical-popup"><div class="tac-popup-head"><span>ROUTE ORIGIN</span></div><div class="tac-popup-body"><div class="tac-popup-title font-bold">${title.split('')[0] || 'Origin'}</div></div></div>`);
     routeGroup.addLayer(startPin);
 
     const endPin = L.circleMarker([endLat, endLng], {
@@ -3572,7 +3572,7 @@ async function calculateAndDrawRoute(startCoords, endCoords, title, routeType = 
       color: '#FFFFFF',
       weight: 2,
       fillOpacity: 1
-    }).bindPopup(`<div class="tactical-popup"><div class="tac-popup-head head-saffron"><span>ROUTE DESTINATION</span></div><div class="tac-popup-body"><div class="tac-popup-title font-bold">${title.split('➔')[1] || 'Destination'}</div></div></div>`);
+    }).bindPopup(`<div class="tactical-popup"><div class="tac-popup-head head-saffron"><span>ROUTE DESTINATION</span></div><div class="tac-popup-body"><div class="tac-popup-title font-bold">${title.split('')[1] || 'Destination'}</div></div></div>`);
     routeGroup.addLayer(endPin);
 
     routeGroup.addTo(state.map);
@@ -3617,7 +3617,7 @@ function clearActiveRoute() {
 
 // Global popup action hooks
 window.routeFromPointToShelter = (fromLat, fromLng, shelterLat, shelterLng, shelterName) => {
-  calculateAndDrawRoute([fromLat, fromLng], [shelterLat, shelterLng], `Dropped Pin ➔ ${shelterName}`, 'EVACUATION');
+  calculateAndDrawRoute([fromLat, fromLng], [shelterLat, shelterLng], `Dropped Pin  ${shelterName}`, 'EVACUATION');
 };
 
 window.routeToShelter = (shelterLat, shelterLng, shelterName) => {
@@ -3630,7 +3630,7 @@ window.routeToShelter = (shelterLat, shelterLng, shelterName) => {
     startLat = center.lat;
     startLng = center.lng;
   }
-  calculateAndDrawRoute([startLat, startLng], [shelterLat, shelterLng], `Tactical Location ➔ ${shelterName}`, 'EVACUATION');
+  calculateAndDrawRoute([startLat, startLng], [shelterLat, shelterLng], `Tactical Location  ${shelterName}`, 'EVACUATION');
 };
 
 window.dispatchToSos = (sosId, sosLat, sosLng) => {
@@ -3639,7 +3639,7 @@ window.dispatchToSos = (sosId, sosLat, sosLng) => {
     showToast('No available NDRF asset in operational radius', 'alert');
     return;
   }
-  calculateAndDrawRoute([asset.lat, asset.lng], [sosLat, sosLng], `${asset.name} (${asset.id}) ➔ ${sosId}`, 'DISPATCH');
+  calculateAndDrawRoute([asset.lat, asset.lng], [sosLat, sosLng], `${asset.name} (${asset.id})  ${sosId}`, 'DISPATCH');
   showToast(`DISPATCHED ${asset.id} to ${sosId}`, 'alert');
   logActivity('OPS', `Asset ${asset.id} dispatched to ${sosId} at [${sosLat}, ${sosLng}]`);
 };
@@ -3650,7 +3650,7 @@ window.routeSosToShelter = (sosLat, sosLng, sosId) => {
     showToast('No cyclone shelter found in radius', 'alert');
     return;
   }
-  calculateAndDrawRoute([sosLat, sosLng], [shelter.lat, shelter.lng], `${sosId} ➔ ${shelter.name}`, 'EVACUATION');
+  calculateAndDrawRoute([sosLat, sosLng], [shelter.lat, shelter.lng], `${sosId}  ${shelter.name}`, 'EVACUATION');
 };
 
 // =========================================================================
@@ -3693,7 +3693,7 @@ function renderScenarioRiskPolygons(scenarioKey) {
               <div>Severity Level: <strong class="${p.severity === 'EXTREME' || p.severity === 'CRITICAL' ? 'text-alert' : 'text-saffron'}">${p.severity}</strong></div>
               <div>Water / Surge Depth: <strong>${p.depth}</strong></div>
             </div>
-            <div class="tac-popup-coords font-mono text-xs">📍 ISRO Bhuvan & CWC Hydro-Spatial Model</div>
+            <div class="tac-popup-coords font-mono text-xs"> ISRO Bhuvan & CWC Hydro-Spatial Model</div>
           </div>
         </div>
       `);
@@ -3727,7 +3727,7 @@ function declareDangerZone(lat, lng, radiusKm, title, severity = 'CRITICAL', dir
   const centerMarker = L.marker([lat, lng], {
     icon: L.divIcon({
       className: 'custom-map-marker-wrap',
-      html: `<div class="danger-zone-center-pin" title="${title}"><span>⚠️</span><span>${title} (${radiusKm}km)</span></div>`,
+      html: `<div class="danger-zone-center-pin" title="${title}"><span>[WARNING]</span><span>${title} (${radiusKm}km)</span></div>`,
       iconSize: null
     })
   });
@@ -3737,7 +3737,7 @@ function declareDangerZone(lat, lng, radiusKm, title, severity = 'CRITICAL', dir
   const popupContent = `
     <div class="tactical-popup">
       <div class="tac-popup-head head-danger">
-        <span class="tac-popup-tag">🔴 DECLARED IMPACT ZONE</span>
+        <span class="tac-popup-tag">[CRITICAL] DECLARED IMPACT ZONE</span>
         <span class="tac-popup-id font-mono">${zoneId}</span>
       </div>
       <div class="tac-popup-body">
@@ -3750,7 +3750,7 @@ function declareDangerZone(lat, lng, radiusKm, title, severity = 'CRITICAL', dir
           <div>Legal Authority: <strong>Disaster Management Act 2005 §30</strong></div>
         </div>
         <div class="tac-popup-actions">
-          <button class="tac-action-btn btn-saffron-action" onclick="window.removeDangerZone('${zoneId}')">✕ Remove Hazard Zone</button>
+          <button class="tac-action-btn btn-saffron-action" onclick="window.removeDangerZone('${zoneId}')"> Remove Hazard Zone</button>
         </div>
       </div>
     </div>
@@ -3767,7 +3767,7 @@ function declareDangerZone(lat, lng, radiusKm, title, severity = 'CRITICAL', dir
   }
 
   sound.playCriticalAlert();
-  showToast(`🔴 DANGER ZONE DECLARED: ${title} (${radiusKm} km radius)`, 'alert');
+  showToast(`[CRITICAL] DANGER ZONE DECLARED: ${title} (${radiusKm} km radius)`, 'alert');
   logActivity('GIS', `Declared danger/impact zone [${zoneId}]: ${title} (${radiusKm}km) at [${lat}, ${lng}]`);
   centerMarker.openPopup();
 }
@@ -3794,7 +3794,7 @@ function addShelterToGIS(s) {
   const icon = L.divIcon({
     className: 'custom-map-marker-wrap',
     html: `<div class="custom-map-pin shelter-pin" title="${s.name}">
-      <span>🏢</span>
+      <span></span>
       <span>${s.name.replace('MCS ', '')}</span>
       <span class="pin-badge ${isCritical ? 'badge-crit' : ''}">${pct}%</span>
     </div>`,
@@ -3819,9 +3819,9 @@ function addShelterToGIS(s) {
           <div>Status: <strong class="${isCritical ? 'text-alert' : 'text-emerald'}">${s.status}</strong></div>
           ${nearestNDRF ? `<div>Nearest NDRF: <strong class="text-emerald">${nearestNDRF.name} (${nearestNDRF.distanceKm} km)</strong></div>` : ''}
         </div>
-        <div class="tac-popup-coords font-mono text-xs">📍 ${s.lat.toFixed(4)}° N, ${s.lng.toFixed(4)}° E</div>
+        <div class="tac-popup-coords font-mono text-xs"> ${s.lat.toFixed(4)}° N, ${s.lng.toFixed(4)}° E</div>
         <div class="tac-popup-actions">
-          <button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${s.lat}, ${s.lng}, '${escapeHtml(s.name)}')">🛣️ Route to Shelter</button>
+          <button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${s.lat}, ${s.lng}, '${escapeHtml(s.name)}')">️ Route to Shelter</button>
         </div>
       </div>
     </div>
@@ -3890,21 +3890,21 @@ function initGisSearch() {
     // Search shelters
     (state.sheltersData || shelters).forEach(s => {
       if (s.name.toLowerCase().includes(term) || (s.region && s.region.toLowerCase().includes(term))) {
-        localMatches.push({ name: s.name, sub: `Cyclone Shelter • Capacity: ${s.capacity} • ${s.region}`, lat: s.lat, lon: s.lng, icon: '🏢' });
+        localMatches.push({ name: s.name, sub: `Cyclone Shelter • Capacity: ${s.capacity} • ${s.region}`, lat: s.lat, lon: s.lng, icon: '' });
       }
     });
 
     // Search assets
     (state.assets || fleetAssets).forEach(a => {
       if (a.name.toLowerCase().includes(term) || a.id.toLowerCase().includes(term) || (a.loc && a.loc.toLowerCase().includes(term))) {
-        localMatches.push({ name: `${a.name} (${a.id})`, sub: `${a.unit} • ${a.loc}`, lat: a.lat, lon: a.lng, icon: '🚤' });
+        localMatches.push({ name: `${a.name} (${a.id})`, sub: `${a.unit} • ${a.loc}`, lat: a.lat, lon: a.lng, icon: 'NDRF' });
       }
     });
 
     // Search built-in disaster cities & points
     builtInLocations.forEach(loc => {
       if (loc.name.toLowerCase().includes(term) || loc.sub.toLowerCase().includes(term)) {
-        localMatches.push({ name: loc.name, sub: loc.sub, lat: loc.lat, lon: loc.lon, icon: '📍' });
+        localMatches.push({ name: loc.name, sub: loc.sub, lat: loc.lat, lon: loc.lon, icon: '' });
       }
     });
 
@@ -3931,7 +3931,7 @@ function initGisSearch() {
               sub: parts.slice(1, 4).join(', '),
               lat: parseFloat(p.lat),
               lon: parseFloat(p.lon),
-              icon: '🌐'
+              icon: ''
             });
           });
           renderSearchResults(combined.slice(0, 7));
@@ -3967,7 +3967,7 @@ function initGisSearch() {
 
     searchResults.innerHTML = places.map(p => `
       <div class="gis-search-item" data-lat="${p.lat}" data-lng="${p.lon}" data-name="${escapeHtml(p.name)}">
-        <span class="gis-search-item-icon">${p.icon || '📍'}</span>
+        <span class="gis-search-item-icon">${p.icon || ''}</span>
         <div class="gis-search-item-main">
           <div class="gis-search-item-name">${p.name}</div>
           <div class="gis-search-item-sub">${p.sub}</div>
@@ -3995,7 +3995,7 @@ function initGisSearch() {
           const searchMarker = L.marker([lat, lng], {
             icon: L.divIcon({
               className: 'custom-map-marker-wrap',
-              html: `<div class="custom-map-pin danger-pin"><span>📍</span><span>${name.toUpperCase()}</span></div>`,
+              html: `<div class="custom-map-pin danger-pin"><span></span><span>${name.toUpperCase()}</span></div>`,
               iconSize: null
             })
           }).addTo(state.map).bindPopup(`
@@ -4012,7 +4012,7 @@ function initGisSearch() {
                   ${nearestAsset ? `<div>Nearest NDRF: <strong class="text-emerald">${nearestAsset.name} (${nearestAsset.distanceKm} km)</strong></div>` : ''}
                 </div>
                 <div class="tac-popup-actions">
-                  ${nearestShelter ? `<button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${nearestShelter.lat}, ${nearestShelter.lng}, '${escapeHtml(nearestShelter.name)}')">🛣️ Route to Shelter</button>` : ''}
+                  ${nearestShelter ? `<button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${nearestShelter.lat}, ${nearestShelter.lng}, '${escapeHtml(nearestShelter.name)}')">️ Route to Shelter</button>` : ''}
                 </div>
               </div>
             </div>
@@ -4149,7 +4149,7 @@ function initGISMap() {
             <div>Central Pressure: <strong>978 hPa</strong></div>
             <div>Doppler Station: Paradip Coastal Radar</div>
           </div>
-          <div class="tac-popup-coords font-mono text-xs">📍 20.2000° N, 87.2000° E</div>
+          <div class="tac-popup-coords font-mono text-xs"> 20.2000° N, 87.2000° E</div>
         </div>
       </div>
     `);
@@ -4257,12 +4257,12 @@ function initGISMap() {
     assetsToRender.forEach(asset => {
       if (!asset.lat || !asset.lng) return;
 
-      let iconEmoji = '🚤';
+      let iconEmoji = 'NDRF';
       let pinClass = 'boat-pin';
-      if (asset.type === 'Water Rescue') iconEmoji = '🚤';
-      else if (asset.type === 'Heavy Vehicle') { iconEmoji = '🚛'; pinClass = 'truck-pin'; }
-      else if (asset.type === 'UAV Drone') { iconEmoji = '🛸'; pinClass = 'drone-pin'; }
-      else if (asset.type === 'Aviation') { iconEmoji = '🚁'; pinClass = 'helo-pin'; }
+      if (asset.type === 'Water Rescue') iconEmoji = 'NDRF';
+      else if (asset.type === 'Heavy Vehicle') { iconEmoji = ''; pinClass = 'truck-pin'; }
+      else if (asset.type === 'UAV Drone') { iconEmoji = ''; pinClass = 'drone-pin'; }
+      else if (asset.type === 'Aviation') { iconEmoji = '[HELI]'; pinClass = 'helo-pin'; }
 
       const nearestSos = findNearestSosOrIncident(asset.lat, asset.lng);
 
@@ -4292,10 +4292,10 @@ function initGISMap() {
               ${asset.fuel ? `<div>Fuel Level: <strong>${asset.fuel}</strong></div>` : ''}
               ${nearestSos ? `<div>Nearest Incident/SOS: <strong class="text-alert">${nearestSos.id} (${nearestSos.distanceKm} km)</strong></div>` : ''}
             </div>
-            <div class="tac-popup-coords font-mono text-xs">📍 ${asset.lat.toFixed(4)}° N, ${asset.lng.toFixed(4)}° E</div>
+            <div class="tac-popup-coords font-mono text-xs"> ${asset.lat.toFixed(4)}° N, ${asset.lng.toFixed(4)}° E</div>
             ${nearestSos ? `
               <div class="tac-popup-actions">
-                <button class="tac-action-btn btn-emerald-action" onclick="window.dispatchToSos('${nearestSos.id}', ${nearestSos.lat}, ${nearestSos.lng})">🚨 Dispatch to ${nearestSos.id}</button>
+                <button class="tac-action-btn btn-emerald-action" onclick="window.dispatchToSos('${nearestSos.id}', ${nearestSos.lat}, ${nearestSos.lng})">[ALERT] Dispatch to ${nearestSos.id}</button>
               </div>
             ` : ''}
           </div>
@@ -4341,10 +4341,10 @@ function initGISMap() {
               ${nearestShelter ? `<div>Nearest Shelter: <strong class="text-saffron">${nearestShelter.name} (${nearestShelter.distanceKm} km)</strong></div>` : ''}
               ${nearestNDRF ? `<div>Nearest NDRF: <strong class="text-emerald">${nearestNDRF.name} (${nearestNDRF.distanceKm} km)</strong></div>` : ''}
             </div>
-            <div class="tac-popup-coords font-mono text-xs">📍 ${sos.lat.toFixed(4)}° N, ${sos.lng.toFixed(4)}° E</div>
+            <div class="tac-popup-coords font-mono text-xs"> ${sos.lat.toFixed(4)}° N, ${sos.lng.toFixed(4)}° E</div>
             <div class="tac-popup-actions">
-              <button class="tac-action-btn btn-emerald-action" onclick="window.dispatchToSos('${sos.id}', ${sos.lat}, ${sos.lng})">🚨 Dispatch NDRF</button>
-              <button class="tac-action-btn btn-saffron-action" onclick="window.routeSosToShelter(${sos.lat}, ${sos.lng}, '${sos.id}')">🏃 Evac Route</button>
+              <button class="tac-action-btn btn-emerald-action" onclick="window.dispatchToSos('${sos.id}', ${sos.lat}, ${sos.lng})">[ALERT] Dispatch NDRF</button>
+              <button class="tac-action-btn btn-saffron-action" onclick="window.routeSosToShelter(${sos.lat}, ${sos.lng}, '${sos.id}')"> Evac Route</button>
             </div>
           </div>
         </div>
@@ -4367,7 +4367,7 @@ function initGISMap() {
       const icon = L.divIcon({
         className: 'custom-map-marker-wrap',
         html: `<div class="custom-map-pin incident-pin" title="${inc.title}">
-          <span>⚠️</span>
+          <span>[WARNING]</span>
           <span>${inc.id}</span>
         </div>`,
         iconSize: null
@@ -4389,7 +4389,7 @@ function initGISMap() {
               ${nearestShelter ? `<div>Nearest Shelter: <strong class="text-saffron">${nearestShelter.name} (${nearestShelter.distanceKm} km)</strong></div>` : ''}
               ${nearestNDRF ? `<div>Nearest NDRF: <strong class="text-emerald">${nearestNDRF.name} (${nearestNDRF.distanceKm} km)</strong></div>` : ''}
             </div>
-            <div class="tac-popup-coords font-mono text-xs">📍 ${inc.lat.toFixed(4)}° N, ${inc.lng.toFixed(4)}° E</div>
+            <div class="tac-popup-coords font-mono text-xs"> ${inc.lat.toFixed(4)}° N, ${inc.lng.toFixed(4)}° E</div>
           </div>
         </div>
       `);
@@ -4411,7 +4411,7 @@ function initGISMap() {
         state.drawDangerMode = false;
         dropPinBtn.classList.toggle('chip-active', state.dropPinMode);
         getEl('draw-danger-zone-btn')?.classList.remove('chip-active');
-        showToast(state.dropPinMode ? '📍 Drop Pin Mode: Click on map to drop a pin & route to nearest shelter' : 'Drop Pin Mode: CANCELLED');
+        showToast(state.dropPinMode ? ' Drop Pin Mode: Click on map to drop a pin & route to nearest shelter' : 'Drop Pin Mode: CANCELLED');
       };
     }
 
@@ -4425,7 +4425,7 @@ function initGISMap() {
         state.dropPinMode = false;
         drawDangerBtn.classList.toggle('chip-active', state.drawDangerMode);
         dropPinBtn?.classList.remove('chip-active');
-        showToast(state.drawDangerMode ? '🔴 Danger Zone Mode: Click on map to instantly declare a Danger Zone' : 'Danger Zone Mode: CANCELLED');
+        showToast(state.drawDangerMode ? '[CRITICAL] Danger Zone Mode: Click on map to instantly declare a Danger Zone' : 'Danger Zone Mode: CANCELLED');
       };
     }
 
@@ -4452,7 +4452,7 @@ function initGISMap() {
 
       const initialPin = L.divIcon({
         className: 'custom-map-marker-wrap',
-        html: `<div class="custom-map-pin danger-pin"><span class="pin-icon">📍</span><span class="pin-name">PINPOINT</span></div>`,
+        html: `<div class="custom-map-pin danger-pin"><span class="pin-icon"></span><span class="pin-name">PINPOINT</span></div>`,
         iconSize: null
       });
 
@@ -4461,7 +4461,7 @@ function initGISMap() {
 
       // Automatically plot shortest driving route to nearest shelter
       if (nearestShelter) {
-        calculateAndDrawRoute([lat, lng], [nearestShelter.lat, nearestShelter.lng], `Tactical Pin ➔ ${nearestShelter.name}`, 'EVACUATION');
+        calculateAndDrawRoute([lat, lng], [nearestShelter.lat, nearestShelter.lng], `Tactical Pin  ${nearestShelter.name}`, 'EVACUATION');
       }
 
       marker.bindPopup(`
@@ -4480,7 +4480,7 @@ function initGISMap() {
             </div>
             ${nearestShelter ? `
               <div class="tac-popup-actions">
-                <button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${nearestShelter.lat}, ${nearestShelter.lng}, '${escapeHtml(nearestShelter.name)}')">🛣️ Re-Route to Shelter</button>
+                <button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${nearestShelter.lat}, ${nearestShelter.lng}, '${escapeHtml(nearestShelter.name)}')">️ Re-Route to Shelter</button>
               </div>
             ` : ''}
           </div>
@@ -4497,7 +4497,7 @@ function initGISMap() {
 
           const updatedIcon = L.divIcon({
             className: 'custom-map-marker-wrap',
-            html: `<div class="custom-map-pin danger-pin"><span>📍</span><span>${locality.toUpperCase()}</span></div>`,
+            html: `<div class="custom-map-pin danger-pin"><span></span><span>${locality.toUpperCase()}</span></div>`,
             iconSize: null
           });
           marker.setIcon(updatedIcon);
@@ -4518,14 +4518,14 @@ function initGISMap() {
                 </div>
                 ${nearestShelter ? `
                   <div class="tac-popup-actions">
-                    <button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${nearestShelter.lat}, ${nearestShelter.lng}, '${escapeHtml(nearestShelter.name)}')">🛣️ Re-Route to Shelter</button>
+                    <button class="tac-action-btn btn-saffron-action" onclick="window.routeToShelter(${nearestShelter.lat}, ${nearestShelter.lng}, '${escapeHtml(nearestShelter.name)}')">️ Re-Route to Shelter</button>
                   </div>
                 ` : ''}
               </div>
             </div>
           `);
 
-          showToast(`OSM Pin: ${locality} [${lat.toFixed(3)}, ${lng.toFixed(3)}] ➔ Route Active`);
+          showToast(`OSM Pin: ${locality} [${lat.toFixed(3)}, ${lng.toFixed(3)}]  Route Active`);
           logActivity('GIS', `Tactical hotspot pinned at ${locality} — Nearest shelter routed`);
         })
         .catch(err => {

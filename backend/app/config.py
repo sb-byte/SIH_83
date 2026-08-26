@@ -12,8 +12,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 12 # 12 hours
     
-    # Database URL: default SQLite with plain lat/lng, or PostgreSQL via env
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./unity_eoc.db")
+    # Database URL: PostgreSQL primary, SQLite fallback
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/unity_eoc")
+    SQLITE_FALLBACK_URL: str = "sqlite:///./unity_eoc.db"
     
     # CORS
     CORS_ORIGINS: List[str] = [

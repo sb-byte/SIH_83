@@ -95,62 +95,62 @@ export const citizenSosQueue = [
 ];
 
 export const chronoIncidents = [
-  // {
-  //   id: "INC-1092",
-  //   region: "Odisha",
-  //   site: "Bhadrak / Dhamra",
-  //   time: "14:24 IST",
-  //   section: "OPS",
-  //   severity: "CRITICAL",
-  //   title: "Dhamra Port Seawall Overtopped",
-  //   details: "Tidal surge of +3.2m breached secondary barrier at Dhamra port fishing jetty. NDRF 03 Bn Bravo Team en route with 6 Inflatable Rescue Boats (IRBs).",
-  //   location: "Dhamra, Bhadrak [20.7937° N, 86.9634° E]",
-  //   lat: 20.7937,
-  //   lng: 86.9634,
-  //   status: "RESPONSE DEPLOYED"
-  // },
-  // {
-  //   id: "INC-1091",
-  //   region: "Odisha",
-  //   site: "Kendrapara / Rajnagar",
-  //   time: "14:18 IST",
-  //   section: "OPS",
-  //   severity: "HIGH",
-  //   title: "SDRF Water Rescue Mission - Kendrapara Lowlands",
-  //   details: "14 villagers stranded on elevated rooftop near Rajnagar creek. High-water evacuation initiated using mechanized dinghies.",
-  //   location: "Rajnagar, Kendrapara [20.5732° N, 86.8522° E]",
-  //   lat: 20.5732,
-  //   lng: 86.8522,
-  //   status: "IN PROGRESS"
-  // },
-  // {
-  //   id: "INC-1090",
-  //   region: "Odisha",
-  //   site: "Bhadrak / Dhamra",
-  //   time: "14:05 IST",
-  //   section: "LOGISTICS",
-  //   severity: "MEDIUM",
-  //   title: "Relief Stockpile Staging - Bhadrak Airbase",
-  //   details: "12,000 ready-to-eat meal packets, 25,000 halogen water purification tablets, and 4 mobile diesel generators delivered via IAF An-32.",
-  //   location: "Bhadrak Transit Depot [21.0543° N, 86.5186° E]",
-  //   lat: 21.0543,
-  //   lng: 86.5186,
-  //   status: "STAGED"
-  // },
-  // {
-  //   id: "INC-1089",
-  //   region: "Odisha",
-  //   site: "Kendrapara / Rajnagar",
-  //   time: "13:50 IST",
-  //   section: "IMD",
-  //   severity: "HIGH",
-  //   title: "Doppler Radar Alert - Peak Wind Gusts Recorded",
-  //   details: "Doppler Weather Radar Paradip recorded sustained core winds at 115 km/h with gusts exceeding 135 km/h moving North-Northwest.",
-  //   location: "Paradip Coastline [20.2644° N, 86.6687° E]",
-  //   lat: 20.2644,
-  //   lng: 86.6687,
-  //   status: "ACTIVE RADAR"
-  // },
+  {
+    id: "INC-1092",
+    region: "Odisha",
+    site: "Bhadrak / Dhamra",
+    time: "14:24 IST",
+    section: "OPS",
+    severity: "CRITICAL",
+    title: "Dhamra Port Seawall Overtopped",
+    details: "Tidal surge of +3.2m breached secondary barrier at Dhamra port fishing jetty. NDRF 03 Bn Bravo Team en route with 6 Inflatable Rescue Boats (IRBs).",
+    location: "Dhamra, Bhadrak [20.7937° N, 86.9634° E]",
+    lat: 20.7937,
+    lng: 86.9634,
+    status: "RESPONSE DEPLOYED"
+  },
+  {
+    id: "INC-1091",
+    region: "Odisha",
+    site: "Kendrapara / Rajnagar",
+    time: "14:18 IST",
+    section: "OPS",
+    severity: "HIGH",
+    title: "SDRF Water Rescue Mission - Kendrapara Lowlands",
+    details: "14 villagers stranded on elevated rooftop near Rajnagar creek. High-water evacuation initiated using mechanized dinghies.",
+    location: "Rajnagar, Kendrapara [20.5732° N, 86.8522° E]",
+    lat: 20.5732,
+    lng: 86.8522,
+    status: "IN PROGRESS"
+  },
+  {
+    id: "INC-1090",
+    region: "Odisha",
+    site: "Bhadrak / Dhamra",
+    time: "14:05 IST",
+    section: "LOGISTICS",
+    severity: "MEDIUM",
+    title: "Relief Stockpile Staging - Bhadrak Airbase",
+    details: "12,000 ready-to-eat meal packets, 25,000 halogen water purification tablets, and 4 mobile diesel generators delivered via IAF An-32.",
+    location: "Bhadrak Transit Depot [21.0543° N, 86.5186° E]",
+    lat: 21.0543,
+    lng: 86.5186,
+    status: "STAGED"
+  },
+  {
+    id: "INC-1089",
+    region: "Odisha",
+    site: "Kendrapara / Rajnagar",
+    time: "13:50 IST",
+    section: "IMD",
+    severity: "HIGH",
+    title: "Doppler Radar Alert - Peak Wind Gusts Recorded",
+    details: "Doppler Weather Radar Paradip recorded sustained core winds at 115 km/h with gusts exceeding 135 km/h moving North-Northwest.",
+    location: "Paradip Coastline [20.2644° N, 86.6687° E]",
+    lat: 20.2644,
+    lng: 86.6687,
+    status: "ACTIVE RADAR"
+  },
   {
     id: "INC-1088",
     region: "Odisha",
@@ -178,6 +178,34 @@ export const chronoIncidents = [
     lat: 20.85,
     lng: 86.55,
     status: "BROADCAST COMPLETE"
+  },
+  {
+    id: "INC-1086",
+    region: "West Bengal",
+    site: "Kolkata / Sunderbans",
+    time: "12:58 IST",
+    section: "OPS",
+    severity: "HIGH",
+    title: "Sunderbans Embankment Breach - Gosaba Block",
+    details: "60m earthen embankment breached along Bidya river. Ingress water threatening 3 revenue villages. WBDMA deploying 4 inflatable rescue boats.",
+    location: "Gosaba, South 24 Parganas [22.1653° N, 88.8021° E]",
+    lat: 22.1653,
+    lng: 88.8021,
+    status: "RESPONSE DEPLOYED"
+  },
+  {
+    id: "INC-1085",
+    region: "West Bengal",
+    site: "Kolkata / Sunderbans",
+    time: "12:40 IST",
+    section: "LOGISTICS",
+    severity: "MEDIUM",
+    title: "Kakdwip Multipurpose Cyclone Shelter Activated",
+    details: "Capacity 1,200 persons reached 85% occupancy. Additional drinking water pouches and chlorine tablets requisitioned from Diamond Harbour hub.",
+    location: "Kakdwip, South 24 Parganas [21.8750° N, 88.1880° E]",
+    lat: 21.8750,
+    lng: 88.1880,
+    status: "OPERATIONAL"
   }
 ];
 
