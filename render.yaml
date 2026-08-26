@@ -1,0 +1,36 @@
+# Render blueprint for the Unity EOC auth API.
+# Deploy: push to GitHub, then Render → New → Blueprint → pick this repo.
+#
+# The UI is NOT served here — it goes to Vercel, which proxies /api to this
+# service (see vercel.json).
+services:
+  - type: web
+    name: unity-eoc-api
+    runtime: node
+    plan: free
+    region: singapore            # closest to India; change if you prefer
+    branch: main
+    # The auth API has zero dependencies, so there is nothing to install or build.
+    # This also stops Render trying to use the macOS binaries committed in
+    # node_modules, which would fail on Linux.
+    buildCommand: 'echo "no build step: the auth API is dependency-free"'
+    startCommand: node server/src/server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render generates this once and keeps it stable across deploys. Without a
+      # stable secret every restart would silently invalidate all live sessions.
+      - key: JWT_SECRET
+        generateValue: true
+      # Paste the output of `npm run enroll` so 2FA survives redeploys.
+      # sync:false = "prompt me, don't store it in git".
+      - key: TOTP_SECRETS
+        sync: false
+      # Only needed if you call this API cross-origin instead of proxying through
+      # Vercel. e.g. https://your-app.vercel.app,https://*.vercel.app
+      - key: ALLOWED_ORIGINS
+        sync: false
+      # Optional: override the demo password. Please do, before any public demo.
+      - key: DEMO_PASSWORD
+        sync: false

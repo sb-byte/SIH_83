@@ -1,0 +1,18 @@
+node_modules/
+
+# Build output. Vercel builds this from source on every deploy, so it does not
+# belong in git — and a committed copy goes stale silently, which is how a
+# pre-auth bundle with no login gate ended up being served.
+dist/
+
+# Auth server runtime state — contains the auto-generated JWT signing secret,
+# scrypt password hashes and TOTP secrets. NEVER commit this.
+server/data/
+*.log
+
+.DS_Store
+.env
+.env.local
+
+# local backup of the pre-integration client-side auth simulation
+src/auth.client-sim.js.bak

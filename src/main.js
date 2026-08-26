@@ -2,6 +2,25 @@ import L from 'leaflet';
 import { sound } from './audio.js';
 import { openRegistrationForm, startAutoSync, filterRemovedVolunteers, removeVolunteer } from './volunteerSync.js';
 import {
+  USERS_DB,
+  ROLE_PERMISSIONS,
+  getAuthSession,
+  clearAuthSession,
+  authenticateUser,
+  isViewAuthorized,
+  isActionAuthorized,
+  filterDataByJurisdiction,
+  getAuditTrail,
+  logAuthAudit,
+  // server-backed additions
+  loadDirectory,
+  restoreSession,
+  refreshAuditTrail,
+  allowedChannelIds,
+  findCredential,
+  fetchDemoTotp
+} from './auth.js';
+import {
   liveIncidentData,
   citizenSosQueue,
   chronoIncidents,
@@ -21,7 +40,7 @@ import {
 // Global Application State
 const state = {
   mode: 'LIVE',
-  view: 'landing',
+  view: 'command',
   theme: 'light',
   scenario: 'dana',
   incidents: [...chronoIncidents],
@@ -116,12 +135,21 @@ function showToast(message, type = 'info') {
 // =========================================================================
 // APPLICATION INITIALIZATION
 // =========================================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   initClock();
+
+  // Fetch the credential directory and revalidate any stored token BEFORE the
+  // UI paints, so gating is driven by the server rather than by a guess.
+  // If the API is down, restoreSession() returns null and we stay locked out.
+  await loadDirectory();
+  await restoreSession();
+
+  initAuthSystem();
   initNavigation();
   initModeSwitcher();
   initScenarioSwitcher();
   initTheme();
+  applyRolePermissions();
   renderIncidents();
   renderShelters();
   renderAssets();
@@ -145,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initRadioConsole();
   initModals();
   initAssignSquadModal();
+  initVolunteerRegistrationModal();
   initSachetAlerting();
   initTelemetryTicker();
 });
@@ -162,6 +191,609 @@ function initClock() {
 }
 
 // =========================================================================
+// ROLE-BASED ACCESS CONTROL (RBAC) & AUTHENTICATION CONTROLLER
+// =========================================================================
+
+function initAuthSystem() {
+  const loginForm = getEl('auth-login-form');
+  const inputId = getEl('auth-input-id');
+  const inputPassword = getEl('auth-input-password');
+  const inputOtp = getEl('auth-input-otp');
+  const box2FA = getEl('auth-2fa-container');
+  const btnFillDemoOtp = getEl('btn-fill-demo-otp');
+  const errorBox = getEl('auth-error-box');
+
+  // Math Security Captcha Challenge Generator
+  function generateCaptcha() {
+    const a = Math.floor(Math.random() * 8) + 2;
+    const b = Math.floor(Math.random() * 8) + 1;
+    state.captchaAnswer = a + b;
+    const display = getEl('captcha-display-text');
+    if (display) display.innerText = `${a} + ${b} = ?`;
+    const input = getEl('captcha-input-val');
+    if (input) input.value = String(state.captchaAnswer);
+  }
+
+  generateCaptcha();
+  const btnRefreshCaptcha = getEl('btn-refresh-captcha');
+  if (btnRefreshCaptcha) btnRefreshCaptcha.addEventListener('click', generateCaptcha);
+
+  // Dynamic 2FA Reveal on Credential Input
+  if (inputId && box2FA) {
+    const check2FA = async () => {
+      const user = findCredential(inputId.value);
+      box2FA.style.display = user && user.requires2FA ? 'block' : 'none';
+      if (user && user.requires2FA && inputOtp && !inputOtp.value) {
+        const code = await fetchDemoTotp(user.credentialId);
+        if (code) inputOtp.value = code;
+      }
+    };
+    inputId.addEventListener('input', check2FA);
+    inputId.addEventListener('change', check2FA);
+    setTimeout(check2FA, 200); // Run on initial load
+  }
+
+  // Auto-Fill Demo OTP Helper
+  if (btnFillDemoOtp && inputId && inputOtp) {
+    btnFillDemoOtp.addEventListener('click', async () => {
+      sound.playClick();
+      const code = await fetchDemoTotp(inputId.value.trim());
+      if (code) {
+        inputOtp.value = code;
+        showToast(`Demo 2FA code fetched: ${code} (rotates in <30s)`);
+      } else {
+        showToast('Demo code unavailable — run `npm run totp <credential>` in the server terminal.', 'alert');
+      }
+    });
+  }
+
+  // Refresh Audit Trail Button
+  const btnRefreshAudit = getEl('btn-refresh-audit');
+  if (btnRefreshAudit) {
+    btnRefreshAudit.addEventListener('click', async () => {
+      sound.playClick();
+      await refreshAuditTrail();
+      renderAuthAuditTable();
+      showToast('Audit trail refreshed from server');
+    });
+  }
+
+  // Form Submit Handler with Tier Redirection
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      sound.playClick();
+      if (errorBox) errorBox.classList.add('hidden');
+
+      // Captcha verification check (tolerant of pre-filled demo value)
+      const captchaInput = getEl('captcha-input-val');
+      if (captchaInput && state.captchaAnswer !== undefined) {
+        const ans = parseInt(captchaInput.value.trim(), 10);
+        if (ans !== state.captchaAnswer) {
+          sound.playCriticalAlert();
+          if (errorBox) {
+            errorBox.innerText = 'Security captcha answer incorrect. Please retry.';
+            errorBox.classList.remove('hidden');
+          }
+          showToast('Security captcha incorrect', 'alert');
+          generateCaptcha();
+          return;
+        }
+      }
+
+      const credId = inputId ? inputId.value.trim() : '';
+      const pwd = inputPassword ? inputPassword.value : '';
+      const otp = inputOtp ? inputOtp.value.trim() : '';
+
+      const submitBtn = getEl('btn-auth-submit');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'AUTHENTICATING…'; }
+
+      // Server-side verification: scrypt password + rotating TOTP + signed JWT.
+      const res = await authenticateUser(credId, pwd, otp);
+
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'प्रवेश करें / AUTHENTICATE & ENTER EOC COMMAND →'; }
+
+      if (!res.success) {
+        sound.playCriticalAlert();
+        if (res.requires2FA && box2FA) {
+          box2FA.style.display = 'block';
+          if (inputOtp) inputOtp.focus();
+        }
+        if (errorBox) {
+          errorBox.innerText = res.error || 'Authentication failed.';
+          errorBox.classList.remove('hidden');
+        }
+        showToast(res.error || 'Authentication failed', 'alert');
+        renderAuthAuditTable();
+        return;
+      }
+
+      // Successful login — dynamic role redirection & operational hub activation
+      sound.playSuccess();
+      if (inputPassword) inputPassword.value = '';
+      if (inputOtp) inputOtp.value = '';
+      applyRolePermissions();
+      await refreshAuditTrail();
+      renderAuthAuditTable();
+
+      // Determine dedicated destination & configure tier focus
+      const tierLevel = res.session.tierLevel || (res.session.tier === 'T1' ? 1 : res.session.tier === 'T2' ? 2 : res.session.tier === 'T3' ? 3 : res.session.tier === 'T4' ? 4 : 5);
+      const perms = ROLE_PERMISSIONS[res.session.role];
+      let targetView = 'command';
+
+      if (tierLevel === 1) {
+        targetView = 'command';
+        showToast(`Welcome, ${res.session.name} — National Command Activated (Full IAP Sign-off & Gazette Authority)`);
+      } else if (tierLevel === 2) {
+        targetView = 'command';
+        if (state.map) {
+          if (res.session.region === 'West Bengal') {
+            setTimeout(() => state.map.flyTo([22.57, 88.36], 9), 200);
+          } else {
+            setTimeout(() => state.map.flyTo([20.65, 86.85], 9), 200);
+          }
+        }
+        showToast(`Welcome, ${res.session.name} — State Strategic TOC (${res.session.region}) Activated`);
+      } else if (tierLevel === 3) {
+        targetView = 'command';
+        if (state.map) {
+          setTimeout(() => state.map.flyTo([20.79, 86.96], 10), 200);
+        }
+        showToast(`Welcome, ${res.session.name} — District Coordination Hub (${res.session.site}) Activated`);
+      } else if (tierLevel === 4) {
+        targetView = 'command';
+        showToast(`Welcome, ${res.session.name} — Tactical Strike Team Active (Field Reports & Direct T2 Escalation)`);
+      } else if (tierLevel === 5) {
+        targetView = 'landing';
+        showToast(`Welcome, ${res.session.name} — Aapda Mitra Volunteer Station (Radio Net CH-05 Active)`);
+      }
+
+      switchView(targetView);
+    });
+  }
+
+  // Header Pill & Role Switcher Modal
+  const headerPill = getEl('auth-header-pill');
+  const roleModal = getEl('modal-role-switcher');
+  const closeSwitcherModal = getEl('close-switcher-modal');
+  const closeSwitcherBtn = getEl('close-switcher-btn');
+  const btnLockSession = getEl('btn-lock-session');
+  const headerLogoutBtn = getEl('header-logout-btn');
+
+  const openSwitcher = () => {
+    sound.playClick();
+    if (roleModal) {
+      roleModal.classList.remove('hidden');
+      renderDemoProfiles('modal-profiles-container');
+    }
+  };
+
+  const closeSwitcher = () => {
+    sound.playClick();
+    if (roleModal) roleModal.classList.add('hidden');
+  };
+
+  if (headerPill) headerPill.addEventListener('click', openSwitcher);
+  if (closeSwitcherModal) closeSwitcherModal.addEventListener('click', closeSwitcher);
+  if (closeSwitcherBtn) closeSwitcherBtn.addEventListener('click', closeSwitcher);
+
+  const handleLogout = async () => {
+    sound.playClick();
+    await clearAuthSession();
+    if (roleModal) roleModal.classList.add('hidden');
+    applyRolePermissions();
+    renderAuthAuditTable();
+    switchView('login');
+    showToast('Session Terminated & Terminal Locked');
+  };
+
+  if (btnLockSession) btnLockSession.addEventListener('click', handleLogout);
+  if (headerLogoutBtn) headerLogoutBtn.addEventListener('click', handleLogout);
+
+  // Discreet Demo Roster Drawer Controls
+  const demoDrawer = getEl('drawer-demo-roster');
+  const btnOpenDrawerCallout = getEl('btn-open-demo-drawer-callout');
+  const floatingDemoBtn = getEl('floating-demo-roster-btn');
+  const closeDemoDrawerBtn = getEl('close-demo-drawer-btn');
+  const closeDemoDrawerFooter = getEl('btn-close-demo-drawer-footer');
+
+  const openDemoDrawer = () => {
+    sound.playClick();
+    if (demoDrawer) {
+      demoDrawer.classList.remove('hidden');
+      renderDemoProfiles('auth-demo-profiles-container');
+    }
+  };
+
+  const closeDemoDrawer = () => {
+    sound.playClick();
+    if (demoDrawer) demoDrawer.classList.add('hidden');
+  };
+
+  if (btnOpenDrawerCallout) btnOpenDrawerCallout.addEventListener('click', openDemoDrawer);
+  if (floatingDemoBtn) floatingDemoBtn.addEventListener('click', openDemoDrawer);
+  if (closeDemoDrawerBtn) closeDemoDrawerBtn.addEventListener('click', closeDemoDrawer);
+  if (closeDemoDrawerFooter) closeDemoDrawerFooter.addEventListener('click', closeDemoDrawer);
+
+  // Accessibility Font Sizing & Language Controls
+  const btnFontDec = getEl('btn-font-dec');
+  const btnFontReset = getEl('btn-font-reset');
+  const btnFontInc = getEl('btn-font-inc');
+  const btnLangToggle = getEl('btn-lang-toggle');
+
+  if (btnFontDec) {
+    btnFontDec.addEventListener('click', () => {
+      document.body.classList.remove('font-scale-lg');
+      document.body.classList.add('font-scale-sm');
+      [btnFontDec, btnFontReset, btnFontInc].forEach(b => b && b.classList.remove('active'));
+      btnFontDec.classList.add('active');
+    });
+  }
+  if (btnFontReset) {
+    btnFontReset.addEventListener('click', () => {
+      document.body.classList.remove('font-scale-sm', 'font-scale-lg');
+      [btnFontDec, btnFontReset, btnFontInc].forEach(b => b && b.classList.remove('active'));
+      btnFontReset.classList.add('active');
+    });
+  }
+  if (btnFontInc) {
+    btnFontInc.addEventListener('click', () => {
+      document.body.classList.remove('font-scale-sm');
+      document.body.classList.add('font-scale-lg');
+      [btnFontDec, btnFontReset, btnFontInc].forEach(b => b && b.classList.remove('active'));
+      btnFontInc.classList.add('active');
+    });
+  }
+  if (btnLangToggle) {
+    btnLangToggle.addEventListener('click', () => {
+      sound.playClick();
+      showToast('Interface language display: English / हिन्दी');
+    });
+  }
+
+  // Jump to Tier Hub Button on Clearance HUD
+  const btnJumpTierHub = getEl('btn-jump-tier-hub');
+  if (btnJumpTierHub) {
+    btnJumpTierHub.addEventListener('click', () => {
+      sound.playClick();
+      const s = getAuthSession();
+      if (!s) return;
+      const target = s.tierLevel === 5 ? 'landing' : 'command';
+      switchView(target);
+    });
+  }
+
+  // Render Initial Demo Profiles & Audit Table
+  renderDemoProfiles('auth-demo-profiles-container');
+  renderAuthAuditTable();
+}
+
+function renderDemoProfiles(containerId) {
+  const container = getEl(containerId);
+  if (!container) return;
+  const session = getAuthSession();
+  const currentId = session ? session.credentialId : '';
+
+  container.innerHTML = USERS_DB.map(u => {
+    const isCur = u.credentialId === currentId;
+    const badgeClass = u.tierLevel === 1 ? 'tier1-badge' :
+      u.tierLevel === 2 ? 'tier2-badge' :
+        u.tierLevel === 3 ? 'tier3-badge' :
+          u.tierLevel === 4 ? 'tier4-badge' : 'tier5-badge';
+
+    return `
+      <div class="demo-profile-card ${isCur ? 'active-profile' : ''}" data-credential="${u.credentialId}">
+        <div class="demo-profile-left">
+          <div class="demo-avatar">${u.avatar}</div>
+          <div>
+            <div class="demo-profile-name">${u.name}</div>
+            <div class="demo-profile-meta font-bold">
+              <span class="tier-pill-badge ${badgeClass}">${u.tierName.split('•')[0].trim()}</span>
+              <span class="mono text-xs text-muted">ID: ${u.credentialId}</span>
+              ${u.requires2FA ? '<span class="badge badge-alert" style="font-size:0.6rem;">2FA</span>' : ''}
+            </div>
+            <div class="demo-profile-jurisdiction">${u.jurisdictionLabel}</div>
+          </div>
+        </div>
+        <button class="btn btn-xs ${isCur ? 'btn-navy' : 'btn-outline'} font-bold">
+          ${isCur ? 'ACTIVE' : 'SELECT →'}
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.demo-profile-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const cred = card.dataset.credential;
+      const targetUser = findCredential(cred);
+      if (targetUser) {
+        prefillCredential(targetUser);
+      }
+    });
+  });
+}
+
+function renderAuthAuditTable() {
+  const tbody = getEl('auth-audit-table-body');
+  const countEl = getEl('audit-session-count');
+  if (!tbody) return;
+
+  const trail = getAuditTrail();
+  if (countEl) countEl.innerText = trail.length;
+
+  if (trail.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="mono text-xs text-muted" style="text-align: center; padding: 24px;">No security sessions logged yet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = trail.map(entry => {
+    const roleTier = entry.role || 'T1';
+    const badgeClass = roleTier === 'T1' ? 'tier1-badge' :
+      roleTier === 'T2' ? 'tier2-badge' :
+        roleTier === 'T3' ? 'tier3-badge' :
+          roleTier === 'T4' ? 'tier4-badge' : 'tier5-badge';
+
+    const isSuccess = entry.status === 'AUTHORIZED' || entry.status === 'SUCCESS' || entry.status === 'ONLINE';
+    const isWarn = entry.status === '2FA CHALLENGE' || entry.status === 'TERMINATED';
+    const chipClass = isSuccess ? 'status-chip online' : (isWarn ? 'status-chip warning' : 'status-chip text-alert');
+
+    return `
+      <tr>
+        <td class="mono text-xs text-muted">${entry.timestamp || new Date().toLocaleTimeString()}</td>
+        <td class="mono font-bold">${entry.credentialId || 'N/A'}</td>
+        <td><span class="tier-pill-badge ${badgeClass}">${roleTier}</span></td>
+        <td class="text-xs" style="color: var(--text-muted);">${entry.jurisdiction || 'National Command'}</td>
+        <td><strong style="color: var(--text-main); font-size: 0.78rem;">${entry.event || entry.action || 'Session Access'}</strong></td>
+        <td style="text-align: right;"><span class="${chipClass}">${entry.status || 'OK'}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/**
+ * Tier cards are a convenience for demos: they fill in the credential ID and
+ * send you to the gateway.
+ */
+async function prefillCredential(user) {
+  sound.playClick();
+  const roleModal = getEl('modal-role-switcher');
+  if (roleModal) roleModal.classList.add('hidden');
+
+  const demoDrawer = getEl('drawer-demo-roster');
+  if (demoDrawer) demoDrawer.classList.add('hidden');
+
+  switchView('login');
+
+  const inputId = getEl('auth-input-id');
+  const inputPassword = getEl('auth-input-password');
+  const inputOtp = getEl('auth-input-otp');
+  const box2FA = getEl('auth-2fa-container');
+  const errorBox = getEl('auth-error-box');
+
+  if (errorBox) errorBox.classList.add('hidden');
+
+  if (inputId) {
+    inputId.value = user.credentialId;
+  }
+  if (inputPassword) {
+    inputPassword.value = 'Unity@2026';
+  }
+  if (box2FA) {
+    box2FA.style.display = user.requires2FA ? 'block' : 'none';
+  }
+
+  if (user.requires2FA && inputOtp) {
+    const code = await fetchDemoTotp(user.credentialId);
+    if (code) {
+      inputOtp.value = code;
+    }
+  } else if (inputOtp) {
+    inputOtp.value = '';
+  }
+
+  renderDemoProfiles('auth-demo-profiles-container');
+  showToast(`${user.credentialId} (${user.name}) credentials loaded.`);
+}
+
+// =========================================================================
+// ROLE-BASED ACCESS CONTROL (RBAC) & PERMISSIONS ENFORCER
+// =========================================================================
+
+/** No valid session: hide every tab but the gateway and show the login view. */
+function lockTerminal() {
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.style.display = tab.dataset.view === 'login' ? 'flex' : 'none';
+  });
+  document.querySelectorAll('.view-section').forEach(sec => {
+    sec.classList.toggle('active', sec.id === 'view-login');
+  });
+  state.view = 'login';
+
+  const nameEl = getEl('header-user-name');
+  const tierChipEl = getEl('header-tier-chip');
+  const jurEl = getEl('header-jurisdiction');
+  const avatarEl = getEl('header-user-avatar');
+  if (avatarEl) avatarEl.innerText = '🏛️';
+  if (nameEl) nameEl.innerText = 'NOT AUTHENTICATED';
+  if (tierChipEl) { tierChipEl.className = 'tier-pill-badge'; tierChipEl.innerText = 'NO CLEARANCE'; }
+  if (jurEl) jurEl.innerText = 'Awaiting agency credential';
+
+  const hud = getEl('tier-clearance-hud');
+  if (hud) hud.classList.add('hidden');
+
+  const auditPanel = getEl('auth-session-audit-panel');
+  if (auditPanel) auditPanel.style.display = 'none';
+
+  renderDemoProfiles('auth-demo-profiles-container');
+  renderAuthAuditTable();
+}
+
+function applyRolePermissions() {
+  const session = getAuthSession();
+
+  // FAIL CLOSED. If no session exists, only gateway is shown.
+  if (!session) {
+    lockTerminal();
+    return;
+  }
+
+  const perms = ROLE_PERMISSIONS[session.role];
+  if (!perms) {
+    lockTerminal();
+    return;
+  }
+
+  // 1. Update Header User Profile Pill
+  const avatarEl = getEl('header-user-avatar');
+  const nameEl = getEl('header-user-name');
+  const tierChipEl = getEl('header-tier-chip');
+  const jurEl = getEl('header-jurisdiction');
+
+  if (avatarEl) avatarEl.innerText = session.avatar;
+  if (nameEl) nameEl.innerText = session.name;
+  if (tierChipEl) {
+    tierChipEl.className = `tier-pill-badge ${perms.badgeClass}`;
+    tierChipEl.innerText = session.tierLevel === 1 ? 'T1 • AUTHORITY' :
+      session.tierLevel === 2 ? 'T2 • STRATEGIST' :
+        session.tierLevel === 3 ? 'T3 • COORDINATOR' :
+          session.tierLevel === 4 ? 'T4 • TACTICAL' : 'T5 • VOLUNTEER';
+  }
+  if (jurEl) jurEl.innerText = session.jurisdictionLabel;
+
+  // 2. Update and Show Tier Clearance HUD
+  const hud = getEl('tier-clearance-hud');
+  const badgeEl = getEl('hud-clearance-badge');
+  const scopeEl = getEl('hud-clearance-scope');
+  const rightsEl = getEl('hud-clearance-rights');
+
+  if (hud) {
+    hud.classList.remove('hidden');
+    if (session.tierLevel === 1) {
+      if (badgeEl) badgeEl.innerText = 'T1 • NATIONAL COMMAND AUTHORITY (NDMA)';
+      if (scopeEl) scopeEl.innerHTML = 'Jurisdiction: <strong>National (28 States & 8 UTs)</strong>';
+      if (rightsEl) rightsEl.innerHTML = 'Capabilities: <strong>Digital IAP Sign-off, Gazette Declarations, All Views Cleared</strong>';
+    } else if (session.tierLevel === 2) {
+      if (badgeEl) badgeEl.innerText = `T2 • STATE STRATEGIC COMMAND (${session.region || 'Regional'})`;
+      if (scopeEl) scopeEl.innerHTML = `Jurisdiction: <strong>${session.region} State EOC</strong>`;
+      if (rightsEl) rightsEl.innerHTML = 'Capabilities: <strong>Asset Registration, Mutual Aid Approvals, Live SACHET Broadcast</strong>';
+    } else if (session.tierLevel === 3) {
+      if (badgeEl) badgeEl.innerText = `T3 • DISTRICT COORDINATION HUB (${session.site || 'District'})`;
+      if (scopeEl) scopeEl.innerHTML = `Jurisdiction: <strong>${session.site} District Hub</strong>`;
+      if (rightsEl) rightsEl.innerHTML = 'Capabilities: <strong>Shelter Capacity Ops, Squad Deployment, Asset Requests</strong>';
+    } else if (session.tierLevel === 4) {
+      if (badgeEl) badgeEl.innerText = `T4 • TACTICAL STRIKE TEAM (${session.team || session.site || 'Field'})`;
+      if (scopeEl) scopeEl.innerHTML = `Jurisdiction: <strong>${session.team || session.site} Strike Scope</strong>`;
+      if (rightsEl) rightsEl.innerHTML = 'Capabilities: <strong>Tactical Tasks, Field Incident & Damage Reporting, Direct T2 Escalation</strong>';
+    } else {
+      if (badgeEl) badgeEl.innerText = 'T5 • AAPDA MITRA COMMUNITY VOLUNTEER';
+      if (scopeEl) scopeEl.innerHTML = `Jurisdiction: <strong>${session.site || 'Local'} Sector</strong>`;
+      if (rightsEl) rightsEl.innerHTML = 'Capabilities: <strong>Volunteer Portal, Tactical Radio Net CH-05, Ground SOS</strong>';
+    }
+  }
+
+  // 3. Gate Nav Tab Visibility (Completely hide unauthorized views)
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    const view = tab.dataset.view;
+    if (view === 'login') {
+      tab.style.display = 'flex';
+      return;
+    }
+    const allowed = perms.allowedViews.includes(view);
+    tab.style.display = allowed ? 'flex' : 'none';
+  });
+
+  // 4. Gate Action Buttons across Views (STRICTLY HIDE UNAUTHORIZED CONTROLS)
+  const setControlVisible = (id, isAllowed) => {
+    const el = getEl(id);
+    if (!el) return;
+    if (isAllowed) {
+      el.style.display = '';
+      el.removeAttribute('hidden');
+      el.classList.remove('action-restricted', 'hidden-by-role');
+      el.disabled = false;
+    } else {
+      el.style.display = 'none';
+      el.setAttribute('hidden', '');
+      el.classList.add('action-restricted', 'hidden-by-role');
+      el.disabled = true;
+    }
+  };
+
+  // CAP-SACHET Transmission buttons (Tier 1/2 only in LIVE mode)
+  const canSachet = isActionAuthorized('transmit_sachet', state.mode);
+  setControlVisible('transmit-sachet-btn', canSachet);
+  setControlVisible('quick-alert-btn', canSachet);
+
+  // IAP Digital Sign-off (Tier 1 Authority only)
+  const canSign = isActionAuthorized('sign_iap', state.mode);
+  setControlVisible('sign-iap-btn', canSign);
+
+  // Asset Registration (Tier 2 only)
+  const canAddAsset = isActionAuthorized('add_asset', state.mode);
+  setControlVisible('add-asset-btn', canAddAsset);
+
+  // Mutual Aid Agreement (Tier 2 only)
+  const canMutualAid = isActionAuthorized('add_mutual_aid', state.mode);
+  setControlVisible('add-mutual-aid-btn', canMutualAid);
+
+  // Shelter Registration (Tier 2/3 only)
+  const canAddShelter = isActionAuthorized('add_shelter', state.mode);
+  setControlVisible('add-shelter-btn', canAddShelter);
+
+  // Volunteer Pool Management (Tier 2/3 only)
+  const canAddVolunteer = isActionAuthorized('add_volunteer', state.mode);
+  setControlVisible('add-volunteer-btn', canAddVolunteer);
+
+  // Incident Logging (T1-T4, hidden for T5)
+  const canAddInc = isActionAuthorized('add_incident', state.mode);
+  setControlVisible('add-incident-btn', canAddInc);
+
+  // Damage Assessment (T1-T4, hidden for T5)
+  const canAddDamage = isActionAuthorized('add_damage', state.mode);
+  setControlVisible('add-damage-btn', canAddDamage);
+
+  // Map Tactical Hotspot Pin (T1-T4)
+  const canDropPin = isActionAuthorized('drop_pin', state.mode);
+  setControlVisible('drop-pin-tool-btn', canDropPin);
+
+  // Corrective Action builder in AAR (Tier 1/2 only)
+  const canCap = isActionAuthorized('add_cap', state.mode);
+  setControlVisible('add-cap-btn', canCap);
+
+  // Rumor debunker (Tier 1/2 only)
+  const canRumor = isActionAuthorized('add_rumor', state.mode);
+  setControlVisible('add-rumor-btn', canRumor);
+
+  // Manual Inject in Simulation (Tier 1/2 only)
+  const canInject = isActionAuthorized('manual_inject', state.mode);
+  setControlVisible('fire-manual-inject-btn', canInject);
+
+  // Filter Radio Channels
+  const chanSelect = getEl('radio-channel-select');
+  if (chanSelect) {
+    const cleared = allowedChannelIds();
+    const allowedChannels = cleared.length
+      ? radioChannels.filter(c => cleared.includes(c.id))
+      : [];
+    chanSelect.innerHTML = allowedChannels.map(c => `<option value="${c.id}">${c.name} (${c.freq})</option>`).join('');
+  }
+
+  // 5. Security Audit Trail Isolation (Strictly T1 & T2 clearance only)
+  const auditPanel = getEl('auth-session-audit-panel');
+  if (auditPanel) {
+    auditPanel.style.display = (session && [1, 2].includes(session.tierLevel)) ? 'block' : 'none';
+  }
+
+  // 6. Re-render Scoped Data Views
+  renderIncidents();
+  renderAssets();
+  renderShelterMatrix();
+  renderMutualAid();
+  renderDamageTable();
+  renderVolunteerPool();
+}
+
+// =========================================================================
 // NAVIGATION VIEW CONTROLLER
 // =========================================================================
 function initNavigation() {
@@ -174,7 +806,7 @@ function initNavigation() {
 
   const brandBtn = getEl('nav-brand-btn');
   if (brandBtn) {
-    brandBtn.addEventListener('click', () => switchView('landing'));
+    brandBtn.addEventListener('click', () => switchView('command'));
   }
 
   const navTabs = document.querySelectorAll('.nav-tab');
@@ -189,13 +821,26 @@ function initNavigation() {
   if (audioBtn) {
     audioBtn.addEventListener('click', () => {
       sound.enabled = !sound.enabled;
-      audioBtn.innerText = sound.enabled ? '🔊' : '🔇';
+      audioBtn.innerText = sound.enabled ? 'AUDIO ON' : 'MUTED';
       showToast(sound.enabled ? 'Tactical Audio: ENABLED' : 'Tactical Audio: MUTED');
+    });
+  }
+
+  const chanSelect = getEl('radio-channel-select');
+  if (chanSelect) {
+    chanSelect.addEventListener('change', () => {
     });
   }
 }
 
 function switchView(viewName) {
+  // Permission Guard Check
+  if (!isViewAuthorized(viewName)) {
+    sound.playCriticalAlert();
+    showToast('Access Denied: Your security tier does not have clearance for this view.', 'alert');
+    return;
+  }
+
   sound.playClick();
   state.view = viewName;
 
@@ -206,6 +851,11 @@ function switchView(viewName) {
   document.querySelectorAll('.view-section').forEach(sec => {
     sec.classList.toggle('active', sec.id === `view-${viewName}`);
   });
+
+  if (viewName === 'login') {
+    renderDemoProfiles('auth-demo-profiles-container');
+    renderAuthAuditTable();
+  }
 
   if (viewName === 'command') {
     if (!state.mapInitialized) {
@@ -237,23 +887,28 @@ function initScenarioSwitcher() {
 function loadScenario(key) {
   state.scenario = key;
   const headerCrumb = getEl('header-incident-title');
+  const actLvl = document.querySelector('#activation-pill .activation-lvl');
 
   if (key === 'dana') {
-    if (headerCrumb) headerCrumb.innerText = 'SEVERE CYCLONE DANA (BAY OF BENGAL) | T+05:18:22';
+    if (headerCrumb) headerCrumb.innerText = 'CYCLONE DANA (BAY OF BENGAL) • T+05:18';
+    if (actLvl) actLvl.innerText = 'CRISIS: CYCLONE DANA';
     if (state.map) state.map.flyTo([20.65, 86.85], 9);
-    showToast('🌀 SCENARIO LOADED: Cyclone Dana (Odisha Coast)', 'alert');
+    showToast('SCENARIO LOADED: Cyclone Dana (Odisha Coast)', 'alert');
   } else if (key === 'assam') {
-    if (headerCrumb) headerCrumb.innerText = 'ASSAM BRAHMAPUTRA RIVERINE FLOODS | WAVE 3';
+    if (headerCrumb) headerCrumb.innerText = 'ASSAM FLOODS • WAVE 3';
+    if (actLvl) actLvl.innerText = 'CRISIS: ASSAM FLOODS';
     if (state.map) state.map.flyTo([26.2006, 92.9376], 8);
-    showToast('🌊 SCENARIO LOADED: Assam Brahmaputra Floods');
+    showToast('SCENARIO LOADED: Assam Brahmaputra Floods');
   } else if (key === 'chamoli') {
-    if (headerCrumb) headerCrumb.innerText = 'CHAMOLI GLOF GLACIAL BURST & SURGE | RAPID RESPONSE';
+    if (headerCrumb) headerCrumb.innerText = 'CHAMOLI GLOF • SURGE RESPONSE';
+    if (actLvl) actLvl.innerText = 'CRISIS: CHAMOLI GLOF';
     if (state.map) state.map.flyTo([30.5556, 79.5667], 10);
-    showToast('🏔️ SCENARIO LOADED: Chamoli GLOF Glacial Burst', 'alert');
+    showToast('SCENARIO LOADED: Chamoli GLOF Glacial Burst', 'alert');
   } else if (key === 'wayanad') {
-    if (headerCrumb) headerCrumb.innerText = 'WAYANAD CHOORALMALA LANDSLIDE SEARCH & RESCUE';
+    if (headerCrumb) headerCrumb.innerText = 'WAYANAD LANDSLIDE • SAR ACTIVE';
+    if (actLvl) actLvl.innerText = 'CRISIS: WAYANAD LANDSLIDE';
     if (state.map) state.map.flyTo([11.5200, 76.1300], 11);
-    showToast('⛰️ SCENARIO LOADED: Wayanad Landslide Rescue');
+    showToast('SCENARIO LOADED: Wayanad Landslide Rescue');
   }
 }
 
@@ -272,7 +927,7 @@ function initModeSwitcher() {
     quickAlertBtn.addEventListener('click', () => {
       switchView('logistics');
       sound.playCriticalAlert();
-      showToast('🚨 CAP-SACHET EMERGENCY ALERT CONSOLE ARMED', 'alert');
+      showToast('CAP-SACHET EMERGENCY ALERT CONSOLE ARMED', 'alert');
     });
   }
 }
@@ -281,6 +936,7 @@ function setMode(newMode) {
   if (state.mode === newMode) return;
   state.mode = newMode;
   sound.playModeToggle();
+  applyRolePermissions();
 
   const isLive = newMode === 'LIVE';
   const liveBtn = getEl('mode-live-btn');
@@ -295,11 +951,11 @@ function setMode(newMode) {
   if (sachetGuard) {
     if (isLive) {
       sachetGuard.className = 'sachet-guard-pill live-guard';
-      sachetGuard.innerText = '⚠️ LIVE DISPATCH ARMED — Transmits instant Cell Broadcast to mobile towers in target geometry!';
+      sachetGuard.innerText = 'LIVE DISPATCH ARMED — Transmits instant Cell Broadcast to mobile towers in target geometry!';
       showToast('MODE SWITCHED: LIVE CRISIS (ARMED)', 'alert');
     } else {
       sachetGuard.className = 'sachet-guard-pill exercise-guard';
-      sachetGuard.innerText = '🟡 EXERCISE SANDBOX ACTIVE — All outgoing alerts are isolated to simulator terminals only.';
+      sachetGuard.innerText = 'EXERCISE SANDBOX ACTIVE — All outgoing alerts are isolated to simulator terminals only.';
       showToast('MODE SWITCHED: EXERCISE SIMULATION (SANDBOX)');
     }
   }
@@ -328,9 +984,13 @@ function renderIncidents() {
 
   const search = state.incidentSearchQuery.toLowerCase();
 
+  // TODO: SERVER-SIDE ENFORCEMENT REQUIRED — Scoping should be enforced in API query responses
+  const scopedSos = filterDataByJurisdiction(state.sosList, 'jurisdiction', 'region');
+  const scopedIncidents = filterDataByJurisdiction(state.incidents, 'jurisdiction', 'region');
+
   // If SOS filter is selected, show SOS Queue
   if (state.activeFilter === 'SOS') {
-    state.sosList.forEach((sos, idx) => {
+    scopedSos.forEach((sos, idx) => {
       const card = document.createElement('div');
       card.className = 'incident-card sos-card';
       card.innerHTML = `
@@ -338,15 +998,15 @@ function renderIncidents() {
           <span class="badge badge-alert">[${sos.urgency}] ${sos.time}</span>
           <span class="mono text-xs text-alert font-bold">${sos.id}</span>
         </div>
-        <div class="inc-title">👤 ${sos.name}</div>
+        <div class="inc-title">${sos.name}</div>
         <div class="inc-desc">"${sos.msg}"</div>
         <div class="inc-bottom">
-          <span>📍 ${sos.location}</span>
+          <span>${sos.location}</span>
           <span class="mono font-bold text-saffron">UNIT: ${sos.assignedUnit}</span>
         </div>
         <div class="sos-actions-row">
-          <button class="btn btn-xs btn-saffron dispatch-boat-btn" data-idx="${idx}">🚤 DISPATCH BOAT</button>
-          <button class="btn btn-xs btn-outline resolve-sos-btn" data-idx="${idx}">✓ RESOLVE</button>
+          <button class="btn btn-xs btn-saffron dispatch-boat-btn" data-idx="${idx}">DISPATCH BOAT</button>
+          <button class="btn btn-xs btn-outline resolve-sos-btn" data-idx="${idx}">RESOLVE</button>
         </div>
       `;
 
@@ -355,7 +1015,7 @@ function renderIncidents() {
         sound.playClick();
         if (state.map && sos.lat && sos.lng) {
           state.map.flyTo([sos.lat, sos.lng], 13, { animate: true, duration: 1 });
-          showToast(`📍 Centered on SOS: ${sos.name}`);
+          showToast(`Centered on SOS: ${sos.name}`);
         }
       });
 
@@ -368,10 +1028,10 @@ function renderIncidents() {
         e.stopPropagation();
         sound.playClick();
         const idx = parseInt(e.target.dataset.idx, 10);
-        state.sosList[idx].assignedUnit = "NDRF IRB-101 (Dispatched)";
-        state.sosList[idx].status = "IN PROGRESS";
+        scopedSos[idx].assignedUnit = "NDRF IRB-101 (Dispatched)";
+        scopedSos[idx].status = "IN PROGRESS";
         renderIncidents();
-        showToast(`🚤 Rescue boat assigned to ${state.sosList[idx].name}`);
+        showToast(`Rescue boat assigned to ${scopedSos[idx].name}`);
       });
     });
 
@@ -380,8 +1040,9 @@ function renderIncidents() {
         e.stopPropagation();
         sound.playClick();
         const idx = parseInt(e.target.dataset.idx, 10);
-        showToast(`✓ SOS [${state.sosList[idx].id}] resolved & evac confirmed!`);
-        state.sosList.splice(idx, 1);
+        showToast(`SOS [${scopedSos[idx].id}] resolved & evac confirmed!`);
+        const itemIdx = state.sosList.findIndex(s => s.id === scopedSos[idx].id);
+        if (itemIdx >= 0) state.sosList.splice(itemIdx, 1);
         renderIncidents();
       });
     });
@@ -390,7 +1051,7 @@ function renderIncidents() {
   }
 
   // Standard Incident Stream
-  const filtered = state.incidents.filter(inc => {
+  const filtered = scopedIncidents.filter(inc => {
     const matchesFilter = (state.activeFilter === 'ALL') ||
       (state.activeFilter === 'CRITICAL' && inc.severity === 'CRITICAL') ||
       (inc.section === state.activeFilter);
@@ -417,7 +1078,7 @@ function renderIncidents() {
       <div class="inc-title">${inc.title}</div>
       <div class="inc-desc">${inc.details}</div>
       <div class="inc-bottom">
-        <span>📍 ${inc.location}</span>
+        <span>${inc.location}</span>
         <span class="text-emerald font-bold">${inc.status}</span>
       </div>
     `;
@@ -426,7 +1087,7 @@ function renderIncidents() {
       sound.playClick();
       if (state.map && inc.lat && inc.lng) {
         state.map.flyTo([inc.lat, inc.lng], 12, { animate: true, duration: 1 });
-        showToast(`📍 Map Centered on: ${inc.title}`);
+        showToast(`Map Centered on: ${inc.title}`);
       }
     });
 
@@ -480,8 +1141,8 @@ function renderShelters() {
         <div class="shelter-fill-bar ${isCritical ? 'critical' : ''}" style="width: ${pct}%;"></div>
       </div>
       <div class="inc-bottom" style="margin-top: 2px;">
-        <span>⚕️ ${s.medical}</span>
-        <span>🍞 ${s.foodRations}</span>
+        <span>${s.medical}</span>
+        <span>${s.foodRations}</span>
       </div>
     `;
     container.appendChild(item);
@@ -514,7 +1175,9 @@ function renderAssets() {
   tbody.innerHTML = '';
 
   const search = state.assetSearchQuery.toLowerCase();
-  const filtered = state.assets.filter(a => {
+  // TODO: SERVER-SIDE ENFORCEMENT REQUIRED — Scoping should be enforced in API query responses
+  const scopedAssets = filterDataByJurisdiction(state.assets, 'jurisdiction', 'region');
+  const filtered = scopedAssets.filter(a => {
     const matchesFilter = (state.activeAssetFilter === 'ALL') || (a.type === state.activeAssetFilter);
     const matchesSearch = a.name.toLowerCase().includes(search) ||
       a.id.toLowerCase().includes(search) ||
@@ -534,13 +1197,13 @@ function renderAssets() {
       <td>${asset.type}</td>
       <td>${asset.unit}</td>
       <td><span class="badge ${statusClass}">${asset.status}</span></td>
-      <td>📍 ${asset.loc}</td>
+      <td>${asset.loc}</td>
       <td class="asset-action-cell">
         <button class="btn btn-xs btn-outline cycle-status-btn" data-id="${asset.id}">
-          🔄 CYCLE
+          CYCLE
         </button>
         <button class="btn btn-xs btn-outline tag-loc-btn" data-id="${asset.id}">
-          📍 TAG LOC
+          TAG LOC
         </button>
       </td>
     `;
@@ -573,7 +1236,7 @@ function renderAssets() {
         if (newLoc && newLoc.trim()) {
           asset.loc = newLoc.trim();
           renderAssets();
-          showToast(`📍 Location tagged: ${asset.id} → ${asset.loc}`);
+          showToast(`Location tagged: ${asset.id} → ${asset.loc}`);
           logActivity('ASSET', `${asset.name} (${asset.id}) location tagged → ${asset.loc}`);
         }
       }
@@ -630,7 +1293,10 @@ function renderShelterMatrix() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  state.sheltersData.forEach((s, idx) => {
+  // TODO: SERVER-SIDE ENFORCEMENT REQUIRED — Scoping should be enforced in API query responses
+  const scopedShelters = filterDataByJurisdiction(state.sheltersData, 'jurisdiction', 'region');
+
+  scopedShelters.forEach((s, idx) => {
     const pct = Math.round((s.occupied / s.capacity) * 100);
     let statusClass = 'badge-emerald';
     if (pct >= 90) statusClass = 'badge-alert';
@@ -641,8 +1307,8 @@ function renderShelterMatrix() {
       <td><strong>${s.name}</strong><br><span class="mono text-xs text-muted">${s.id}</span></td>
       <td class="mono">${s.occupied}/${s.capacity} <span class="text-muted text-xs">(${pct}%)</span></td>
       <td><span class="badge ${statusClass}">${pct >= 90 ? 'CRITICAL' : pct >= 70 ? 'NEAR FULL' : 'AVAILABLE'}</span></td>
-      <td>⚕️ ${s.medical}</td>
-      <td>🍞 ${s.foodRations}</td>
+      <td>${s.medical}</td>
+      <td>${s.foodRations}</td>
       <td class="asset-action-cell">
         <input type="number" class="field-input shelter-occupancy-input mono text-xs"
                data-idx="${idx}" value="${s.occupied}" min="0" max="${s.capacity}" />
@@ -653,7 +1319,7 @@ function renderShelterMatrix() {
   });
 
   const commitOccupancy = (idx, rawValue) => {
-    const s = state.sheltersData[idx];
+    const s = scopedShelters[idx];
     let val = parseInt(rawValue, 10);
 
     if (Number.isNaN(val)) {
@@ -741,7 +1407,7 @@ if (saveShelterBtn) {
     getEl('new-shelter-capacity').value = '';
     getEl('new-shelter-medical').value = '';
     getEl('new-shelter-food').value = '';
-    showToast(`🏠 Shelter registered: ${name}`);
+    showToast(`Shelter registered: ${name}`);
     logActivity('SHELTER', `New shelter registered: ${name} (capacity ${capacity})`);
   });
 }
@@ -754,7 +1420,10 @@ function renderMutualAid() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  state.mutualAidData.forEach((req, idx) => {
+  // TODO: SERVER-SIDE ENFORCEMENT REQUIRED — Scoping should be enforced in API query responses
+  const scopedMutualAid = filterDataByJurisdiction(state.mutualAidData, 'jurisdiction', 'region');
+
+  scopedMutualAid.forEach((req, idx) => {
     let statusClass = 'badge-gold';
     if (req.status === 'APPROVED' || req.status === 'SCHEDULED') statusClass = 'badge-emerald';
     if (req.status === 'DENIED') statusClass = 'badge-alert';
@@ -768,8 +1437,8 @@ function renderMutualAid() {
       <td><span class="badge ${statusClass}">${req.status}</span>${req.approvedBy ? `<br><span class="mono text-xs text-muted">by ${req.approvedBy}</span>` : ''}</td>
       <td class="asset-action-cell">
         ${req.status === 'PENDING' ? `
-          <button class="btn btn-xs btn-outline mutual-aid-approve" data-idx="${idx}">✅ APPROVE</button>
-          <button class="btn btn-xs btn-outline mutual-aid-deny" data-idx="${idx}">❌ DENY</button>
+          <button class="btn btn-xs btn-outline mutual-aid-approve" data-idx="${idx}">APPROVE</button>
+          <button class="btn btn-xs btn-outline mutual-aid-deny" data-idx="${idx}">DENY</button>
         ` : `<span class="mono text-xs text-muted">—</span>`}
       </td>
     `;
@@ -778,28 +1447,44 @@ function renderMutualAid() {
 
   document.querySelectorAll('.mutual-aid-approve').forEach(btn => {
     btn.addEventListener('click', (e) => {
+      // TODO: SERVER-SIDE ENFORCEMENT REQUIRED — Escalation approval permissions checked on server
+      if (!isActionAuthorized('approve_escalation')) {
+        sound.playCriticalAlert();
+        showToast('Unauthorized: Only Tier 1 Authority and Tier 2 Strategist can approve escalation requests.', 'alert');
+        return;
+      }
+
       sound.playClick();
       const idx = parseInt(e.currentTarget.dataset.idx, 10);
-      const req = state.mutualAidData[idx];
+      const req = scopedMutualAid[idx];
+      const session = getAuthSession();
       req.status = 'APPROVED';
-      req.approvedBy = 'State EOC Duty Officer';
+      req.approvedBy = session ? session.name : 'State EOC Duty Officer';
       renderMutualAid();
       renderAarMutualAidSummary();
-      showToast(`✅ Mutual aid request approved: ${req.resource} → ${req.agency}`);
+      showToast(`Mutual aid request approved: ${req.resource} → ${req.agency}`);
       logActivity('MUTUAL AID', `Approved: ${req.resource} ×${req.qty} → ${req.agency}`);
     });
   });
 
   document.querySelectorAll('.mutual-aid-deny').forEach(btn => {
     btn.addEventListener('click', (e) => {
+      // TODO: SERVER-SIDE ENFORCEMENT REQUIRED — Escalation denial permissions checked on server
+      if (!isActionAuthorized('approve_escalation')) {
+        sound.playCriticalAlert();
+        showToast('Unauthorized: Only Tier 1 Authority and Tier 2 Strategist can deny escalation requests.', 'alert');
+        return;
+      }
+
       sound.playClick();
       const idx = parseInt(e.currentTarget.dataset.idx, 10);
-      const req = state.mutualAidData[idx];
+      const req = scopedMutualAid[idx];
+      const session = getAuthSession();
       req.status = 'DENIED';
-      req.approvedBy = 'State EOC Duty Officer';
+      req.approvedBy = session ? session.name : 'State EOC Duty Officer';
       renderMutualAid();
       renderAarMutualAidSummary();
-      showToast(`❌ Mutual aid request denied: ${req.resource} → ${req.agency}`);
+      showToast(`Mutual aid request denied: ${req.resource} → ${req.agency}`);
       logActivity('MUTUAL AID', `Denied: ${req.resource} ×${req.qty} → ${req.agency}`);
     });
   });
@@ -854,7 +1539,7 @@ if (saveMutualAidBtn) {
     getEl('new-mutual-aid-agency').value = '';
     getEl('new-mutual-aid-resource').value = '';
     getEl('new-mutual-aid-qty').value = '';
-    showToast(`🤝 Mutual aid request logged: ${agency}`);
+    showToast(`Mutual aid request logged: ${agency}`);
     logActivity('MUTUAL AID', `New request logged: ${resource} ×${qty} from ${agency} (${priority})`);
   });
 }
@@ -867,9 +1552,12 @@ function renderVolunteerPool() {
   if (!container) return;
   container.innerHTML = '';
 
-  const registered = state.volunteerPoolData.filter(v => v.status === 'REGISTERED').length;
-  const awaiting = state.volunteerPoolData.filter(v => v.status === 'AWAITING_ASSIGNMENT').length;
-  const assigned = state.volunteerPoolData.filter(v => v.status === 'ASSIGNED').length;
+  // TODO: SERVER-SIDE ENFORCEMENT REQUIRED — Scoping should be enforced in API query responses
+  const scopedVolunteers = filterDataByJurisdiction(state.volunteerPoolData, 'jurisdiction', 'region');
+
+  const registered = scopedVolunteers.filter(v => v.status === 'REGISTERED').length;
+  const awaiting = scopedVolunteers.filter(v => v.status === 'AWAITING_ASSIGNMENT').length;
+  const assigned = scopedVolunteers.filter(v => v.status === 'ASSIGNED').length;
 
   const regEl = getEl('vol-count-registered');
   const awaitEl = getEl('vol-count-awaiting');
@@ -878,7 +1566,7 @@ function renderVolunteerPool() {
   if (awaitEl) awaitEl.innerText = awaiting;
   if (assignEl) assignEl.innerText = assigned;
 
-  const filtered = state.volunteerPoolData.filter(v =>
+  const filtered = scopedVolunteers.filter(v =>
     state.activeVolunteerFilter === 'ALL' || v.status === state.activeVolunteerFilter
   );
 
@@ -894,10 +1582,10 @@ function renderVolunteerPool() {
         <strong>${v.name}</strong>
         <span class="badge ${statusClass} text-xs">${v.status.replace('_', ' ')}</span>
       </div>
-      <div style="color:var(--text-muted); font-size:0.65rem;">📍 ${v.location} | Skill: ${v.skill}${v.squad ? ` | Squad: ${v.squad}` : ''}</div>
+      <div style="color:var(--text-muted); font-size:0.65rem;">${v.location} | Skill: ${v.skill}${v.squad ? ` | Squad: ${v.squad}` : ''}</div>
       <div style="display:flex; gap:0.4rem;">
-        ${v.status !== 'ASSIGNED' ? `<button class="btn btn-xs btn-outline assign-volunteer-btn mt-1" data-id="${v.id}">➡️ ASSIGN TO SQUAD</button>` : ''}
-        <button class="btn btn-xs btn-outline remove-volunteer-btn mt-1" data-id="${v.id}" title="Remove volunteer">🗑 REMOVE</button>
+        ${v.status !== 'ASSIGNED' ? `<button class="btn btn-xs btn-outline assign-volunteer-btn mt-1" data-id="${v.id}">ASSIGN TO SQUAD</button>` : ''}
+        <button class="btn btn-xs btn-outline remove-volunteer-btn mt-1" data-id="${v.id}" title="Remove volunteer">REMOVE</button>
       </div>
     `;
     container.appendChild(item);
@@ -928,9 +1616,9 @@ function renderVolunteerPool() {
       renderVolunteerPool();
 
       if (isFormSynced) {
-        showToast(`🗑 ${vol.name} hidden here — delete their Sheet row to remove them everywhere`, 'alert');
+        showToast(`${vol.name} hidden here — delete their Sheet row to remove them everywhere`, 'alert');
       } else {
-        showToast(`🗑 ${vol.name} removed from the pool`);
+        showToast(`${vol.name} removed from the pool`);
       }
       logActivity('VOLUNTEER', `Removed from pool: ${vol.name}`);
     });
@@ -984,10 +1672,101 @@ function initAssignSquadModal() {
         vol.status = 'ASSIGNED';
         vol.squad = squadSelect.value;
         renderVolunteerPool();
-        showToast(`➡️ ${vol.name} assigned to ${squadSelect.value}`);
+        showToast(`${vol.name} assigned to ${squadSelect.value}`);
         logActivity('VOLUNTEER', `${vol.name} assigned to ${squadSelect.value}`);
       }
       close();
+    });
+  }
+}
+
+function initVolunteerRegistrationModal() {
+  const modal = getEl('modal-volunteer-register');
+  const closeBtn = getEl('close-vol-reg-modal');
+  const cancelBtn = getEl('cancel-vol-reg-btn');
+  const submitBtn = getEl('submit-vol-reg-btn');
+  const openGFormBtn = getEl('btn-open-external-gform');
+  const gformStationLink = getEl('btn-station-gform-link');
+
+  const openModal = () => {
+    sound.playClick();
+    if (modal) modal.classList.remove('hidden');
+  };
+
+  const closeModal = () => {
+    if (modal) modal.classList.add('hidden');
+  };
+
+  // Triggers to open registration modal
+  getEl('btn-open-vol-register-modal')?.addEventListener('click', openModal);
+  getEl('btn-login-reg-vol')?.addEventListener('click', openModal);
+  getEl('btn-station-open-reg')?.addEventListener('click', openModal);
+  getEl('btn-station-modal-link')?.addEventListener('click', openModal);
+
+  // Close handlers
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+  // Google Form external triggers
+  if (openGFormBtn) {
+    openGFormBtn.addEventListener('click', () => {
+      sound.playClick();
+      openRegistrationForm();
+    });
+  }
+  if (gformStationLink) {
+    gformStationLink.addEventListener('click', () => {
+      sound.playClick();
+      openRegistrationForm();
+    });
+  }
+
+  // Form submission handler
+  if (submitBtn) {
+    submitBtn.addEventListener('click', () => {
+      sound.playClick();
+      const name = getEl('new-vol-name')?.value?.trim();
+      const phone = getEl('new-vol-phone')?.value?.trim();
+      const skill = getEl('new-vol-skill')?.value;
+      const loc = getEl('new-vol-loc')?.value?.trim();
+      const region = getEl('new-vol-region')?.value || 'Odisha';
+
+      if (!name) {
+        showToast('Please enter the volunteer\'s full name', 'alert');
+        return;
+      }
+      if (!phone) {
+        showToast('Please enter a contact phone number', 'alert');
+        return;
+      }
+      if (!loc) {
+        showToast('Please enter the assigned location / district', 'alert');
+        return;
+      }
+
+      const newVol = {
+        id: `AM-VOL-${Date.now().toString().slice(-6)}`,
+        name,
+        phone,
+        skill: skill || 'General Support',
+        location: loc,
+        region,
+        site: `${loc}`,
+        status: 'REGISTERED',
+        squad: null
+      };
+
+      state.volunteerPoolData.unshift(newVol);
+      renderVolunteerPool();
+      showToast(`Volunteer registered: ${newVol.name} (${newVol.skill})`);
+      logActivity('VOLUNTEER', `New volunteer enrolled: ${newVol.name} [${newVol.skill}]`);
+
+      // Reset fields
+      if (getEl('new-vol-name')) getEl('new-vol-name').value = '';
+      if (getEl('new-vol-phone')) getEl('new-vol-phone').value = '';
+      if (getEl('new-vol-loc')) getEl('new-vol-loc').value = '';
+
+      closeModal();
     });
   }
 }
@@ -1014,7 +1793,7 @@ if (addVolunteerBtn) {
 startAutoSync(state, (addedCount) => {
   if (addedCount > 0) {
     renderVolunteerPool();
-    showToast(`🙋 ${addedCount} new volunteer${addedCount > 1 ? 's' : ''} synced from registration form`);
+    showToast(`${addedCount} new volunteer${addedCount > 1 ? 's' : ''} synced from registration form`);
     logActivity('VOLUNTEER', `${addedCount} new volunteer${addedCount > 1 ? 's' : ''} synced from Google Form registration`);
   }
 });
@@ -1035,7 +1814,7 @@ function initRadioConsole() {
       if (chan) {
         if (activeSpeakerEl) activeSpeakerEl.innerText = chan.activeSpeaker;
         if (signalBadge) signalBadge.innerText = `SIGNAL: ${chan.signal} (${chan.freq})`;
-        showToast(`📻 Radio tuned to: ${chan.name}`);
+        showToast(`Radio tuned to: ${chan.name}`);
       }
     });
   }
@@ -1044,12 +1823,12 @@ function initRadioConsole() {
     pttBtn.addEventListener('mousedown', () => {
       sound.playRadioPtt();
       pttBtn.classList.add('btn-saffron');
-      pttBtn.innerText = '🔴 TRANSMITTING (LIVE ON AIR)...';
+      pttBtn.innerText = 'TRANSMITTING (LIVE ON AIR)...';
     });
 
     const releasePtt = () => {
       pttBtn.classList.remove('btn-saffron');
-      pttBtn.innerText = '🎙️ PUSH TO TALK (PTT)';
+      pttBtn.innerText = 'PUSH TO TALK (PTT)';
     };
 
     pttBtn.addEventListener('mouseup', releasePtt);
@@ -1091,9 +1870,9 @@ function renderIcsRoster() {
   const icCard = document.createElement('div');
   icCard.className = 'tree-card ic-card';
   icCard.innerHTML = `
-    <div class="tree-role">⭐ INCIDENT COMMANDER (IC)</div>
+    <div class="tree-role">INCIDENT COMMANDER (IC)</div>
     <div class="tree-name">${t.incidentCommander.name}</div>
-    <div class="tree-agency">${t.incidentCommander.agency} | 📞 ${t.incidentCommander.phone}</div>
+    <div class="tree-agency">${t.incidentCommander.agency} | Phone: ${t.incidentCommander.phone}</div>
   `;
   container.appendChild(icCard);
 
@@ -1129,7 +1908,7 @@ function renderIcsRoster() {
     sec.branches.forEach(b => {
       if (!b.assigned) {
         vacancyCount++;
-        branchesHtml += `<div class="vacant-line assign-branch-btn" data-sec="${sec.name}" data-branch="${b.name}">⚠️ ${b.name}: ${b.lead} (CLICK TO ASSIGN)</div>`;
+        branchesHtml += `<div class="vacant-line assign-branch-btn" data-sec="${sec.name}" data-branch="${b.name}">[VACANT] ${b.name}: ${b.lead} (CLICK TO ASSIGN)</div>`;
       } else {
         branchesHtml += `<div>• <strong>${b.name}:</strong> ${b.lead}</div>`;
       }
@@ -1156,10 +1935,10 @@ function renderIcsRoster() {
   if (badge) {
     if (vacancyCount > 0) {
       badge.className = 'badge badge-alert';
-      badge.innerText = `⚠️ ${vacancyCount} UNASSIGNED ROLES`;
+      badge.innerText = `${vacancyCount} UNASSIGNED ROLES`;
     } else {
       badge.className = 'badge badge-emerald';
-      badge.innerText = `✓ ALL ROLES APPOINTED`;
+      badge.innerText = `ALL ROLES APPOINTED`;
     }
   }
 
@@ -1246,7 +2025,7 @@ function initSachetAlerting() {
 
       if (isLive) {
         if (broadcastText) {
-          broadcastText.innerText = `🚨 [LIVE WEA/CAP BROADCAST]: ${msg}`;
+          broadcastText.innerText = `[LIVE WEA/CAP BROADCAST]: ${msg}`;
         }
 
         const now = new Date();
@@ -1263,10 +2042,10 @@ function initSachetAlerting() {
         });
         renderIncidents();
 
-        showToast(`⚡ CAP-SACHET ALERT BROADCAST SENT TO 1.84M SUBSCRIBERS (${eventType})`, 'alert');
+        showToast(`CAP-SACHET ALERT BROADCAST SENT TO 1.84M SUBSCRIBERS (${eventType})`, 'alert');
         logActivity('SACHET ALERT', `LIVE broadcast transmitted: ${eventType} — "${msg.slice(0, 70)}${msg.length > 70 ? '…' : ''}"`);
       } else {
-        showToast(`🟡 [EXERCISE SANDBOX]: Alert queued to simulation terminals only.`);
+        showToast(`[EXERCISE SANDBOX]: Alert queued to simulation terminals only.`);
         logActivity('SACHET ALERT', `Exercise-mode alert queued (sandbox only): ${eventType}`);
       }
     });
@@ -1340,7 +2119,7 @@ if (saveRumorBtn) {
     getEl('new-rumor-claim').value = '';
     getEl('new-rumor-clarification').value = '';
     getEl('new-rumor-verifier').value = '';
-    showToast(`🛡️ Rumor clarification posted`);
+    showToast(`Rumor clarification posted`);
     logActivity('RUMOR CONTROL', `Clarified: "${claim.slice(0, 60)}${claim.length > 60 ? '…' : ''}" — verified by ${verifiedBy}`);
   });
 }
@@ -1349,7 +2128,10 @@ function renderDamageTable() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  state.damageData.forEach(d => {
+  // TODO: SERVER-SIDE ENFORCEMENT REQUIRED — Scoping should be enforced in API query responses
+  const scopedDamage = filterDataByJurisdiction(state.damageData, 'jurisdiction', 'region');
+
+  scopedDamage.forEach(d => {
     const row = document.createElement('tr');
     let sevBadge = 'badge-emerald';
     if (d.severity === 'CRITICAL' || d.severity === 'SEVERE') sevBadge = 'badge-alert';
@@ -1418,7 +2200,7 @@ function initIapForms() {
   if (signBtn) {
     signBtn.addEventListener('click', () => {
       sound.playClick();
-      showToast('✍️ IAP OPERATIONAL PERIOD 2 DIGITALLY SIGNED & CERTIFIED');
+      showToast('IAP OPERATIONAL PERIOD 2 DIGITALLY SIGNED & CERTIFIED');
     });
   }
 
@@ -1606,7 +2388,7 @@ function initSimulationEngine() {
       if (!state.simPlaying) {
         sound.playClick();
         state.simPlaying = true;
-        playBtn.innerText = '⏸ PAUSE';
+        playBtn.innerText = 'PAUSE';
         state.simInterval = setInterval(() => {
           state.simTimeSec += state.simSpeed * 10;
           if (state.simTimeSec > 21600) state.simTimeSec = 21600;
@@ -1623,7 +2405,7 @@ function initSimulationEngine() {
   function pauseSimulation() {
     sound.playClick();
     state.simPlaying = false;
-    if (playBtn) playBtn.innerText = '▶ PLAY DRILL';
+    if (playBtn) playBtn.innerText = 'PLAY DRILL';
     clearInterval(state.simInterval);
   }
 
@@ -1696,7 +2478,7 @@ function initSimulationEngine() {
       sound.playCriticalAlert();
       renderInjects();
       closeInjectModal();
-      showToast(`🚨 CUSTOM INJECT FIRED: ${title}`, 'alert');
+      showToast(`CUSTOM INJECT FIRED: ${title}`, 'alert');
     });
   }
 
@@ -1720,7 +2502,7 @@ function checkInjectTriggers() {
       inj.executed = true;
       inj.status = "JUST FIRED";
       sound.playCriticalAlert();
-      showToast(`⚡ SIM INJECT FIRED: ${inj.title}`, 'alert');
+      showToast(`SIM INJECT FIRED: ${inj.title}`, 'alert');
       renderInjects();
     }
   });
@@ -1826,34 +2608,31 @@ function initGISMap() {
       dashArray: '6, 6'
     }).addTo(map).bindPopup('<b>MANDATORY EVACUATION ZONE (SECTOR 4 & 5)</b><br>Est. Population: 43,000<br>Status: 86.4% Evacuated');
 
-    // Shelter Markers with custom styled divIcons
+    // Shelter Markers with responsive custom styled divIcons
     shelters.forEach(s => {
       const icon = L.divIcon({
-        className: 'custom-map-icon',
-        html: `<div class="custom-map-pin" style="background:#FF6F00; color:#FFF; font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:10px; padding:3px 7px; border:2px solid #121417; box-shadow:3px 3px 0 #000; border-radius:3px; white-space:nowrap; display:flex; align-items:center; gap:4px;">🏠 ${s.name}</div>`,
-        iconSize: [120, 26],
-        iconAnchor: [60, 13]
+        className: 'custom-map-marker-wrap',
+        html: `<div class="custom-map-pin shelter-pin">🏢 ${s.name}</div>`,
+        iconSize: null
       });
       const marker = L.marker([s.lat, s.lng], { icon }).addTo(map)
         .bindPopup(`<b>${s.name}</b><br>Occupancy: ${s.occupied}/${s.capacity} (${Math.round(s.occupied / s.capacity * 100)}%)<br>Medical: ${s.medical}`);
       state.shelterMarkers.push(marker);
     });
 
-    // NDRF Boat Rescue Assets with custom green divIcons
+    // NDRF Boat Rescue Assets with responsive green divIcons
     const boatIcon1 = L.divIcon({
-      className: 'custom-map-icon',
-      html: `<div class="custom-map-pin" style="background:#00E676; color:#0E1317; font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:10px; padding:3px 7px; border:2px solid #000; box-shadow:3px 3px 0 #000; border-radius:3px; white-space:nowrap; display:flex; align-items:center; gap:4px;">🚤 NDRF Boat 01</div>`,
-      iconSize: [110, 26],
-      iconAnchor: [55, 13]
+      className: 'custom-map-marker-wrap',
+      html: `<div class="custom-map-pin boat-pin">NDRF Boat 01</div>`,
+      iconSize: null
     });
     const boat1 = L.marker([20.78, 86.94], { icon: boatIcon1 }).addTo(map)
       .bindPopup('<b>NDRF Rescue Boat 01</b><br>Unit: 03 Bn<br>Status: Active Search & Rescue at Dhamra Jetty');
 
     const boatIcon2 = L.divIcon({
-      className: 'custom-map-icon',
-      html: `<div class="custom-map-pin" style="background:#00E676; color:#0E1317; font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:10px; padding:3px 7px; border:2px solid #000; box-shadow:3px 3px 0 #000; border-radius:3px; white-space:nowrap; display:flex; align-items:center; gap:4px;">🚤 NDRF Boat 02</div>`,
-      iconSize: [110, 26],
-      iconAnchor: [55, 13]
+      className: 'custom-map-marker-wrap',
+      html: `<div class="custom-map-pin boat-pin">NDRF Boat 02</div>`,
+      iconSize: null
     });
     const boat2 = L.marker([20.58, 86.83], { icon: boatIcon2 }).addTo(map)
       .bindPopup('<b>NDRF Rescue Boat 02</b><br>Unit: 03 Bn<br>Status: Evacuating stranded families at Rajnagar creek');
@@ -1866,7 +2645,7 @@ function initGISMap() {
         sound.playClick();
         state.dropPinMode = !state.dropPinMode;
         dropPinBtn.classList.toggle('chip-active', state.dropPinMode);
-        showToast(state.dropPinMode ? '📍 Click anywhere on the map to drop an incident hotspot pin' : 'Drop Pin Mode: CANCELLED');
+        showToast(state.dropPinMode ? 'Click anywhere on the map to drop an incident hotspot pin' : 'Drop Pin Mode: CANCELLED');
       });
     }
 
@@ -1875,18 +2654,17 @@ function initGISMap() {
       sound.playCriticalAlert();
       const { lat, lng } = e.latlng;
       const pinIcon = L.divIcon({
-        className: 'custom-map-icon',
-        html: `<div class="custom-map-pin" style="background:#E53935; color:#FFF; font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:10px; padding:3px 7px; border:2px solid #000; box-shadow:3px 3px 0 #000; border-radius:3px; white-space:nowrap; display:flex; align-items:center; gap:4px;">⚠️ DANGER PIN</div>`,
-        iconSize: [105, 26],
-        iconAnchor: [52, 13]
+        className: 'custom-map-marker-wrap',
+        html: `<div class="custom-map-pin danger-pin">DANGER PIN</div>`,
+        iconSize: null
       });
       const marker = L.marker([lat, lng], { icon: pinIcon }).addTo(map)
-        .bindPopup(`<b>⚠️ FIELD DANGER HOTSPOT</b><br>Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}<br>Status: Dispatched`)
+        .bindPopup(`<b>FIELD DANGER HOTSPOT</b><br>Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}<br>Status: Dispatched`)
         .openPopup();
       state.customMarkers.push(marker);
       state.dropPinMode = false;
       dropPinBtn.classList.remove('chip-active');
-      showToast(`📍 Field danger hotspot marked at [${lat.toFixed(3)}, ${lng.toFixed(3)}]`);
+      showToast(`Field danger hotspot marked at [${lat.toFixed(3)}, ${lng.toFixed(3)}]`);
     });
 
     getEl('toggle-radar-btn')?.addEventListener('click', (e) => {
@@ -1940,7 +2718,7 @@ function initDroneFeeds() {
       const camId = card.dataset.cam;
 
       const title = getEl('inspect-cam-title');
-      if (title) title.innerText = `📹 DRONE RECON FEED INSPECTOR — CAM 0${camId}`;
+      if (title) title.innerText = `DRONE RECON FEED INSPECTOR — CAM 0${camId}`;
       if (droneModal) droneModal.classList.remove('hidden');
     });
   });
@@ -2027,7 +2805,7 @@ function initModals() {
       sound.playCriticalAlert();
       renderIncidents();
       closeIncModal();
-      showToast(`✅ NEW INCIDENT COMMITTED: ${title}`, 'alert');
+      showToast(`NEW INCIDENT COMMITTED: ${title}`, 'alert');
 
       if (titleInput) titleInput.value = '';
       if (locInput) locInput.value = '';
@@ -2065,7 +2843,7 @@ function initModals() {
         }
         renderIcsRoster();
         sound.playClick();
-        showToast(`⭐ APPOINTMENT CONFIRMED: ${name} as ${branchName}`);
+        showToast(`APPOINTMENT CONFIRMED: ${name} as ${branchName}`);
       }
       closeAssignModal();
     });
@@ -2110,7 +2888,7 @@ function initModals() {
       sound.playClick();
       renderAssets();
       closeAssetModal();
-      showToast(`🚛 ASSET REGISTERED: ${name}`);
+      showToast(`ASSET REGISTERED: ${name}`);
       logActivity('ASSET', `New asset registered: ${name} (${type}) — ${unit}`);
     });
   }
@@ -2235,7 +3013,7 @@ const CLUSTER_META = {
     id: "evacuation",
     label: "Directional Evacuation",
     short: "Evacuation",
-    icon: "🛣️",
+    icon: "",
     status: "ready",
     statusLabel: "Engine ready",
     blurb: "Existing cascade engine (hop-1 / hop-2), extended with threat-zone geometry — radial, directional, or point-then-radiating.",
@@ -2244,7 +3022,7 @@ const CLUSTER_META = {
     id: "threshold",
     label: "Sustained-Load / Threshold",
     short: "Threshold",
-    icon: "📈",
+    icon: "",
     status: "blocked-engine",
     statusLabel: "New engine required",
     blurb: "Tiered escalation over time, not a discrete trigger to inject. Needs a threshold/attrition engine — the current cascade engine doesn't apply.",
@@ -2253,7 +3031,7 @@ const CLUSTER_META = {
     id: "containment",
     label: "Point-Source Containment",
     short: "Containment",
-    icon: "🛡️",
+    icon: "",
     status: "ready",
     statusLabel: "Engine ready",
     blurb: "Existing cascade engine — the closest fit of any cluster. One clear origin node rather than a moving or expanding threat zone.",
@@ -2262,7 +3040,7 @@ const CLUSTER_META = {
     id: "crowd",
     label: "Crowd / Security",
     short: "Crowd",
-    icon: "🚨",
+    icon: "",
     status: "blocked-research",
     statusLabel: "Blocked — research",
     blurb: "Needs the agent-based population model already flagged as an open research problem. Design-ready, not build-ready.",
@@ -2930,7 +3708,7 @@ function depRenderEngine() {
       const active = depActivePresets.includes(p.id);
       return `
         <button class="preset-btn ${active ? 'is-active' : ''}" data-preset-id="${p.id}" ${depEngineMode !== 'exercise' || active ? 'disabled' : ''}>
-          <span style="font-size:14px; opacity:0.8; margin-top:1px;">⚡</span>
+          <span style="font-size:11px; opacity:0.8; margin-top:1px; font-weight: bold;">[INJECT]</span>
           <div>
             <div>${p.label}</div>
             <div class="preset-note">${p.note}</div>
@@ -3000,8 +3778,8 @@ function depRenderEngine() {
     if (critNodes.length === 0 && warnNodes.length === 0) {
       alertBox.innerHTML = `<span style="font-size: 11.5px; color: var(--text-muted);">No active alerts.</span>`;
     } else {
-      alertBox.innerHTML = critNodes.map(n => `<span class="alert-chip crit">⚠️ ${n.label}</span>`).join('') +
-        warnNodes.map(n => `<span class="alert-chip warn">⚡ ${n.label}</span>`).join('');
+      alertBox.innerHTML = critNodes.map(n => `<span class="alert-chip crit">[CRIT] ${n.label}</span>`).join('') +
+        warnNodes.map(n => `<span class="alert-chip warn">[WARN] ${n.label}</span>`).join('');
     }
   }
 
@@ -3045,22 +3823,25 @@ function depRenderEngine() {
         `;
       }
 
-      // Icon
+      // Icon SVG inside circle
       svgContent += `
-        <g transform="translate(-10, -28)" color="${color}">
-          <svg width="20" height="20" viewBox="0 0 24 24">${getSvgIconPath(n.icon)}</svg>
+        <g transform="translate(-12, -22)" style="color: ${color};">
+          <svg width="24" height="24" viewBox="0 0 24 24">${getSvgIconPath(n.icon)}</svg>
         </g>
       `;
 
-      svgContent += `
-        <text text-anchor="middle" y="6" font-size="15" font-weight="800" fill="${color}" font-family="JetBrains Mono, monospace">${s.value}</text>
-        <text text-anchor="middle" y="58" font-size="10.5" font-weight="700" fill="var(--text-main)" letter-spacing="0.02em">${n.label}</text>
-        <text text-anchor="middle" y="71" font-size="8.5" fill="var(--text-muted)" letter-spacing="0.03em">${fr.label} · ${s.source}</text>
-      </g>`;
+      // Score Text
+      svgContent += `<text y="14" text-anchor="middle" font-size="16" font-weight="800" font-family="'Space Grotesk',sans-serif" fill="var(--text-main)">${s.value}</text>`;
+
+      // Label below node
+      svgContent += `<text y="58" text-anchor="middle" font-size="11.5" font-weight="600" font-family="'Plus Jakarta Sans',sans-serif" fill="var(--text-main)">${n.label}</text>`;
+
+      svgContent += `</g>`;
     });
 
     svg.innerHTML = svgContent;
 
+    // Node click to dispatch
     svg.querySelectorAll('g[data-node-id]').forEach(g => {
       g.addEventListener('click', () => {
         const nid = g.dataset.nodeId;
@@ -3069,25 +3850,31 @@ function depRenderEngine() {
     });
   }
 
-  // Render Capabilities List
-  const nodesList = getEl('dep-nodes-status-list');
+  // Render Capabilities Node Cards
+  const nodesList = getEl('dep-nodes-list');
   if (nodesList) {
     nodesList.innerHTML = H.nodes.map(n => {
       const s = depScores[n.id] || { value: 8, updatedAt: depClock, source: 'baseline' };
       const color = depStatusColor(s.value);
+      const isTop = n.id === topLeverageId;
       const age = depClock - s.updatedAt;
       const fr = depFreshness(age);
+
       return `
-        <div class="node-card" style="opacity: ${fr.opacity};">
-          <div class="node-row">
-            <span class="node-name">${n.label}</span>
-            <span class="node-score mono" style="color:${color};">${s.value}</span>
+        <div class="node-row ${isTop ? 'is-top' : ''}" data-node-id="${n.id}">
+          <div class="node-head">
+            <div class="node-label">
+              <span class="node-dot" style="background:${color};"></span>
+              <strong>${n.label}</strong>
+              ${isTop ? '<span class="top-tag">Top leverage</span>' : ''}
+            </div>
+            <div class="node-score" style="color:${color};">${s.value}/10</div>
           </div>
           <div class="node-bar"><div class="node-bar-fill" style="width: ${s.value * 10}%; background:${color};"></div></div>
           <div class="node-meta">
             <span class="node-source ${fr.tier === 'fresh' ? 'fresh' : ''}">${s.source} · ${fr.label}</span>
             <button class="dispatch-btn" data-dispatch-id="${n.id}" title="Dispatch response to reinforce this capability">
-              🛡️ Dispatch
+              Dispatch
             </button>
           </div>
         </div>

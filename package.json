@@ -2,11 +2,23 @@
   "name": "unity-eoc-india",
   "private": true,
   "version": "1.0.0",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev.js",
+    "dev:web": "vite",
+    "server": "node server/src/server.js",
+    "seed": "node server/src/db/seed.js",
+    "reset": "node server/src/db/seed.js --reset",
+    "totp": "node server/src/tools/totp-code.js",
+    "test:auth": "node server/test/break-tests.js",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:client": "node server/test/client-e2e-runner.js",
+    "test": "npm run test:auth && npm run test:client",
+    "enroll": "node server/src/tools/enroll.js"
   },
   "devDependencies": {
     "vite": "^5.4.2"

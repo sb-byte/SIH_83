@@ -34,6 +34,8 @@ export const liveIncidentData = {
 export const citizenSosQueue = [
   {
     id: "SOS-801",
+    region: "Odisha",
+    site: "Kendrapara / Rajnagar",
     time: "14:28 IST",
     name: "Subrata Jena (6 family members)",
     phone: "+91-98612-XXXXX",
@@ -47,6 +49,8 @@ export const citizenSosQueue = [
   },
   {
     id: "SOS-802",
+    region: "Odisha",
+    site: "Kendrapara / Rajnagar",
     time: "14:21 IST",
     name: "Pravakar Mohapatra (Village Elder)",
     phone: "+91-94371-XXXXX",
@@ -60,6 +64,8 @@ export const citizenSosQueue = [
   },
   {
     id: "SOS-803",
+    region: "Odisha",
+    site: "Bhadrak / Dhamra",
     time: "14:09 IST",
     name: "Deepak Sahoo (Fisherman)",
     phone: "+91-97773-XXXXX",
@@ -70,12 +76,29 @@ export const citizenSosQueue = [
     msg: "Trawler anchor snapped. 3 crew adrift near sandbar in 90 km/h winds.",
     status: "IN PROGRESS",
     assignedUnit: "ICG Hovercraft 02"
+  },
+  {
+    id: "SOS-804",
+    region: "West Bengal",
+    site: "Kolkata / Sunderbans",
+    time: "13:58 IST",
+    name: "Ashima Halder (4 family members)",
+    phone: "+91-90513-XXXXX",
+    location: "Gosaba Island Embankment Ward 4 [22.165° N, 88.802° E]",
+    lat: 22.165,
+    lng: 88.802,
+    urgency: "HIGH",
+    msg: "Earthen embankment leaking beside homestead. Family sheltering on school roof, need boat evacuation before high tide.",
+    status: "PENDING",
+    assignedUnit: "UNASSIGNED"
   }
 ];
 
 export const chronoIncidents = [
   {
     id: "INC-1092",
+    region: "Odisha",
+    site: "Bhadrak / Dhamra",
     time: "14:24 IST",
     section: "OPS",
     severity: "CRITICAL",
@@ -88,6 +111,8 @@ export const chronoIncidents = [
   },
   {
     id: "INC-1091",
+    region: "Odisha",
+    site: "Kendrapara / Rajnagar",
     time: "14:18 IST",
     section: "OPS",
     severity: "HIGH",
@@ -100,6 +125,8 @@ export const chronoIncidents = [
   },
   {
     id: "INC-1090",
+    region: "Odisha",
+    site: "Bhadrak / Dhamra",
     time: "14:05 IST",
     section: "LOGISTICS",
     severity: "MEDIUM",
@@ -112,6 +139,8 @@ export const chronoIncidents = [
   },
   {
     id: "INC-1089",
+    region: "Odisha",
+    site: "Kendrapara / Rajnagar",
     time: "13:50 IST",
     section: "IMD",
     severity: "HIGH",
@@ -124,6 +153,8 @@ export const chronoIncidents = [
   },
   {
     id: "INC-1088",
+    region: "Odisha",
+    site: "Bhadrak / Dhamra",
     time: "13:35 IST",
     section: "PLANNING",
     severity: "INFO",
@@ -136,6 +167,8 @@ export const chronoIncidents = [
   },
   {
     id: "INC-1087",
+    region: "Odisha",
+    site: "Kendrapara / Rajnagar",
     time: "13:12 IST",
     section: "COMMS",
     severity: "CRITICAL",
@@ -145,25 +178,57 @@ export const chronoIncidents = [
     lat: 20.65,
     lng: 86.85,
     status: "BROADCAST COMPLETE"
+  },
+  {
+    id: "INC-1086",
+    region: "West Bengal",
+    site: "Kolkata / Sunderbans",
+    time: "12:58 IST",
+    section: "OPS",
+    severity: "HIGH",
+    title: "Sunderbans Embankment Breach - Gosaba Block",
+    details: "60m earthen embankment breached along the Bidya river at Gosaba. WBDMA Quick Response Team with NDRF 02 Bn deployed 4 country boats for ring-bund sandbagging.",
+    location: "Gosaba, South 24 Parganas [22.1653° N, 88.8021° E]",
+    lat: 22.1653,
+    lng: 88.8021,
+    status: "RESPONSE DEPLOYED"
+  },
+  {
+    id: "INC-1085",
+    region: "West Bengal",
+    site: "Kolkata / Sunderbans",
+    time: "12:40 IST",
+    section: "LOGISTICS",
+    severity: "MEDIUM",
+    title: "Kolkata Urban Waterlogging - Ballygunge Sector",
+    details: "KMC deployed 18 portable pumps after 96mm rainfall in 3 hours. Two uprooted trees cleared from AJC Bose Road by the Disaster Management Group.",
+    location: "Ballygunge, Kolkata [22.5226° N, 88.3639° E]",
+    lat: 22.5226,
+    lng: 88.3639,
+    status: "IN PROGRESS"
   }
 ];
 
 export const fleetAssets = [
-  { id: "NDRF-IRB-101", name: "Inflatable Rescue Boat 01", type: "Water Rescue", unit: "NDRF 03 Bn", status: "DEPLOYED", loc: "Dhamra Port Jetty", crew: 6, battery: "94%", lat: 20.78, lng: 86.94 },
-  { id: "NDRF-IRB-102", name: "Inflatable Rescue Boat 02", type: "Water Rescue", unit: "NDRF 03 Bn", status: "DEPLOYED", loc: "Kendrapara Creek", crew: 6, battery: "88%", lat: 20.58, lng: 86.83 },
-  { id: "NDRF-HWV-04", name: "High-Water Rescue Truck", type: "Heavy Vehicle", unit: "SDRF Odisha", status: "DEPLOYED", loc: "Bhadrak Route 16", crew: 4, fuel: "78%", lat: 21.06, lng: 86.50 },
-  { id: "DRONE-RECON-ALPHA", name: "Surveillance Hexacopter Alpha", type: "UAV Drone", unit: "Coast Guard Air Recon", status: "AIRBORNE", loc: "Paradip Outer Anchorage", crew: 2, battery: "82%", lat: 20.27, lng: 86.70 },
-  { id: "ICG-ALH-08", name: "Advanced Light Helicopter MK-III", type: "Aviation", unit: "Indian Coast Guard", status: "AVAILABLE", loc: "Bhubaneswar Airfield", crew: 4, fuel: "95%", lat: 20.24, lng: 85.81 },
-  { id: "NDRF-BOAT-09", name: "Deep Water Dinghy 09", type: "Water Rescue", unit: "NDRF 02 Bn", status: "OUT_OF_SERVICE", loc: "Cuttack Maintenance Bay", crew: 0, reason: "Propeller fouled with debris", lat: 20.46, lng: 85.88 },
-  { id: "DEOC-GEN-02", name: "50kVA Mobile Generator Unit", type: "Heavy Vehicle", unit: "State Disaster Logistics", status: "AVAILABLE", loc: "Balasore Collectorate", crew: 2, fuel: "100%", lat: 21.49, lng: 86.92 }
+  { id: "NDRF-IRB-101", name: "Inflatable Rescue Boat 01", type: "Water Rescue", unit: "NDRF 03 Bn", status: "DEPLOYED", loc: "Dhamra Port Jetty", crew: 6, battery: "94%", lat: 20.78, lng: 86.94, region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "NDRF-IRB-102", name: "Inflatable Rescue Boat 02", type: "Water Rescue", unit: "NDRF 03 Bn", status: "DEPLOYED", loc: "Kendrapara Creek", crew: 6, battery: "88%", lat: 20.58, lng: 86.83, region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "NDRF-HWV-04", name: "High-Water Rescue Truck", type: "Heavy Vehicle", unit: "SDRF Odisha", status: "DEPLOYED", loc: "Bhadrak Route 16", crew: 4, fuel: "78%", lat: 21.06, lng: 86.50, region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "DRONE-RECON-ALPHA", name: "Surveillance Hexacopter Alpha", type: "UAV Drone", unit: "Coast Guard Air Recon", status: "AIRBORNE", loc: "Paradip Outer Anchorage", crew: 2, battery: "82%", lat: 20.27, lng: 86.70, region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "ICG-ALH-08", name: "Advanced Light Helicopter MK-III", type: "Aviation", unit: "Indian Coast Guard", status: "AVAILABLE", loc: "Bhubaneswar Airfield", crew: 4, fuel: "95%", lat: 20.24, lng: 85.81, region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "NDRF-BOAT-09", name: "Deep Water Dinghy 09", type: "Water Rescue", unit: "NDRF 02 Bn", status: "OUT_OF_SERVICE", loc: "Cuttack Maintenance Bay", crew: 0, reason: "Propeller fouled with debris", lat: 20.46, lng: 85.88, region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "DEOC-GEN-02", name: "50kVA Mobile Generator Unit", type: "Heavy Vehicle", unit: "State Disaster Logistics", status: "AVAILABLE", loc: "Balasore Collectorate", crew: 2, fuel: "100%", lat: 21.49, lng: 86.92, region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "WB-IRB-21", name: "Inflatable Rescue Boat 21", type: "Water Rescue", unit: "NDRF 02 Bn", status: "DEPLOYED", loc: "Sagar Island Ferry Ghat", crew: 6, battery: "91%", lat: 21.65, lng: 88.05, region: "West Bengal", site: "Kolkata / Sunderbans" },
+  { id: "WB-HWV-07", name: "High-Water Rescue Truck 07", type: "Heavy Vehicle", unit: "SDRF West Bengal", status: "AVAILABLE", loc: "Namkhana Block HQ", crew: 4, fuel: "86%", lat: 21.76, lng: 88.23, region: "West Bengal", site: "Kolkata / Sunderbans" }
 ];
 
 export const shelters = [
-  { id: "MCS-01", name: "MCS Balasore Central High School", capacity: 500, occupied: 460, status: "NEAR FULL", lat: 21.4934, lng: 86.9135, medical: "Doctor On-Duty", foodRations: "48h Stored" },
-  { id: "MCS-02", name: "MCS Kendrapara Cyclone Shelter", capacity: 300, occupied: 285, status: "CRITICAL", lat: 20.5028, lng: 86.4227, medical: "Nurse Station Active", foodRations: "72h Stored" },
-  { id: "MCS-03", name: "MCS Puri Seafront Multi-Purpose Shelter", capacity: 200, occupied: 184, status: "NEAR FULL", lat: 19.8135, lng: 85.8312, medical: "Paramedic Unit", foodRations: "36h Stored" },
-  { id: "MCS-04", name: "MCS Bhadrak Government College", capacity: 400, occupied: 120, status: "AVAILABLE", lat: 21.0543, lng: 86.5186, medical: "Doctor On-Duty", foodRations: "96h Stored" },
-  { id: "MCS-05", name: "MCS Paradip Port Community Center", capacity: 350, occupied: 340, status: "CRITICAL", lat: 20.2644, lng: 86.6687, medical: "SDRF Medical Team", foodRations: "24h Stored" }
+  { id: "MCS-01", name: "MCS Balasore Central High School", capacity: 500, occupied: 460, status: "NEAR FULL", lat: 21.4934, lng: 86.9135, medical: "Doctor On-Duty", foodRations: "48h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "MCS-02", name: "MCS Kendrapara Cyclone Shelter", capacity: 300, occupied: 285, status: "CRITICAL", lat: 20.5028, lng: 86.4227, medical: "Nurse Station Active", foodRations: "72h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "MCS-03", name: "MCS Puri Seafront Multi-Purpose Shelter", capacity: 200, occupied: 184, status: "NEAR FULL", lat: 19.8135, lng: 85.8312, medical: "Paramedic Unit", foodRations: "36h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "MCS-04", name: "MCS Bhadrak Government College", capacity: 400, occupied: 120, status: "AVAILABLE", lat: 21.0543, lng: 86.5186, medical: "Doctor On-Duty", foodRations: "96h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "MCS-05", name: "MCS Paradip Port Community Center", capacity: 350, occupied: 340, status: "CRITICAL", lat: 20.2644, lng: 86.6687, medical: "SDRF Medical Team", foodRations: "24h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "MCS-06", name: "MCS Gosaba Sunderbans Cyclone Shelter", capacity: 450, occupied: 412, status: "NEAR FULL", lat: 22.1653, lng: 88.8021, medical: "Nurse Station Active", foodRations: "60h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
+  { id: "MCS-07", name: "MCS Namkhana Coastal Flood Shelter", capacity: 300, occupied: 96, status: "AVAILABLE", lat: 21.7597, lng: 88.2296, medical: "Paramedic Unit", foodRations: "72h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" }
 ];
 
 export const radioChannels = [
@@ -175,14 +240,16 @@ export const radioChannels = [
 ];
 
 export const volunteerSquads = [
-  { id: "VOL-SQ-01", name: "Dhamra Coastal Aapda Mitra Squad", members: 45, skills: "Water Rescue & First Aid", deployedAt: "Dhamra Cyclone Shelter", lead: "Ramesh Jena" },
-  { id: "VOL-SQ-02", name: "Bhadrak Relief Distribution Squad", members: 60, skills: "Food Staging & Ham Radio", deployedAt: "Bhadrak Transit Depot", lead: "Priyanka Das" },
-  { id: "VOL-SQ-03", name: "Kendrapara Creek Recon Squad", members: 30, skills: "Boat Handling & Tree Clearing", deployedAt: "Rajnagar High School", lead: "Manas Barik" }
+  { id: "VOL-SQ-01", name: "Dhamra Coastal Aapda Mitra Squad", members: 45, skills: "Water Rescue & First Aid", deployedAt: "Dhamra Cyclone Shelter", lead: "Ramesh Jena", region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "VOL-SQ-02", name: "Bhadrak Relief Distribution Squad", members: 60, skills: "Food Staging & Ham Radio", deployedAt: "Bhadrak Transit Depot", lead: "Priyanka Das", region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "VOL-SQ-03", name: "Kendrapara Creek Recon Squad", members: 30, skills: "Boat Handling & Tree Clearing", deployedAt: "Rajnagar High School", lead: "Manas Barik", region: "Odisha", site: "Kendrapara / Rajnagar" }
 ];
 
 export const rumorDebunking = [
   {
     id: "RUMOR-01",
+    region: "Odisha",
+    site: "Bhadrak / Dhamra",
     claim: "Dhamra drinking water treatment plant contaminated by sea water backflow.",
     status: "DEBUNKED",
     clarification: "Public Health Engineering Dept confirms water treatment plant is operating safely on backup power. Reverse osmosis filtration fully active.",
@@ -191,6 +258,8 @@ export const rumorDebunking = [
   },
   {
     id: "RUMOR-02",
+    region: "Odisha",
+    site: "Kendrapara / Rajnagar",
     claim: "Shelter Kendrapara is turning away incoming evacuees.",
     status: "MONITORING",
     clarification: "Shelter is at 95% capacity. State Transport buses are routing overflow families to Bhadrak College MCS (30% occupied).",
@@ -199,6 +268,8 @@ export const rumorDebunking = [
   },
   {
     id: "RUMOR-03",
+    region: "Odisha",
+    site: "Bhadrak / Dhamra",
     claim: "National Highway 16 completely closed due to culvert collapse at Soro.",
     status: "FALSE / CLARIFIED",
     clarification: "NH-16 is open for emergency vehicles. Tree-clearing SDRF squads cleared fallen banyan tree on left lane at 13:40 IST.",
@@ -208,26 +279,28 @@ export const rumorDebunking = [
 ];
 
 export const mutualAidRequests = [
-  { id: "MA-01", agency: "Kendrapara District EOC", resource: "High-Water Rescue Trucks", qty: 3, priority: "CRITICAL", status: "APPROVED", requestedAt: "12:40 IST", approvedBy: "State EOC Duty Officer" },
-  { id: "MA-02", agency: "OSDMA Bhadrak Cell", resource: "Mobile 50kVA Diesel Generators", qty: 4, priority: "HIGH", status: "PENDING", requestedAt: "13:05 IST", approvedBy: null },
-  { id: "MA-03", agency: "Indian Coast Guard Zone (East)", resource: "ALH Helicopters", qty: 1, priority: "HIGH", status: "PENDING", requestedAt: "13:20 IST", approvedBy: null },
-  { id: "MA-04", agency: "Cuttack Fire & Emergency Services", resource: "Deep Water Dinghies", qty: 2, priority: "MODERATE", status: "DENIED", requestedAt: "11:55 IST", approvedBy: "State EOC Duty Officer" },
-  { id: "MA-05", agency: "IAF Bhubaneswar Station", resource: "Mutual Aid Helicopter Fleet", qty: 2, priority: "CRITICAL", status: "SCHEDULED", requestedAt: "10:30 IST", approvedBy: "NDMA Liaison" }
+  { id: "MA-01", agency: "Kendrapara District EOC", resource: "High-Water Rescue Trucks", qty: 3, priority: "CRITICAL", status: "APPROVED", requestedAt: "12:40 IST", approvedBy: "State EOC Duty Officer", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "MA-02", agency: "OSDMA Bhadrak Cell", resource: "Mobile 50kVA Diesel Generators", qty: 4, priority: "HIGH", status: "PENDING", requestedAt: "13:05 IST", approvedBy: null, region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "MA-03", agency: "Indian Coast Guard Zone (East)", resource: "ALH Helicopters", qty: 1, priority: "HIGH", status: "PENDING", requestedAt: "13:20 IST", approvedBy: null, region: "West Bengal", site: "Kolkata / Sunderbans" },
+  { id: "MA-04", agency: "Cuttack Fire & Emergency Services", resource: "Deep Water Dinghies", qty: 2, priority: "MODERATE", status: "DENIED", requestedAt: "11:55 IST", approvedBy: "State EOC Duty Officer", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "MA-05", agency: "IAF Bhubaneswar Station", resource: "Mutual Aid Helicopter Fleet", qty: 2, priority: "CRITICAL", status: "SCHEDULED", requestedAt: "10:30 IST", approvedBy: "NDMA Liaison", region: "Odisha", site: "Bhadrak / Dhamra" }
 ];
 
 export const volunteerPool = [
-  { id: "AM-VOL-101", name: "Suresh Nayak", skill: "Water Rescue & First Aid", location: "Dhamra", status: "ASSIGNED", squad: "Dhamra Coastal Aapda Mitra Squad" },
-  { id: "AM-VOL-102", name: "Lalita Patra", skill: "Ham Radio Operator", location: "Bhadrak", status: "ASSIGNED", squad: "Bhadrak Relief Distribution Squad" },
-  { id: "AM-VOL-103", name: "Ajay Mallick", skill: "Boat Handling", location: "Kendrapara", status: "ASSIGNED", squad: "Kendrapara Creek Recon Squad" },
-  { id: "AM-VOL-104", name: "Snehalata Swain", skill: "Field Nursing", location: "Balasore", status: "AWAITING_ASSIGNMENT", squad: null },
-  { id: "AM-VOL-105", name: "Biswajit Rout", skill: "Chainsaw / Tree Clearing", location: "Soro", status: "AWAITING_ASSIGNMENT", squad: null },
-  { id: "AM-VOL-106", name: "Debasmita Sahoo", skill: "Shelter Management", location: "Puri", status: "REGISTERED", squad: null },
-  { id: "AM-VOL-107", name: "Manoj Behera", skill: "Logistics & Ham Radio", location: "Paradip", status: "REGISTERED", squad: null }
+  { id: "AM-VOL-101", name: "Suresh Nayak", skill: "Water Rescue & First Aid", location: "Dhamra", status: "ASSIGNED", squad: "Dhamra Coastal Aapda Mitra Squad", region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "AM-VOL-102", name: "Lalita Patra", skill: "Ham Radio Operator", location: "Bhadrak", status: "ASSIGNED", squad: "Bhadrak Relief Distribution Squad", region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "AM-VOL-103", name: "Ajay Mallick", skill: "Boat Handling", location: "Kendrapara", status: "ASSIGNED", squad: "Kendrapara Creek Recon Squad", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "AM-VOL-104", name: "Snehalata Swain", skill: "Field Nursing", location: "Balasore", status: "AWAITING_ASSIGNMENT", squad: null, region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "AM-VOL-105", name: "Biswajit Rout", skill: "Chainsaw / Tree Clearing", location: "Soro", status: "AWAITING_ASSIGNMENT", squad: null, region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "AM-VOL-106", name: "Debasmita Sahoo", skill: "Shelter Management", location: "Puri", status: "REGISTERED", squad: null, region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "AM-VOL-107", name: "Manoj Behera", skill: "Logistics & Ham Radio", location: "Paradip", status: "REGISTERED", squad: null, region: "Odisha", site: "Kendrapara / Rajnagar" }
 ];
 
 export const damageAssessments = [
   {
     id: "DA-101",
+    region: "Odisha",
+    site: "Bhadrak / Dhamra",
     sector: "Dhamra Fishing Harbor",
     type: "Structural / Coastal",
     severity: "SEVERE",
@@ -239,6 +312,8 @@ export const damageAssessments = [
   },
   {
     id: "DA-102",
+    region: "Odisha",
+    site: "Bhadrak / Dhamra",
     sector: "Bhadrak Rural Sub-division",
     type: "Power Infrastructure",
     severity: "CRITICAL",
@@ -250,6 +325,8 @@ export const damageAssessments = [
   },
   {
     id: "DA-103",
+    region: "Odisha",
+    site: "Kendrapara / Rajnagar",
     sector: "Rajnagar Creek Basin",
     type: "Inundation / Agricultural",
     severity: "MODERATE",
@@ -277,7 +354,7 @@ export const icsCommandTree = {
       branches: [
         { id: "b-sar", name: "Search & Rescue Branch", lead: "Commandant 03 Bn", assigned: true },
         { id: "b-evac", name: "Evacuation Branch", lead: "SP Coastal Police", assigned: true },
-        { id: "b-air", name: "Air Operations Branch", lead: "⚠️ UNASSIGNED", assigned: false }
+        { id: "b-air", name: "Air Operations Branch", lead: "[VACANT] UNASSIGNED", assigned: false }
       ]
     },
     {
@@ -303,7 +380,7 @@ export const icsCommandTree = {
       branches: [
         { id: "b-supply", name: "Supply & Rations", lead: "Civil Supplies Officer", assigned: true },
         { id: "b-transport", name: "Transport Fleet", lead: "State Transport Lead", assigned: true },
-        { id: "b-staging", name: "Staging Area Balasore", lead: "⚠️ UNASSIGNED", assigned: false }
+        { id: "b-staging", name: "Staging Area Balasore", lead: "[VACANT] UNASSIGNED", assigned: false }
       ]
     },
     {
@@ -322,13 +399,13 @@ export const icsCommandTree = {
 };
 
 export const icsTasksList = [
-  { id: "TSK-01", section: "Operations", task: "Evacuate 14 stranded families from Satbhaya rooftop", assignee: "NDRF 03 Bn Team Bravo", due: "15:00 IST", completed: true },
-  { id: "TSK-02", section: "Operations", task: "Stage 6 high-water rescue trucks on NH-16 Soro junction", assignee: "SDRF Route 16 Lead", due: "15:30 IST", completed: true },
-  { id: "TSK-03", section: "Operations", task: "Complete aerial FLIR survey of Dhamra port breach", assignee: "Coast Guard Drone Alpha", due: "16:00 IST", completed: false },
-  { id: "TSK-04", section: "Logistics", task: "Dispatch 4 mobile 50kVA diesel generators to District Hospital", assignee: "State Fleet Logistics", due: "15:15 IST", completed: true },
-  { id: "TSK-05", section: "Logistics", task: "Transfer 5,000 food packets to Kendrapara MCS from Bhadrak depot", assignee: "Civil Supplies Transport", due: "16:30 IST", completed: false },
-  { id: "TSK-06", section: "Planning", task: "Generate flood inundation forecast polygon for high-tide peak (20:00 IST)", assignee: "ISRO Bhuvan Spatial Team", due: "16:00 IST", completed: true },
-  { id: "TSK-07", section: "Finance", task: "Release emergency SDRF tranche ₹5 Crore for fuel & provisions", assignee: "SDRF Treasury Officer", due: "17:00 IST", completed: true }
+  { id: "TSK-01", section: "Operations", task: "Evacuate 14 stranded families from Satbhaya rooftop", assignee: "NDRF 03 Bn Team Bravo", due: "15:00 IST", completed: true, region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "TSK-02", section: "Operations", task: "Stage 6 high-water rescue trucks on NH-16 Soro junction", assignee: "SDRF Route 16 Lead", due: "15:30 IST", completed: true, region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "TSK-03", section: "Operations", task: "Complete aerial FLIR survey of Dhamra port breach", assignee: "Coast Guard Drone Alpha", due: "16:00 IST", completed: false, region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "TSK-04", section: "Logistics", task: "Dispatch 4 mobile 50kVA diesel generators to District Hospital", assignee: "State Fleet Logistics", due: "15:15 IST", completed: true, region: "West Bengal", site: "Kolkata / Sunderbans" },
+  { id: "TSK-05", section: "Logistics", task: "Transfer 5,000 food packets to Kendrapara MCS from Bhadrak depot", assignee: "Civil Supplies Transport", due: "16:30 IST", completed: false, region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "TSK-06", section: "Planning", task: "Generate flood inundation forecast polygon for high-tide peak (20:00 IST)", assignee: "ISRO Bhuvan Spatial Team", due: "16:00 IST", completed: true, region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "TSK-07", section: "Finance", task: "Release emergency SDRF tranche ₹5 Crore for fuel & provisions", assignee: "SDRF Treasury Officer", due: "17:00 IST", completed: true, region: "Odisha", site: "Bhadrak / Dhamra" }
 ];
 
 export const exerciseScenario = {

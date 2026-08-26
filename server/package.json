@@ -1,0 +1,17 @@
+{
+  "name": "unity-eoc-auth-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Unity EOC — auth & tiered access-control API. Zero dependencies (Node built-ins only).",
+  "type": "commonjs",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "seed": "node src/db/seed.js",
+    "reset": "node src/db/seed.js --reset",
+    "totp": "node src/tools/totp-code.js",
+    "test": "node test/break-tests.js"
+  },
+  "engines": { "node": ">=18" },
+  "//": "CommonJS island: the parent Vite app is ESM (\"type\":\"module\"), so this folder declares its own module system. Zero runtime deps by design."
+}

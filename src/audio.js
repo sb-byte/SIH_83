@@ -47,6 +47,12 @@ class TacticalAudio {
     this.playTone(850, 'sine', 0.05, 0.08);
   }
 
+  playSuccess() {
+    this.playTone(523.25, 'sine', 0.08, 0.1);
+    setTimeout(() => this.playTone(659.25, 'sine', 0.08, 0.1), 80);
+    setTimeout(() => this.playTone(783.99, 'sine', 0.15, 0.12), 160);
+  }
+
   playModeToggle() {
     this.playTone(440, 'triangle', 0.08, 0.12);
     setTimeout(() => this.playTone(660, 'triangle', 0.12, 0.12), 80);
