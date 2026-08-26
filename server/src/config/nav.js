@@ -16,14 +16,14 @@
  * Any action NOT listed for a role is DENIED (fail closed).
  */
 
-const VIEWS = ['login', 'landing', 'command', 'ics', 'logistics', 'simulation', 'reports'];
+const VIEWS = ['login', 'landing', 'command', 'ics', 'logistics', 'simulation', 'reports', 'field', 'escalation'];
 
 /** Nav tabs (data-view) each tier may see. 'login' is always reachable. */
 const NAV = {
-  T1: ['landing', 'command', 'ics', 'logistics', 'simulation', 'reports'],
-  T2: ['landing', 'command', 'ics', 'logistics', 'simulation', 'reports'],
-  T3: ['landing', 'command', 'ics', 'logistics', 'simulation', 'reports'],
-  T4: ['landing', 'command', 'logistics', 'simulation'], // no ICS/IAP authoring, no AAR
+  T1: ['landing', 'command', 'ics', 'logistics', 'simulation', 'reports', 'escalation'],
+  T2: ['landing', 'command', 'ics', 'logistics', 'simulation', 'reports', 'escalation'],
+  T3: ['landing', 'command', 'ics', 'logistics', 'simulation', 'reports', 'escalation'],
+  T4: ['landing', 'command', 'logistics', 'simulation', 'field', 'escalation'],
   T5: ['landing'],                                        // volunteer portal home only
 };
 
@@ -63,6 +63,7 @@ const ACTIONS = {
 
   // ---- Escalation ----
   approve_escalation:   ['T1', 'T2'],                        // action/deny requests
+  approve_mutual_aid:   ['T1', 'T2'],                        // approve/deny mutual-aid requests
   submit_escalation:    ['T2', 'T3', 'T4', 'T5'],
 
   // ---- Exercise control (who may drive a drill) ----
@@ -113,7 +114,7 @@ const CHANNELS = {
 };
 
 /** Where each tier lands after login. */
-const DEFAULT_VIEW = { T1: 'landing', T2: 'command', T3: 'command', T4: 'command', T5: 'landing' };
+const DEFAULT_VIEW = { T1: 'landing', T2: 'command', T3: 'command', T4: 'field', T5: 'landing' };
 
 function allowedViews(role) { return NAV[role] || []; }
 function channelsFor(role) { return CHANNELS[role] || []; }

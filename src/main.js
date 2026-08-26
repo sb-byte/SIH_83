@@ -21,7 +21,8 @@ import {
   refreshAuditTrail,
   allowedChannelIds,
   findCredential,
-  fetchDemoTotp
+  fetchDemoTotp,
+  apiFetch
 } from './auth.js';
 import {
   liveIncidentData,
@@ -185,6 +186,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderVolunteerPool();
   renderInjects();
   renderTrainees();
+  renderKanban();
+  initEscalationPanel();
+  initVolunteerStation();
+  initFieldHub();
+  initTaskAndResourceModals();
   initIapForms();
   initSimulationEngine();
   initDependencySimulator();
@@ -361,8 +367,8 @@ function initAuthSystem() {
         }
         showToast(`Welcome, ${res.session.name} — District Coordination Hub (${res.session.site}) Activated`);
       } else if (tierLevel === 4) {
-        targetView = 'command';
-        showToast(`Welcome, ${res.session.name} — Tactical Strike Team Active (Field Reports & Direct T2 Escalation)`);
+        targetView = 'field';
+        showToast(`Welcome, ${res.session.name} — Tactical Field Hub Active (Direct Assignment & Rapid Report-Up)`);
       } else if (tierLevel === 5) {
         targetView = 'landing';
         showToast(`Welcome, ${res.session.name} — Aapda Mitra Volunteer Station (Radio Net CH-05 Active)`);
@@ -478,7 +484,7 @@ function initAuthSystem() {
       sound.playClick();
       const s = getAuthSession();
       if (!s) return;
-      const target = s.tierLevel === 5 ? 'landing' : 'command';
+      const target = s.tierLevel === 5 ? 'landing' : (s.tierLevel === 4 ? 'field' : 'command');
       switchView(target);
     });
   }
@@ -752,6 +758,10 @@ function applyRolePermissions() {
   const canAddAsset = isActionAuthorized('add_asset', state.mode);
   setControlVisible('add-asset-btn', canAddAsset);
 
+  // Resource Request (Tier 3 Coordinator only)
+  const canRequestAsset = isActionAuthorized('request_asset', state.mode);
+  setControlVisible('request-asset-btn', canRequestAsset);
+
   // Mutual Aid Agreement (Tier 2 only)
   const canMutualAid = isActionAuthorized('add_mutual_aid', state.mode);
   setControlVisible('add-mutual-aid-btn', canMutualAid);
@@ -764,6 +774,23 @@ function applyRolePermissions() {
   const canAddVolunteer = isActionAuthorized('add_volunteer', state.mode);
   setControlVisible('add-volunteer-btn', canAddVolunteer);
   setControlVisible('btn-open-vol-register-modal', canAddVolunteer);
+
+  // Task Creation (T2 and T3 coordinators)
+  const canCreateTask = session && ['T2', 'T3'].includes(session.tier);
+  setControlVisible('create-task-btn', canCreateTask);
+
+  // Landing Page Adaptation: T5 Volunteer Station vs Higher-tier Command Hub
+  const volStation = getEl('landing-volunteer-station');
+  const cmdBanner = getEl('landing-command-banner');
+  if (volStation && cmdBanner) {
+    if (session.tierLevel === 5) {
+      volStation.style.display = 'block';
+      cmdBanner.style.display = 'none';
+    } else {
+      volStation.style.display = 'none';
+      cmdBanner.style.display = 'block';
+    }
+  }
 
   // Incident Logging (T1-T4, hidden for T5)
   const canAddInc = isActionAuthorized('add_incident', state.mode);
@@ -812,6 +839,10 @@ function applyRolePermissions() {
   renderMutualAid();
   renderDamageTable();
   renderVolunteerPool();
+  renderKanban();
+  initVolunteerStation();
+  initFieldHub();
+  renderEscalationInbox();
 }
 
 // =========================================================================
@@ -876,6 +907,22 @@ function switchView(viewName) {
   if (viewName === 'login') {
     renderDemoProfiles('auth-demo-profiles-container');
     renderAuthAuditTable();
+  }
+
+  if (viewName === 'ics') {
+    renderKanban();
+  }
+
+  if (viewName === 'escalation') {
+    renderEscalationInbox();
+  }
+
+  if (viewName === 'landing') {
+    initVolunteerStation();
+  }
+
+  if (viewName === 'field') {
+    initFieldHub();
   }
 
   if (viewName === 'command') {
@@ -1499,10 +1546,9 @@ function renderMutualAid() {
 
   document.querySelectorAll('.mutual-aid-approve').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      // TODO: SERVER-SIDE ENFORCEMENT REQUIRED — Escalation approval permissions checked on server
-      if (!isActionAuthorized('approve_escalation')) {
+      if (!isActionAuthorized('approve_mutual_aid')) {
         sound.playCriticalAlert();
-        showToast('Unauthorized: Only Tier 1 Authority and Tier 2 Strategist can approve escalation requests.', 'alert');
+        showToast('Unauthorized: Only Tier 1 Authority and Tier 2 Strategist can approve mutual aid requests.', 'alert');
         return;
       }
 
@@ -1521,10 +1567,9 @@ function renderMutualAid() {
 
   document.querySelectorAll('.mutual-aid-deny').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      // TODO: SERVER-SIDE ENFORCEMENT REQUIRED — Escalation denial permissions checked on server
-      if (!isActionAuthorized('approve_escalation')) {
+      if (!isActionAuthorized('approve_mutual_aid')) {
         sound.playCriticalAlert();
-        showToast('Unauthorized: Only Tier 1 Authority and Tier 2 Strategist can deny escalation requests.', 'alert');
+        showToast('Unauthorized: Only Tier 1 Authority and Tier 2 Strategist can deny mutual aid requests.', 'alert');
         return;
       }
 
@@ -2024,14 +2069,678 @@ function openAssignOfficerModal(secName, branchName) {
 }
 
 function renderIcsTasks() {
-  const completed = state.tasksData.filter(t => t.completed).length;
-  const total = state.tasksData.length;
-  const pct = Math.round((completed / total) * 100);
+  renderKanban();
+}
+
+// =========================================================================
+// T3 KANBAN TASK BOARD & ASSIGNMENT CONTROLLER
+// =========================================================================
+export function renderKanban() {
+  const colOpen = getEl('kanban-open');
+  const colProgress = getEl('kanban-in_progress');
+  const colCompleted = getEl('kanban-completed');
+  if (!colOpen || !colProgress || !colCompleted) return;
+
+  colOpen.innerHTML = '';
+  colProgress.innerHTML = '';
+  colCompleted.innerHTML = '';
+
+  const scopedTasks = filterDataByJurisdiction(state.tasksData, 'site', 'region');
+  const completedCount = scopedTasks.filter(t => t.completed || t.status === 'completed').length;
+  const totalCount = scopedTasks.length || 1;
+  const pct = Math.round((completedCount / totalCount) * 100);
 
   const progressTxt = getEl('task-progress-txt');
   const progressBar = getEl('task-progress-bar');
-  if (progressTxt) progressTxt.innerText = `SECTION TASKS COMPLETION (${completed}/${total} COMPLETED - ${pct}%)`;
+  if (progressTxt) progressTxt.innerText = `SECTION TASKS COMPLETION (${completedCount}/${scopedTasks.length} COMPLETED - ${pct}%)`;
   if (progressBar) progressBar.style.width = `${pct}%`;
+
+  scopedTasks.forEach(task => {
+    const isDone = task.completed || task.status === 'completed';
+    const isProgress = !isDone && (task.status === 'in_progress' || (task.progress && task.progress > 0));
+    const targetCol = isDone ? colCompleted : (isProgress ? colProgress : colOpen);
+
+    const card = document.createElement('div');
+    card.className = 'kanban-card';
+    card.setAttribute('draggable', 'true');
+    card.dataset.taskId = task.id;
+
+    const currentStatus = isDone ? 'completed' : (isProgress ? 'in_progress' : 'open');
+    const badgeClass = task.section === 'Operations' ? 'badge-alert' :
+      task.section === 'Logistics' ? 'badge-navy' :
+        task.section === 'Planning' ? 'badge-gold' : 'badge-emerald';
+
+    card.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="kanban-card-id">${task.id}</span>
+        <span class="badge ${badgeClass}" style="font-size: 0.65rem;">${task.section || 'General'}</span>
+      </div>
+      <div class="kanban-card-title">${task.task || task.title}</div>
+      <div class="kanban-card-meta">
+        <span>👤 ${task.assignee || task.assigned_to || 'Unassigned'}</span>
+        ${task.due ? `<span>⏰ ${task.due}</span>` : ''}
+      </div>
+      <div class="kanban-card-actions">
+        <div>
+          ${currentStatus !== 'open' ? `<button class="kanban-move-btn" data-action="to-open" data-task-id="${task.id}" title="Move to Open">◀ Open</button>` : ''}
+          ${currentStatus !== 'in_progress' ? `<button class="kanban-move-btn" data-action="to-progress" data-task-id="${task.id}" title="Move to In Progress">⚡ Active</button>` : ''}
+          ${currentStatus !== 'completed' ? `<button class="kanban-move-btn" data-action="to-complete" data-task-id="${task.id}" title="Mark Complete">✔ Done ▶</button>` : ''}
+        </div>
+        <button class="kanban-move-btn btn-assign-task" data-task-id="${task.id}" data-task-title="${(task.task || task.title).replace(/"/g, '&quot;')}" style="color: #0284c7;">Assign 👤</button>
+      </div>
+    `;
+
+    targetCol.appendChild(card);
+  });
+
+  // Attach move button handlers
+  document.querySelectorAll('.kanban-move-btn[data-action]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const taskId = e.currentTarget.dataset.taskId;
+      const action = e.currentTarget.dataset.action;
+      const task = state.tasksData.find(t => t.id === taskId);
+      if (!task) return;
+
+      sound.playClick();
+      if (action === 'to-open') {
+        task.status = 'open';
+        task.completed = false;
+        task.progress = 0;
+      } else if (action === 'to-progress') {
+        task.status = 'in_progress';
+        task.completed = false;
+        task.progress = 50;
+      } else if (action === 'to-complete') {
+        task.status = 'completed';
+        task.completed = true;
+        task.progress = 100;
+      }
+
+      try {
+        await apiFetch('PATCH', `/tasks/${taskId}`, { status: task.status, progress: task.progress });
+      } catch { /* demo fallback */ }
+
+      renderKanban();
+      initFieldHub();
+      initVolunteerStation();
+      showToast(`Task ${taskId} status updated to: ${task.status.toUpperCase()}`);
+    });
+  });
+
+  // Attach assign button handlers
+  document.querySelectorAll('.btn-assign-task').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const taskId = e.currentTarget.dataset.taskId;
+      const taskTitle = e.currentTarget.dataset.taskTitle;
+      openAssignTaskModal(taskId, taskTitle);
+    });
+  });
+}
+
+function openAssignTaskModal(taskId, taskTitle) {
+  const modal = getEl('modal-assign-task');
+  const idInput = getEl('assign-task-id');
+  const titleDisplay = getEl('assign-task-title-display');
+  const select = getEl('assign-task-recipient-select');
+  if (!modal || !select) return;
+
+  if (idInput) idInput.value = taskId;
+  if (titleDisplay) titleDisplay.innerText = `${taskId}: ${taskTitle}`;
+
+  // Populate recipient list from volunteer squads + pool
+  select.innerHTML = `
+    <optgroup label="Frontline Strike Teams (T4)">
+      <option value="NDRF 03 Bn Team Bravo">NDRF 03 Bn Team Bravo (Water Rescue)</option>
+      <option value="SDRF Route 16 Lead">SDRF Route 16 Lead (Chainsaw / Debris)</option>
+      <option value="Coast Guard Drone Alpha">Coast Guard Drone Alpha (Recon)</option>
+    </optgroup>
+    <optgroup label="Aapda Mitra Volunteer Squads (T5)">
+      ${state.volunteerSquads.map(sq => `<option value="${sq.name}">${sq.name} (${sq.deployedAt || sq.site})</option>`).join('')}
+    </optgroup>
+    <optgroup label="Registered Volunteers (T5)">
+      ${state.volunteerPoolData.map(v => `<option value="${v.name} (${v.skill})">${v.name} — ${v.skill} (${v.location || v.site})</option>`).join('')}
+    </optgroup>
+  `;
+
+  sound.playClick();
+  modal.classList.remove('hidden');
+}
+
+// Modals for Task creation, assigning, and Resource request
+export function initTaskAndResourceModals() {
+  // 1. Create Task Modal
+  const createBtn = getEl('create-task-btn');
+  const createModal = getEl('modal-create-task');
+  const closeCreateBtn = getEl('close-create-task-modal');
+  const cancelCreateBtn = getEl('cancel-create-task-btn');
+  const saveCreateBtn = getEl('save-create-task-btn');
+
+  const closeCreate = () => createModal && createModal.classList.add('hidden');
+  if (createBtn && createModal) {
+    createBtn.addEventListener('click', () => {
+      sound.playClick();
+      createModal.classList.remove('hidden');
+    });
+  }
+  if (closeCreateBtn) closeCreateBtn.addEventListener('click', closeCreate);
+  if (cancelCreateBtn) cancelCreateBtn.addEventListener('click', closeCreate);
+
+  if (saveCreateBtn) {
+    saveCreateBtn.addEventListener('click', async () => {
+      const title = getEl('new-task-title')?.value.trim();
+      const section = getEl('new-task-section')?.value || 'Operations';
+      const status = getEl('new-task-status')?.value || 'open';
+      const assignee = getEl('new-task-assignee')?.value || 'Unassigned';
+
+      if (!title) {
+        showToast('Task title is required', 'alert');
+        return;
+      }
+
+      const session = getAuthSession();
+      const newTask = {
+        id: `TSK-${String(state.tasksData.length + 1).padStart(2, '0')}`,
+        section,
+        task: title,
+        title,
+        assignee,
+        assigned_to: assignee,
+        due: 'Next Period',
+        completed: status === 'completed',
+        status,
+        progress: status === 'completed' ? 100 : (status === 'in_progress' ? 50 : 0),
+        region: session ? session.region : 'Odisha',
+        site: session ? session.site : 'Bhadrak / Dhamra'
+      };
+
+      state.tasksData.unshift(newTask);
+
+      try {
+        await apiFetch('POST', '/tasks', { title, section, status, assigned_to: assignee });
+      } catch { /* demo fallback */ }
+
+      sound.playSuccess();
+      renderKanban();
+      closeCreate();
+      if (getEl('new-task-title')) getEl('new-task-title').value = '';
+      showToast(`Task created & added to board: ${title}`);
+      logActivity('TASK', `New Task created by coordinator: ${title} → Assigned to ${assignee}`);
+    });
+  }
+
+  // 2. Assign Task Modal
+  const assignModal = getEl('modal-assign-task');
+  const closeAssignBtn = getEl('close-assign-task-modal');
+  const cancelAssignBtn = getEl('cancel-assign-task-btn');
+  const saveAssignBtn = getEl('save-assign-task-btn');
+
+  const closeAssign = () => assignModal && assignModal.classList.add('hidden');
+  if (closeAssignBtn) closeAssignBtn.addEventListener('click', closeAssign);
+  if (cancelAssignBtn) cancelAssignBtn.addEventListener('click', closeAssign);
+
+  if (saveAssignBtn) {
+    saveAssignBtn.addEventListener('click', async () => {
+      const taskId = getEl('assign-task-id')?.value;
+      const recipient = getEl('assign-task-recipient-select')?.value;
+      const task = state.tasksData.find(t => t.id === taskId);
+      if (!task) return;
+
+      task.assignee = recipient;
+      task.assigned_to = recipient;
+
+      try {
+        await apiFetch('PATCH', `/tasks/${taskId}`, { assigned_to: recipient });
+      } catch { /* demo fallback */ }
+
+      sound.playSuccess();
+      renderKanban();
+      initFieldHub();
+      initVolunteerStation();
+      closeAssign();
+      showToast(`Task ${taskId} assigned to ${recipient}`);
+      logActivity('ASSIGNMENT', `Task ${taskId} assigned to ${recipient}`);
+    });
+  }
+
+  // 3. Resource Request Modal (T3 Coordinator)
+  const reqAssetBtn = getEl('request-asset-btn');
+  const reqAssetModal = getEl('modal-request-asset');
+  const closeReqAssetBtn = getEl('close-request-asset-modal');
+  const cancelReqAssetBtn = getEl('cancel-request-asset-btn');
+  const saveReqAssetBtn = getEl('save-request-asset-btn');
+
+  const closeReqAsset = () => reqAssetModal && reqAssetModal.classList.add('hidden');
+  if (reqAssetBtn && reqAssetModal) {
+    reqAssetBtn.addEventListener('click', () => {
+      sound.playClick();
+      reqAssetModal.classList.remove('hidden');
+    });
+  }
+  if (closeReqAssetBtn) closeReqAssetBtn.addEventListener('click', closeReqAsset);
+  if (cancelReqAssetBtn) cancelReqAssetBtn.addEventListener('click', closeReqAsset);
+
+  if (saveReqAssetBtn) {
+    saveReqAssetBtn.addEventListener('click', async () => {
+      const type = getEl('req-asset-type')?.value;
+      const qty = parseInt(getEl('req-asset-qty')?.value, 10) || 1;
+      const priority = getEl('req-asset-priority')?.value || 'HIGH';
+      const reason = getEl('req-asset-reason')?.value.trim() || `Urgent equipment request for ${qty}x ${type}`;
+
+      const session = getAuthSession();
+      try {
+        const res = await apiFetch('POST', '/resource-requests', {
+          type,
+          label: `${qty}x ${type}`,
+          reason: `[${priority}] ${reason}`
+        });
+
+        if (res.ok) {
+          showToast(`Resource Request Dispatched to State EOC (T2) — ID: ${res.body.data ? res.body.data.id : 'ESC-NEW'}`);
+        } else {
+          showToast(`Resource Request Logged & Routed to State EOC`);
+        }
+      } catch {
+        showToast(`Resource Request Logged & Routed to State EOC`);
+      }
+
+      sound.playSuccess();
+      closeReqAsset();
+      if (getEl('req-asset-reason')) getEl('req-asset-reason').value = '';
+      logActivity('RESOURCE REQUEST', `Coordinator requested ${qty}x ${type} (${priority}): ${reason}`);
+      renderEscalationInbox();
+    });
+  }
+}
+
+// =========================================================================
+// T5 VOLUNTEER STATION WORKFLOW
+// =========================================================================
+let isVolunteerCheckedIn = false;
+
+export function initVolunteerStation() {
+  const session = getAuthSession();
+  if (!session || session.tierLevel !== 5) return;
+
+  const siteInfo = getEl('vol-site-info');
+  const radioInfo = getEl('vol-radio-info');
+  const taskCard = getEl('vol-task-card');
+  const taskBadge = getEl('vol-task-status-badge');
+  const checkinBtn = getEl('vol-checkin-btn');
+  const checkinBadge = getEl('vol-checkin-status-badge');
+
+  if (siteInfo) siteInfo.innerText = `${session.jurisdictionLabel || session.site || 'Local Sector'} • Sector Response Unit`;
+  if (radioInfo) radioInfo.innerHTML = `Assigned Channel: <strong>CH-05 (Aapda Mitra Net - 148.550 MHz)</strong>`;
+
+  // Find assigned task
+  const myTask = state.tasksData.find(t => 
+    t.assignee?.includes('Aapda Mitra') || 
+    t.assignee?.includes(session.name) ||
+    t.site === session.site
+  ) || state.tasksData[0];
+
+  if (taskCard && myTask) {
+    taskCard.innerHTML = `
+      <div style="font-weight: 700; font-size: 0.95rem; color: var(--navy-primary); margin-bottom: 4px;">${myTask.task || myTask.title}</div>
+      <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 12px;">
+        <span>Sector: <strong>${myTask.section}</strong></span>
+        <span>Due: <strong>${myTask.due || 'ASAP'}</strong></span>
+      </div>
+    `;
+    if (taskBadge) {
+      taskBadge.className = myTask.completed ? 'badge badge-emerald' : 'badge badge-gold';
+      taskBadge.innerText = myTask.completed ? 'COMPLETED' : 'ACTIVE DUTY';
+    }
+  }
+
+  // Check-In / Check-Out Toggle
+  if (checkinBtn) {
+    checkinBtn.onclick = async () => {
+      sound.playClick();
+      isVolunteerCheckedIn = !isVolunteerCheckedIn;
+
+      if (isVolunteerCheckedIn) {
+        checkinBtn.className = 'btn btn-outline font-bold';
+        checkinBtn.innerText = 'CHECK OUT — STAND DOWN';
+        if (checkinBadge) {
+          checkinBadge.className = 'status-chip online';
+          checkinBadge.innerText = '● CHECKED IN / ON AIR';
+        }
+        showToast(`Volunteer ${session.name} checked in at ${session.site || 'station'}`);
+        try {
+          await apiFetch('POST', '/incidents', {
+            title: `Aapda Mitra Check-In: ${session.name} ON AIR`,
+            severity: 'low',
+            body: `Volunteer checked in on CH-05 at ${session.site || 'station'}`
+          });
+        } catch { /* demo fallback */ }
+      } else {
+        checkinBtn.className = 'btn btn-emerald font-bold';
+        checkinBtn.innerText = 'CHECK IN — GO ACTIVE';
+        if (checkinBadge) {
+          checkinBadge.className = 'status-chip';
+          checkinBadge.innerText = '● CHECKED OUT';
+        }
+        showToast('Checked out of volunteer station');
+      }
+    };
+  }
+
+  // 3 Status Buttons
+  document.querySelectorAll('.vol-status-btn').forEach(btn => {
+    btn.onclick = async (e) => {
+      const vstatus = e.currentTarget.dataset.vstatus;
+      sound.playClick();
+
+      if (vstatus === 'ACTIVE') {
+        showToast(`Status updated: ACTIVE ON DUTY`);
+        try {
+          await apiFetch('POST', '/incidents', {
+            title: `Volunteer Status Update: ${session.name} is ACTIVE`,
+            severity: 'low'
+          });
+        } catch { /* fallback */ }
+      } else if (vstatus === 'STANDBY') {
+        showToast(`Status updated: STANDBY AT SHELTER`);
+      } else if (vstatus === 'NEED SUPPORT') {
+        sound.playCriticalAlert();
+        showToast(`URGENT: Field Support Escalated to District Coordinator (T3)`, 'alert');
+        try {
+          await apiFetch('POST', '/escalations', {
+            kind: 'backup_request',
+            reason: `Aapda Mitra Volunteer ${session.name} requested immediate ground support at ${session.site || 'assigned sector'}`
+          });
+          renderEscalationInbox();
+        } catch { /* fallback */ }
+      }
+    };
+  });
+}
+
+// =========================================================================
+// T4 FIELD HUB WORKFLOW & RAPID REPORT-UP
+// =========================================================================
+export function initFieldHub() {
+  const session = getAuthSession();
+  if (!session || session.tierLevel !== 4) return;
+
+  const subTitle = getEl('field-hub-subtitle');
+  const teamBadge = getEl('field-hub-team-badge');
+  const siteInfo = getEl('field-site-info');
+  const radioInfo = getEl('field-radio-info');
+  const taskCard = getEl('field-task-card');
+  const taskBadge = getEl('field-task-status-badge');
+
+  if (subTitle) subTitle.innerText = `${session.team || 'NDRF Strike Team Alpha'} • Tactical Field Ops`;
+  if (teamBadge) teamBadge.innerText = `T4 • ${session.team || 'STRIKE TEAM'}`;
+  if (siteInfo) siteInfo.innerText = session.site || 'Dhamra / Rajnagar Sector';
+  if (radioInfo) radioInfo.innerText = 'CH-02 (Ops Net) / CH-04';
+
+  // Find T4 current assignment
+  const activeTask = state.tasksData.find(t => 
+    !t.completed && (t.assignee?.includes('NDRF') || t.assignee?.includes('SDRF') || t.site === session.site)
+  ) || state.tasksData[0];
+
+  if (taskCard && activeTask) {
+    taskCard.innerHTML = `
+      <div style="font-weight: 700; font-size: 1rem; color: var(--navy-primary); margin-bottom: 6px;">${activeTask.task || activeTask.title}</div>
+      <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; gap: 14px;">
+        <span>Division: <strong>${activeTask.section}</strong></span>
+        <span>Target: <strong>${activeTask.due || 'Operational Period 2'}</strong></span>
+      </div>
+    `;
+    if (taskBadge) {
+      taskBadge.className = activeTask.completed ? 'badge badge-emerald' : 'badge badge-alert';
+      taskBadge.innerText = activeTask.completed ? 'COMPLETED' : 'IN PROGRESS';
+    }
+  }
+
+  // 3 Tactical Big Buttons
+  const btnComplete = getEl('field-btn-complete');
+  const btnBackup = getEl('field-btn-backup');
+  const btnHazard = getEl('field-btn-hazard');
+
+  if (btnComplete) {
+    btnComplete.onclick = async () => {
+      sound.playSuccess();
+      if (activeTask) {
+        activeTask.completed = true;
+        activeTask.status = 'completed';
+        activeTask.progress = 100;
+        try {
+          await apiFetch('PATCH', `/tasks/${activeTask.id}`, { status: 'completed', progress: 100 });
+        } catch { /* fallback */ }
+      }
+      renderKanban();
+      initFieldHub();
+      showToast('✅ Assignment Marked COMPLETE & Reported Up to Command');
+      logActivity('STRIKE TEAM', `Task marked complete by frontline team: ${activeTask ? (activeTask.task || activeTask.title) : 'Active Mission'}`);
+    };
+  }
+
+  if (btnBackup) {
+    btnBackup.onclick = async () => {
+      sound.playCriticalAlert();
+      try {
+        const res = await apiFetch('POST', '/escalations', {
+          kind: 'backup_request',
+          reason: `Frontline Strike Team (${session.name}, ${session.team || session.site}) requests immediate tactical backup.`
+        });
+        if (res.ok) {
+          showToast('🆘 URGENT BACKUP REQUEST Escalated directly to Tier 2 Strategist!', 'alert');
+        } else {
+          showToast('🆘 Backup Request Dispatched to State EOC', 'alert');
+        }
+      } catch {
+        showToast('🆘 Backup Request Dispatched to State EOC', 'alert');
+      }
+      logActivity('ESCALATION', `T4 Strike Team (${session.name}) requested immediate field backup.`);
+      renderEscalationInbox();
+    };
+  }
+
+  if (btnHazard) {
+    btnHazard.onclick = async () => {
+      sound.playCriticalAlert();
+      const hazardTitle = `EMERGENCY HAZARD: Road breach / severe obstruction at ${session.site || 'operational sector'}`;
+      try {
+        await apiFetch('POST', '/incidents', {
+          title: hazardTitle,
+          severity: 'critical',
+          body: `Reported by Frontline Lead ${session.name} (${session.team || session.site})`
+        });
+      } catch { /* fallback */ }
+
+      state.incidents.unshift({
+        id: `INC-${Math.floor(1000 + Math.random() * 9000)}`,
+        time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }) + ' IST',
+        section: 'OPS',
+        severity: 'CRITICAL',
+        title: hazardTitle,
+        details: `Reported via T4 Rapid Report-up by ${session.name}. Immediate triage required.`
+      });
+
+      renderIncidents();
+      showToast('⚠️ Critical Hazard Alert Broadcast to Incident Stream!', 'alert');
+      logActivity('HAZARD', `Frontline team flagged critical hazard at ${session.site || 'sector'}`);
+    };
+  }
+}
+
+// =========================================================================
+// ESCALATION REQUESTS & INBOX CONTROLLER
+// =========================================================================
+export function initEscalationPanel() {
+  const submitBtn = getEl('esc-submit-btn');
+  const refreshBtn = getEl('esc-refresh-btn');
+
+  if (submitBtn) {
+    submitBtn.addEventListener('click', async () => {
+      const kind = getEl('esc-kind-select')?.value || 'general';
+      const reason = getEl('esc-reason-input')?.value.trim();
+
+      if (!reason) {
+        showToast('Please provide a reason / details for the escalation', 'alert');
+        return;
+      }
+
+      sound.playClick();
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'SUBMITTING…';
+
+      try {
+        const res = await apiFetch('POST', '/escalations', { kind, reason });
+        if (res.ok) {
+          sound.playSuccess();
+          showToast(`Escalation request submitted & routed to ${res.body.data ? res.body.data.routed_to_tier : 'supervising tier'}!`);
+          if (getEl('esc-reason-input')) getEl('esc-reason-input').value = '';
+          logActivity('ESCALATION', `New escalation submitted (${kind}): ${reason.slice(0, 50)}...`);
+        } else {
+          showToast(res.body.message || 'Failed to submit escalation', 'alert');
+        }
+      } catch {
+        showToast('Escalation recorded', 'info');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'SUBMIT ESCALATION →';
+        renderEscalationInbox();
+      }
+    });
+  }
+
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+      sound.playClick();
+      renderEscalationInbox();
+      showToast('Escalation inbox refreshed');
+    });
+  }
+}
+
+export async function renderEscalationInbox() {
+  const container = getEl('esc-inbox-list');
+  const inboxTitle = getEl('esc-inbox-title');
+  if (!container) return;
+
+  const session = getAuthSession();
+  if (!session) {
+    container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 24px 0;">Sign in to view escalations.</p>`;
+    return;
+  }
+
+  // T1 does not originate escalations; hide submit panel for T1
+  const submitPanel = getEl('escalation-submit-panel');
+  if (submitPanel) {
+    submitPanel.style.display = session.tier === 'T1' ? 'none' : 'block';
+  }
+
+  if (inboxTitle) {
+    if (['T1', 'T2'].includes(session.tier)) inboxTitle.innerText = '📥 Actionable Escalation Inbox (Approval Authority)';
+    else if (session.tier === 'T3') inboxTitle.innerText = '📥 District Triage Inbox (Forward to T2)';
+    else inboxTitle.innerText = '📤 My Submitted Escalations';
+  }
+
+  try {
+    const res = await apiFetch('GET', '/escalations');
+    const rows = (res.ok && Array.isArray(res.body.data)) ? res.body.data : [];
+
+    if (rows.length === 0) {
+      container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 24px 0;">No active escalation requests in your queue.</p>`;
+      return;
+    }
+
+    container.innerHTML = rows.map(r => {
+      const statusClass = r.status === 'approved' ? 'status-approved' : (r.status === 'denied' ? 'status-denied' : 'status-pending');
+      const badgeClass = r.status === 'approved' ? 'badge-emerald' : (r.status === 'denied' ? 'badge-alert' : 'badge-gold');
+      const canAction = ['T1', 'T2'].includes(session.tier) && r.status === 'pending';
+      const canForward = session.tier === 'T3' && r.status === 'pending' && r.routed_to_tier === 'T3';
+
+      return `
+        <div class="escalation-card ${statusClass}" data-esc-id="${r.id}">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div>
+              <span class="mono font-bold text-xs" style="color: var(--navy-primary);">${r.id}</span>
+              <span class="tier-pill-badge" style="font-size: 0.65rem; margin-left: 6px;">Origin: ${r.origin_role}</span>
+              <span class="mono text-xs text-muted" style="margin-left: 6px;">→ Routed to: <strong>${r.routed_to_tier}</strong></span>
+            </div>
+            <span class="badge ${badgeClass}">${r.status.toUpperCase()}</span>
+          </div>
+          <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            [${r.kind ? r.kind.toUpperCase() : 'GENERAL'}]: ${r.reason}
+          </div>
+          <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px;">
+            <span>Location: ${r.region || '—'} · ${r.site || '—'}</span> · 
+            <span>Logged: ${r.created_at ? new Date(r.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : 'Recent'}</span>
+            ${r.triage_note ? `<div style="margin-top: 4px; color: #0369a1;"><em>Triage Note: ${r.triage_note}</em></div>` : ''}
+          </div>
+
+          ${canAction ? `
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+              <button class="btn btn-xs btn-emerald font-bold esc-approve-btn" data-esc-id="${r.id}">APPROVE REQUEST</button>
+              <button class="btn btn-xs btn-alert font-bold esc-deny-btn" data-esc-id="${r.id}">DENY</button>
+            </div>
+          ` : ''}
+
+          ${canForward ? `
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+              <button class="btn btn-xs btn-navy font-bold esc-forward-btn" data-esc-id="${r.id}">FORWARD TO STATE T2 →</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+
+    // Attach approve/deny handlers
+    container.querySelectorAll('.esc-approve-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.dataset.escId;
+        sound.playClick();
+        const res2 = await apiFetch('POST', `/escalations/${id}/approve`);
+        if (res2.ok) {
+          showToast(`Escalation request #${id} APPROVED`);
+          logActivity('ESCALATION', `Approved escalation #${id}`);
+        } else {
+          showToast(res2.body.message || 'Error actioning escalation', 'alert');
+        }
+        renderEscalationInbox();
+      });
+    });
+
+    container.querySelectorAll('.esc-deny-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.dataset.escId;
+        sound.playClick();
+        const res2 = await apiFetch('POST', `/escalations/${id}/deny`);
+        if (res2.ok) {
+          showToast(`Escalation request #${id} DENIED`);
+          logActivity('ESCALATION', `Denied escalation #${id}`);
+        } else {
+          showToast(res2.body.message || 'Error actioning escalation', 'alert');
+        }
+        renderEscalationInbox();
+      });
+    });
+
+    // Attach forward handler (T3)
+    container.querySelectorAll('.esc-forward-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.dataset.escId;
+        const note = prompt('Enter triage notes to attach for State EOC (Tier 2):', 'Verified on ground by District Hub. Forwarding for immediate state-level resource release.');
+        if (note === null) return;
+        sound.playClick();
+        const res2 = await apiFetch('POST', `/escalations/${id}/forward`, { note });
+        if (res2.ok) {
+          showToast(`Escalation #${id} triaged & forwarded to State EOC (T2)`);
+          logActivity('ESCALATION', `T3 Coordinator forwarded escalation #${id} to T2`);
+        } else {
+          showToast(res2.body.message || 'Error forwarding escalation', 'alert');
+        }
+        renderEscalationInbox();
+      });
+    });
+
+  } catch {
+    container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 24px 0;">No active escalation requests in your queue.</p>`;
+  }
 }
 
 // =========================================================================
@@ -2261,9 +2970,27 @@ function initIapForms() {
 
   const signBtn = getEl('sign-iap-btn');
   if (signBtn) {
-    signBtn.addEventListener('click', () => {
+    signBtn.addEventListener('click', async () => {
+      if (!isActionAuthorized('sign_iap', state.mode)) {
+        sound.playCriticalAlert();
+        showToast('Unauthorized: Only Tier 1 Authority can sign and certify IAP declarations.', 'alert');
+        return;
+      }
       sound.playClick();
-      showToast('IAP OPERATIONAL PERIOD 2 DIGITALLY SIGNED & CERTIFIED');
+      const session = getAuthSession();
+      const title = `IAP OPERATIONAL PERIOD 2 — CERTIFIED & SIGNED BY ${session ? session.name : 'NDMA AUTHORITY'}`;
+      try {
+        const res = await apiFetch('POST', '/declarations', { title, status: 'active', region: session ? session.region : null });
+        if (res.ok) {
+          showToast(`IAP Certified & Real Declaration Registered (ID: ${res.body.data ? res.body.data.id : 'DEC-01'})`);
+          logActivity('COMMAND', `IAP Declaration registered and digitally certified by ${session ? session.name : 'NDMA Authority'}`);
+        } else {
+          showToast('IAP OPERATIONAL PERIOD 2 DIGITALLY SIGNED & CERTIFIED');
+        }
+      } catch {
+        showToast('IAP OPERATIONAL PERIOD 2 DIGITALLY SIGNED & CERTIFIED');
+      }
+      renderIapForm('202', formContainer);
     });
   }
 
@@ -2277,6 +3004,11 @@ function initIapForms() {
 }
 
 function renderIapForm(formNum, container) {
+  const session = getAuthSession();
+  const approverName = (session && session.name) ? `${session.name} (${session.designation || 'NDMA Authority'})` : 'Shri Rajesh Verma, IAS (NDMA National Command)';
+  const now = new Date();
+  const certDateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + ' ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ' IST';
+
   if (formNum === '202') {
     container.innerHTML = `
       <div class="nims-form-wrapper">
@@ -2311,8 +3043,8 @@ function renderIapForm(formNum, container) {
             </div>
           </div>
           <div style="margin-top: 6px; display: flex; justify-content: space-between; font-size: 0.75rem;">
-            <span>APPROVED BY: <strong class="text-saffron">Shri R. Mohanty, IAS (State IC)</strong></span>
-            <span class="mono text-emerald font-bold">CERTIFIED: 2026-08-15 13:35 IST</span>
+            <span>APPROVED BY: <strong class="text-saffron">${approverName}</strong></span>
+            <span class="mono text-emerald font-bold">CERTIFIED: ${certDateStr}</span>
           </div>
         </div>
       </div>
@@ -2360,6 +3092,8 @@ function renderIapForm(formNum, container) {
     }, 50);
 
   } else if (formNum === '203') {
+    const icName = (session && session.tierLevel <= 2) ? session.name : 'Shri R. Mohanty, IAS';
+    const icAgency = (session && session.region) ? `${session.region} SDMA` : 'SDMA Odisha / NDMA';
     container.innerHTML = `
       <div class="nims-form-wrapper">
         <div class="nims-form-header" style="border-bottom: 2px solid var(--border-color); padding-bottom: 6px;">
@@ -2368,7 +3102,7 @@ function renderIapForm(formNum, container) {
         </div>
         <table class="brutal-table" style="margin-top: 10px;">
           <tr><th>POSITION</th><th>ASSIGNED OFFICER</th><th>AGENCY</th><th>RADIO CHANNEL</th></tr>
-          <tr><td>Incident Commander</td><td>Shri R. Mohanty, IAS</td><td>SDMA Odisha</td><td>Command Net (155.475)</td></tr>
+          <tr><td>Incident Commander</td><td><strong>${icName}</strong></td><td>${icAgency}</td><td>Command Net (155.475)</td></tr>
           <tr><td>Operations Chief</td><td>DIG S. K. Verma</td><td>NDRF HQ</td><td>Ops Net (154.280)</td></tr>
           <tr><td>Planning Chief</td><td>Dr. P. C. Dash</td><td>OSDMA</td><td>Command Net</td></tr>
           <tr><td>Logistics Chief</td><td>Shri Alok Mishra</td><td>Civil Supplies</td><td>Logistics Net (153.860)</td></tr>

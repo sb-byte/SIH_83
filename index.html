@@ -168,6 +168,12 @@
         <button class="nav-tab" data-view="reports" id="nav-tab-reports">
           AAR & DAMAGE AUDIT
         </button>
+        <button class="nav-tab" data-view="field" id="nav-tab-field">
+          FIELD HUB
+        </button>
+        <button class="nav-tab" data-view="escalation" id="nav-tab-escalation">
+          ESCALATION
+        </button>
       </div>
 
       <!-- Compact Active Incident Ticker Breadcrumb -->
@@ -479,36 +485,73 @@
     <!-- VIEW: VOLUNTEER STATION (AAPDA MITRA)                                     -->
     <!-- ========================================================================= -->
     <section id="view-landing" class="view-section">
-      <div class="volunteer-portal-card"
-        style="max-width: 960px; margin: 30px auto; background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-        <div
-          style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
+      <!-- Higher-tier (T1/T2/T3) landing banner — shown/hidden by JS -->
+      <div id="landing-command-banner" style="max-width: 960px; margin: 30px auto 0; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; display: none;">
+        <h2 style="margin: 0 0 6px; color: var(--navy-primary);">UNITY EOC — COMMAND HUB</h2>
+        <p style="margin: 0; font-size: 0.88rem; color: var(--text-muted);">Use the nav tabs above to access Situational GIS, ICS, Logistics &amp; SACHET, Simulation, and Reports.</p>
+        <div style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-navy font-bold launch-view-btn" data-view="command">SITUATIONAL GIS &amp; TOC →</button>
+          <button class="btn btn-outline font-bold launch-view-btn" data-view="ics">INCIDENT COMMAND →</button>
+          <button class="btn btn-outline font-bold launch-view-btn" data-view="escalation">ESCALATION INBOX →</button>
+        </div>
+      </div>
+
+      <!-- T5 Volunteer Station — shown/hidden by JS -->
+      <div id="landing-volunteer-station" class="volunteer-portal-card" style="max-width: 960px; margin: 30px auto; background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
           <div style="display: flex; align-items: center; gap: 14px;">
             <div style="font-size: 2rem;">🏛️</div>
             <div>
-              <h2 style="margin: 0; font-size: 1.3rem; color: var(--navy-primary);">आपदा मित्र स्वयंसेवक स्टेशन | Aapda
-                Mitra Volunteer Station</h2>
-              <div style="font-size: 0.85rem; color: var(--text-muted);">National Disaster Management Authority • Ground
-                Volunteer Operations &amp; Radio Net</div>
+              <h2 style="margin: 0; font-size: 1.3rem; color: var(--navy-primary);">आपदा मित्र स्वयंसेवक स्टेशन | Aapda Mitra Volunteer Station</h2>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">National Disaster Management Authority • Ground Volunteer Operations &amp; Radio Net</div>
             </div>
           </div>
+          <div id="vol-checkin-status-badge" class="status-chip" style="font-size: 0.75rem;">● CHECKED OUT</div>
         </div>
+
+        <!-- Site Info Row -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 18px;">
-          <div
-            style="background: var(--bg-card); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
+          <div style="background: var(--bg-card); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
             <h4 style="margin: 0 0 10px 0; color: var(--text-main);">Tactical Radio Net</h4>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Assigned Channel:
-              <strong>CH-05 (Aapda Mitra Net - 146.520 MHz)</strong>
-            </p>
+            <p id="vol-radio-info" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Assigned Channel: <strong>CH-05 (Aapda Mitra Net - 146.520 MHz)</strong></p>
             <div class="status-chip online">● TRANSMITTER ACTIVE</div>
           </div>
-          <div
-            style="background: var(--bg-card); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
+          <div style="background: var(--bg-card); padding: 16px; border-radius: 6px; border: 1px solid var(--border-color);">
             <h4 style="margin: 0 0 10px 0; color: var(--text-main);">Assigned Jurisdiction</h4>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Local District Sector •
-              Emergency Operations Roster</p>
+            <p id="vol-site-info" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Local District Sector • Emergency Operations Roster</p>
             <span class="tier-pill-badge tier5-badge">T5 • VOLUNTEER CLEARANCE</span>
           </div>
+        </div>
+
+        <!-- Assigned Task Card -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; padding: 16px; margin-bottom: 18px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: var(--text-main);">📋 Current Assignment</h4>
+            <span id="vol-task-status-badge" class="badge badge-gold">AWAITING TASK</span>
+          </div>
+          <div id="vol-task-card">
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">No task assigned. Stand by for coordinator instructions via radio net.</p>
+          </div>
+        </div>
+
+        <!-- Check-In / Check-Out Toggle -->
+        <div style="margin-bottom: 18px; text-align: center;">
+          <button id="vol-checkin-btn" class="btn btn-emerald font-bold" style="width: 100%; padding: 16px; font-size: 1.1rem; letter-spacing: 0.1em;">
+            CHECK IN — GO ACTIVE
+          </button>
+        </div>
+
+        <!-- 3 Status Buttons -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+          <button id="vol-status-active-btn" class="btn btn-emerald font-bold vol-status-btn" data-vstatus="ACTIVE" style="padding: 14px 6px; font-size: 0.85rem;">
+            ✅ ACTIVE
+          </button>
+          <button id="vol-status-standby-btn" class="btn btn-outline font-bold vol-status-btn" data-vstatus="STANDBY" style="padding: 14px 6px; font-size: 0.85rem;">
+            ⏸ STANDBY
+          </button>
+          <button id="vol-status-support-btn" class="btn btn-alert font-bold vol-status-btn" data-vstatus="NEED SUPPORT" style="padding: 14px 6px; font-size: 0.85rem;">
+            🆘 NEED SUPPORT
+          </button>
         </div>
       </div>
     </section>
@@ -879,15 +922,29 @@
               <!-- Rendered dynamically -->
             </div>
 
-            <!-- Task Tracker Footer -->
+            <!-- Task Kanban Board -->
             <div class="task-tracker-footer">
               <div class="task-tracker-meta">
-                <span class="font-bold text-xs" id="task-progress-txt">SECTION TASKS COMPLETION (5/7 COMPLETED -
-                  71.4%)</span>
-                <span class="mono text-xs text-saffron">NEXT BRIEFING: 01:29:45</span>
+                <span class="font-bold text-xs" id="task-progress-txt">SECTION TASKS COMPLETION (5/7 COMPLETED - 71.4%)</span>
+                <button id="create-task-btn" class="btn btn-xs btn-navy font-bold" style="margin-left: auto;">+ CREATE TASK</button>
               </div>
-              <div class="brutal-progress-bar">
+              <div class="brutal-progress-bar" style="margin-bottom: 12px;">
                 <div class="brutal-progress-fill" id="task-progress-bar" style="width: 71.4%;"></div>
+              </div>
+              <!-- Kanban Columns -->
+              <div id="kanban-board" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; min-height: 160px;">
+                <div class="kanban-col" data-kanban-status="open" style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;">
+                  <div style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted); letter-spacing: 0.08em; margin-bottom: 8px; text-transform: uppercase;">OPEN</div>
+                  <div id="kanban-open" class="kanban-cards-list"></div>
+                </div>
+                <div class="kanban-col" data-kanban-status="in_progress" style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;">
+                  <div style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted); letter-spacing: 0.08em; margin-bottom: 8px; text-transform: uppercase;">IN PROGRESS</div>
+                  <div id="kanban-in_progress" class="kanban-cards-list"></div>
+                </div>
+                <div class="kanban-col" data-kanban-status="completed" style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;">
+                  <div style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted); letter-spacing: 0.08em; margin-bottom: 8px; text-transform: uppercase;">COMPLETED</div>
+                  <div id="kanban-completed" class="kanban-cards-list"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -908,6 +965,7 @@
               <h2 class="head-text">NDRF &amp; RESCUE ASSETS LIFECYCLE</h2>
             </div>
             <button id="add-asset-btn" class="btn btn-xs btn-saffron font-bold">+ REGISTER ASSET</button>
+            <button id="request-asset-btn" class="btn btn-xs btn-outline font-bold">+ REQUEST ASSET</button>
           </div>
 
           <div class="asset-search-row">
@@ -1579,6 +1637,103 @@
       </div>
     </section>
 
+    <!-- ========================================================================= -->
+    <!-- VIEW 7: T4 FIELD HUB — Tactical Assignment & Report-Up                   -->
+    <!-- ========================================================================= -->
+    <section id="view-field" class="view-section">
+      <div style="max-width: 700px; margin: 30px auto; padding: 0 16px;">
+
+        <!-- Header -->
+        <div style="background: var(--navy-primary); color: #fff; border-radius: 8px 8px 0 0; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 1.1rem; font-weight: bold; letter-spacing: 0.05em;">⚡ TACTICAL FIELD HUB</div>
+            <div id="field-hub-subtitle" style="font-size: 0.8rem; opacity: 0.75; margin-top: 2px;">Strike Team • Field Operations</div>
+          </div>
+          <div id="field-hub-team-badge" class="tier-pill-badge tier4-badge">T4 • FRONTLINE</div>
+        </div>
+
+        <!-- Current Assignment -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-top: none; padding: 20px 24px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <h3 style="margin: 0; font-size: 1rem; color: var(--text-main);">📋 Current Assignment</h3>
+            <span id="field-task-status-badge" class="badge badge-gold" style="font-size: 0.75rem;">NO TASK</span>
+          </div>
+          <div id="field-task-card" style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: 6px; padding: 14px; margin-bottom: 0;">
+            <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Awaiting assignment from coordinator. Monitor radio net for instructions.</p>
+          </div>
+        </div>
+
+        <!-- Site & Team Info -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-top: none; padding: 14px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;">Site / Sector</div>
+            <div id="field-site-info" style="font-size: 0.9rem; font-weight: bold; color: var(--text-main);">—</div>
+          </div>
+          <div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;">Radio Channel</div>
+            <div id="field-radio-info" style="font-size: 0.9rem; font-weight: bold; color: var(--text-main);">CH-02 / CH-04</div>
+          </div>
+        </div>
+
+        <!-- Report-Up Buttons: 3 Big Tactical Actions -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-top: none; border-radius: 0 0 8px 8px; padding: 20px 24px;">
+          <div style="font-size: 0.75rem; font-weight: bold; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px;">REPORT TO COMMAND</div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button id="field-btn-complete" class="btn font-bold" style="padding: 18px; font-size: 1rem; background: #1a7f4b; color: #fff; border: none; border-radius: 6px; letter-spacing: 0.06em; cursor: pointer;">
+              ✅ TASK COMPLETE
+            </button>
+            <button id="field-btn-backup" class="btn font-bold" style="padding: 18px; font-size: 1rem; background: #d97706; color: #fff; border: none; border-radius: 6px; letter-spacing: 0.06em; cursor: pointer;">
+              🆘 NEED BACKUP
+            </button>
+            <button id="field-btn-hazard" class="btn font-bold" style="padding: 18px; font-size: 1rem; background: #dc2626; color: #fff; border: none; border-radius: 6px; letter-spacing: 0.06em; cursor: pointer;">
+              ⚠️ HAZARD REPORT
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 8: ESCALATION — Submit & Inbox (All tiers, role-appropriate)          -->
+    <!-- ========================================================================= -->
+    <section id="view-escalation" class="view-section">
+      <div style="max-width: 960px; margin: 30px auto; padding: 0 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+        <!-- Left: Submit Form (T2/T3/T4/T5) -->
+        <div id="escalation-submit-panel" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
+          <h3 style="margin: 0 0 14px; color: var(--navy-primary);">🔼 Submit Escalation Request</h3>
+          <div class="form-field" style="margin-bottom: 12px;">
+            <label class="field-lbl">Kind</label>
+            <select id="esc-kind-select" class="field-input">
+              <option value="general">General — Situation update requiring senior action</option>
+              <option value="resource">Resource — Equipment/personnel gap</option>
+              <option value="authority">Authority — Need decision beyond my tier</option>
+              <option value="backup_request">Backup — Immediate field reinforcement needed</option>
+            </select>
+          </div>
+          <div class="form-field" style="margin-bottom: 16px;">
+            <label class="field-lbl">Reason / Details</label>
+            <textarea id="esc-reason-input" class="field-input" rows="4" placeholder="Describe the situation clearly. Include location, what's needed, and urgency level." style="resize: vertical;"></textarea>
+          </div>
+          <button id="esc-submit-btn" class="btn btn-saffron font-bold" style="width: 100%;">SUBMIT ESCALATION →</button>
+          <div id="esc-submit-feedback" style="margin-top: 10px; font-size: 0.8rem; color: var(--text-muted); display: none;"></div>
+        </div>
+
+        <!-- Right: Inbox (T1/T2/T3 see incoming; T4/T5 see own submissions) -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+            <h3 style="margin: 0; color: var(--navy-primary);" id="esc-inbox-title">📥 Escalation Inbox</h3>
+            <button id="esc-refresh-btn" class="btn btn-xs btn-outline font-bold">REFRESH</button>
+          </div>
+          <div id="esc-inbox-list" style="max-height: 420px; overflow-y: auto;">
+            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 24px 0;">Loading escalations…</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
   </main>
 
   <!-- ========================================================================= -->
@@ -2144,6 +2299,128 @@
       <div class="modal-actions justify-between">
         <button class="btn btn-outline-danger font-bold" id="btn-lock-session">LOCK SESSION / LOGOUT</button>
         <button class="btn btn-navy font-bold" id="close-switcher-btn">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 13: CREATE KANBAN TASK -->
+  <div id="modal-create-task" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 class="modal-title font-bold">CREATE INCIDENT COMMAND TASK</h3>
+        <button class="modal-x-btn" id="close-create-task-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-field">
+          <label class="field-lbl">TASK TITLE / DIRECTIVE</label>
+          <input type="text" id="new-task-title" class="field-input" placeholder="e.g. Deploy auxiliary pumps to Bhadrak water plant" />
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-lbl">SECTION</label>
+            <select id="new-task-section" class="field-input">
+              <option value="Operations">Operations</option>
+              <option value="Logistics">Logistics</option>
+              <option value="Planning">Planning</option>
+              <option value="Finance">Finance</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="field-lbl">INITIAL STATUS</label>
+            <select id="new-task-status" class="field-input">
+              <option value="open">Open</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">ASSIGN TO VOLUNTEER SQUAD / UNIT</label>
+          <select id="new-task-assignee" class="field-input">
+            <option value="NDRF 03 Bn Team Bravo">NDRF 03 Bn Team Bravo (T4 Strike Team)</option>
+            <option value="SDRF Route 16 Lead">SDRF Route 16 Lead (T4 Strike Team)</option>
+            <option value="Dhamra Coastal Aapda Mitra Squad">Dhamra Coastal Aapda Mitra Squad (T5 Volunteer)</option>
+            <option value="Bhadrak Relief Distribution Squad">Bhadrak Relief Distribution Squad (T5 Volunteer)</option>
+            <option value="Kendrapara Creek Recon Squad">Kendrapara Creek Recon Squad (T5 Volunteer)</option>
+            <option value="Awaiting Assignment">Unassigned</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancel-create-task-btn">CANCEL</button>
+        <button class="btn btn-navy font-bold" id="save-create-task-btn">CREATE TASK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 14: ASSIGN TASK TO VOLUNTEER -->
+  <div id="modal-assign-task" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 class="modal-title font-bold">ASSIGN TASK TO FRONTLINE / VOLUNTEER</h3>
+        <button class="modal-x-btn" id="close-assign-task-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <input type="hidden" id="assign-task-id" />
+        <div class="form-field">
+          <label class="field-lbl">TASK DIRECTIVE</label>
+          <div id="assign-task-title-display" class="font-bold text-sm text-navy mb-2" style="background: var(--bg-canvas); padding: 8px; border-radius: 4px; border: 1px solid var(--border-color);"></div>
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">SELECT VOLUNTEER / UNIT</label>
+          <select id="assign-task-recipient-select" class="field-input">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancel-assign-task-btn">CANCEL</button>
+        <button class="btn btn-emerald font-bold" id="save-assign-task-btn">ASSIGN &amp; DISPATCH</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 15: RESOURCE REQUEST (T3 COORDINATOR) -->
+  <div id="modal-request-asset" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 class="modal-title font-bold">REQUEST EMERGENCY RESOURCE (T3 → T2)</h3>
+        <button class="modal-x-btn" id="close-request-asset-modal">✕</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-field">
+          <label class="field-lbl">RESOURCE TYPE</label>
+          <select id="req-asset-type" class="field-input">
+            <option value="Water Rescue">Inflatable Rescue Boats (IRB)</option>
+            <option value="Heavy Vehicle">High-Water Rescue Trucks (4x4)</option>
+            <option value="UAV Drone">Aerial FLIR Reconnaissance Drone</option>
+            <option value="Generator">Mobile 50kVA Diesel Generator</option>
+            <option value="Medical">Mobile Emergency Trauma Unit</option>
+            <option value="Dewatering">High-Capacity Dewatering Pumps</option>
+          </select>
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="field-lbl">QUANTITY</label>
+            <input type="number" id="req-asset-qty" class="field-input" value="2" min="1" max="50" />
+          </div>
+          <div class="form-field">
+            <label class="field-lbl">URGENCY PRIORITY</label>
+            <select id="req-asset-priority" class="field-input">
+              <option value="HIGH">HIGH (Deploy &lt; 2 hrs)</option>
+              <option value="CRITICAL">CRITICAL (Immediate Surge)</option>
+              <option value="MEDIUM">MEDIUM (Next Operational Period)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-lbl">OPERATIONAL JUSTIFICATION / SITE DESTINATION</label>
+          <textarea id="req-asset-reason" class="field-input" rows="3" placeholder="e.g. Surge in creek overflow at Dhamra shelter requires 2 extra IRBs for night evacuation."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancel-request-asset-btn">CANCEL</button>
+        <button class="btn btn-saffron font-bold" id="save-request-asset-btn">TRANSMIT REQUEST TO T2 →</button>
       </div>
     </div>
   </div>
