@@ -34,13 +34,13 @@ const ROSTER = [
   // ---- TIER 1 — Authority (national oversight). 2FA mandatory. ------------
   {
     cred: 'NDMA-AUTH-01', role: 'T1', region: NATIONAL, site: null, team: null,
-    name: 'Shri Rajesh Verma, IAS', avatar: 'NDMA',
+    name: 'Shri Rajesh Verma, IAS', avatar: '🏛️',
     designation: 'Member Secretary & National Incident Director',
     jurisdictionLabel: 'National Command (NDMA New Delhi)',
   },
   {
     cred: 'NDMA-AUTH-02', role: 'T1', region: NATIONAL, site: null, team: null,
-    name: 'Smt. Ananya Sen, IAS', avatar: 'NDMA',
+    name: 'Smt. Ananya Sen, IAS', avatar: '🛡️',
     designation: 'Special Relief Commissioner & Executive Authority',
     jurisdictionLabel: 'Eastern Regional Command (Kolkata Hub)',
   },
@@ -48,13 +48,13 @@ const ROSTER = [
   // ---- TIER 2 — Strategist (one region). 2FA mandatory. -------------------
   {
     cred: 'STRAT-OD-01', role: 'T2', region: REGION_OD, site: null, team: null,
-    name: 'Dr. P. K. Mohapatra, OAS', avatar: 'NDMA',
+    name: 'Dr. P. K. Mohapatra, OAS', avatar: '🌊',
     designation: 'Regional Operations Chief & Resource Allocator',
     jurisdictionLabel: 'Odisha State EOC (Bhubaneswar)',
   },
   {
     cred: 'STRAT-WB-02', role: 'T2', region: REGION_WB, site: null, team: null,
-    name: 'Shri A. K. Banerjee, WBCS', avatar: 'NDMA',
+    name: 'Shri A. K. Banerjee, WBCS', avatar: '🌿',
     designation: 'State Disaster Logistics Strategist',
     jurisdictionLabel: 'West Bengal State EOC (Kolkata / Sunderbans)',
   },
@@ -62,13 +62,13 @@ const ROSTER = [
   // ---- TIER 3 — Coordinator (one site). ----------------------------------
   {
     cred: 'COORD-BHK-01', role: 'T3', region: REGION_OD, site: SITE_BHADRAK, team: null,
-    name: 'Capt. S. R. Nayak', avatar: '',
+    name: 'Capt. S. R. Nayak', avatar: '⚓',
     designation: 'District Incident Commander',
     jurisdictionLabel: 'Bhadrak District Incident Hub (Dhamra Sector)',
   },
   {
     cred: 'COORD-KNP-02', role: 'T3', region: REGION_OD, site: SITE_KENDRAPARA, team: null,
-    name: 'Maj. R. C. Pradhan', avatar: '',
+    name: 'Maj. R. C. Pradhan', avatar: '🛶',
     designation: 'District Incident Commander',
     jurisdictionLabel: 'Kendrapara Coastal Incident Command Post',
   },
@@ -76,13 +76,13 @@ const ROSTER = [
   // ---- TIER 4 — Frontline (task/team scope). -----------------------------
   {
     cred: 'TACT-NDRF-01', role: 'T4', region: REGION_OD, site: SITE_BHADRAK, team: TEAM_NDRF,
-    name: 'SI Manoj Kumar', avatar: '',
+    name: 'SI Manoj Kumar', avatar: '🚤',
     designation: 'NDRF Tactical Strike Team Lead',
     jurisdictionLabel: 'NDRF 03 Bn Bravo — Sector 4 Coastal Ingress',
   },
   {
     cred: 'TACT-ODRAF-02', role: 'T4', region: REGION_OD, site: SITE_KENDRAPARA, team: TEAM_ODRAF,
-    name: 'Insp. Deepak Jena', avatar: '',
+    name: 'Insp. Deepak Jena', avatar: '🛟',
     designation: 'ODRAF Waterborne Search & Rescue Strike Lead',
     jurisdictionLabel: 'ODRAF Unit 07 — Chandbali Riverine Sector',
   },
@@ -90,13 +90,13 @@ const ROSTER = [
   // ---- TIER 5 — Volunteer (self scope). ----------------------------------
   {
     cred: 'VOL-AM-01', role: 'T5', region: REGION_OD, site: SITE_BHADRAK, team: TEAM_NDRF,
-    name: 'Sunita Das', avatar: '',
+    name: 'Sunita Das', avatar: '🤝',
     designation: 'Community First Responder (Aapda Mitra)',
     jurisdictionLabel: 'Aapda Mitra Volunteer — Shelter B Chandbali',
   },
   {
     cred: 'VOL-AM-02', role: 'T5', region: REGION_OD, site: SITE_KENDRAPARA, team: TEAM_ODRAF,
-    name: 'Bikram Samal', avatar: '',
+    name: 'Bikram Samal', avatar: '🩹',
     designation: 'Community First Responder (Aapda Mitra)',
     jurisdictionLabel: 'Aapda Mitra Volunteer — Shelter Kendrapara High School',
   },

@@ -2199,7 +2199,7 @@ export function renderKanban() {
       </div>
       <div class="kanban-card-title">${task.task || task.title}</div>
       <div class="kanban-card-meta">
-        <span>OFFICER ${task.assignee || task.assigned_to || 'Unassigned'}</span>
+        <span>👤 ${task.assignee || task.assigned_to || 'Unassigned'}</span>
         ${task.due ? `<span>⏰ ${task.due}</span>` : ''}
       </div>
       ${actionsHtml}
@@ -2549,7 +2549,7 @@ export function initFieldHub() {
   const taskTarget = getEl('field-task-target');
 
   if (subTitle) subTitle.innerText = `${session.team || 'NDRF Strike Team Alpha'} • Tactical Field Operations`;
-  if (teamBadge) teamBadge.innerText = `T4 • ${session.team || 'STRIKE TEAM'}`;
+  if (teamBadge) teamBadge.innerText = `T4 • 🚤 ${session.team || 'STRIKE TEAM'}`;
   if (siteInfo) siteInfo.innerText = session.site || 'Bhadrak / Dhamra Port';
   if (radioInfo) radioInfo.innerText = 'CH-02 (Tactical Ops Net • 154.280 MHz) / CH-04';
 
