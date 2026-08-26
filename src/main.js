@@ -639,7 +639,7 @@ function lockTerminal() {
   const tierChipEl = getEl('header-tier-chip');
   const jurEl = getEl('header-jurisdiction');
   const avatarEl = getEl('header-user-avatar');
-  if (avatarEl) avatarEl.innerText = 'NDMA';
+  if (avatarEl) avatarEl.innerText = '🏛️';
   if (nameEl) nameEl.innerText = 'OFFICIAL GATEWAY';
   if (tierChipEl) { tierChipEl.className = 'tier-pill-badge'; tierChipEl.innerText = 'NIC PARICHAY'; }
   if (jurEl) jurEl.innerText = 'Awaiting agency credential';
@@ -2586,7 +2586,7 @@ export function initFieldHub() {
       }
       renderKanban();
       initFieldHub();
-      showToast('Assignment marked COMPLETE and reported up to Command', 'success');
+      showToast('✅ Assignment Marked COMPLETE & Reported Up to Command', 'success');
       logActivity('STRIKE TEAM', `Task marked complete by frontline team: ${activeTask ? (activeTask.task || activeTask.title) : 'Active Mission'}`);
     };
   }
@@ -2634,7 +2634,7 @@ export function initFieldHub() {
       });
 
       renderIncidents();
-      showToast('Critical Hazard Alert Broadcast to National Incident Stream!', 'alert');
+      showToast('⚠️ Critical Hazard Alert Broadcast to Incident Stream!', 'alert');
       logActivity('HAZARD', `Frontline team flagged critical hazard at ${session.site || 'sector'}`);
     };
   }
@@ -2716,10 +2716,10 @@ export async function renderEscalationInbox() {
   }
 
   if (inboxTitle) {
-    if (session.tier === 'T1') inboxTitle.innerText = 'NATIONAL APEX ACTIONABLE ESCALATION QUEUE';
-    else if (session.tier === 'T2') inboxTitle.innerText = 'STATE REGIONAL ESCALATION INBOX';
-    else if (session.tier === 'T3') inboxTitle.innerText = 'DISTRICT TRIAGE INBOX (FORWARD TO T2)';
-    else inboxTitle.innerText = 'MY SUBMITTED ESCALATIONS & STATUS TRACKER';
+    if (session.tier === 'T1') inboxTitle.innerText = '📥 Actionable Escalation Inbox (Approval Authority)';
+    else if (session.tier === 'T2') inboxTitle.innerText = '📥 Actionable Escalation Inbox (Approval Authority)';
+    else if (session.tier === 'T3') inboxTitle.innerText = '📥 District Triage Inbox (Forward to T2)';
+    else inboxTitle.innerText = '📤 My Submitted Escalations';
   }
 
   try {

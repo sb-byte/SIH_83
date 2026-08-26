@@ -21,7 +21,7 @@ SEEDED_USERS = [
     {
         "credential_id": "NDMA-AUTH-02",
         "name": "Smt. Sunita Rao, IPS",
-        "avatar": "🛡️",
+        "avatar": "🏛️",
         "role": "T1",
         "tier_name": "Tier 1 — Authority",
         "tier_level": 1,
@@ -36,7 +36,7 @@ SEEDED_USERS = [
     {
         "credential_id": "ODISHA-SEOC-01",
         "name": "Shri R. Mohanty, IAS",
-        "avatar": "🌊",
+        "avatar": "🏛️",
         "role": "T2",
         "tier_name": "Tier 2 — Strategist",
         "tier_level": 2,
@@ -51,7 +51,7 @@ SEEDED_USERS = [
     {
         "credential_id": "WB-SEOC-01",
         "name": "Dr. Anirban Sen, WBCS",
-        "avatar": "🌿",
+        "avatar": "🏛️",
         "role": "T2",
         "tier_name": "Tier 2 — Strategist",
         "tier_level": 2,
