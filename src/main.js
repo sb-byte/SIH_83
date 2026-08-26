@@ -625,7 +625,7 @@ async function prefillCredential(user) {
 // ROLE-BASED ACCESS CONTROL (RBAC) & PERMISSIONS ENFORCER
 // =========================================================================
 
-/** No valid session: hide every tab but the gateway and show the login view. */
+/** No valid session: hide operational tabs, show gateway only, and lock UI. */
 function lockTerminal() {
   document.querySelectorAll('.nav-tab').forEach(tab => {
     tab.style.display = tab.dataset.view === 'login' ? 'flex' : 'none';
@@ -640,9 +640,15 @@ function lockTerminal() {
   const jurEl = getEl('header-jurisdiction');
   const avatarEl = getEl('header-user-avatar');
   if (avatarEl) avatarEl.innerText = '🏛️';
-  if (nameEl) nameEl.innerText = 'NOT AUTHENTICATED';
-  if (tierChipEl) { tierChipEl.className = 'tier-pill-badge'; tierChipEl.innerText = 'NO CLEARANCE'; }
+  if (nameEl) nameEl.innerText = 'OFFICIAL GATEWAY';
+  if (tierChipEl) { tierChipEl.className = 'tier-pill-badge'; tierChipEl.innerText = 'NIC PARICHAY'; }
   if (jurEl) jurEl.innerText = 'Awaiting agency credential';
+
+  const logoutBtn = getEl('header-logout-btn');
+  if (logoutBtn) logoutBtn.style.display = 'none';
+
+  const alertBtn = getEl('quick-alert-btn');
+  if (alertBtn) alertBtn.style.display = 'none';
 
   const hud = getEl('tier-clearance-hud');
   if (hud) hud.classList.add('hidden');
@@ -669,7 +675,7 @@ function applyRolePermissions() {
     return;
   }
 
-  // 1. Update Header User Profile Pill
+  // 1. Update Header User Profile Pill & Actions
   const avatarEl = getEl('header-user-avatar');
   const nameEl = getEl('header-user-name');
   const tierChipEl = getEl('header-tier-chip');
@@ -686,6 +692,9 @@ function applyRolePermissions() {
   }
   if (jurEl) jurEl.innerText = session.jurisdictionLabel;
 
+  const logoutBtn = getEl('header-logout-btn');
+  if (logoutBtn) logoutBtn.style.display = '';
+
   // 2. Update and Show Tier Clearance HUD
   const hud = getEl('tier-clearance-hud');
   const badgeEl = getEl('hud-clearance-badge');
@@ -697,15 +706,15 @@ function applyRolePermissions() {
     if (session.tierLevel === 1) {
       if (badgeEl) badgeEl.innerText = 'T1 • NATIONAL COMMAND AUTHORITY (NDMA)';
       if (scopeEl) scopeEl.innerHTML = 'Jurisdiction: <strong>National (28 States & 8 UTs)</strong>';
-      if (rightsEl) rightsEl.innerHTML = 'Capabilities: <strong>Digital IAP Sign-off, Gazette Declarations, All Views Cleared</strong>';
+      if (rightsEl) rightsEl.innerHTML = 'Capabilities: <strong>Digital IAP Sign-off, Gazette Declarations, All Operational Views Cleared</strong>';
     } else if (session.tierLevel === 2) {
       if (badgeEl) badgeEl.innerText = `T2 • STATE STRATEGIC COMMAND (${session.region || 'Regional'})`;
       if (scopeEl) scopeEl.innerHTML = `Jurisdiction: <strong>${session.region} State EOC</strong>`;
-      if (rightsEl) rightsEl.innerHTML = 'Capabilities: <strong>Asset Registration, Mutual Aid Approvals, Live SACHET Broadcast</strong>';
+      if (rightsEl) rightsEl.innerHTML = 'Capabilities: <strong>Asset Registration, Mutual Aid Compacts, Live SACHET Broadcast</strong>';
     } else if (session.tierLevel === 3) {
       if (badgeEl) badgeEl.innerText = `T3 • DISTRICT COORDINATION HUB (${session.site || 'District'})`;
       if (scopeEl) scopeEl.innerHTML = `Jurisdiction: <strong>${session.site} District Hub</strong>`;
-      if (rightsEl) rightsEl.innerHTML = 'Capabilities: <strong>Shelter Capacity Ops, Squad Deployment, Asset Requests</strong>';
+      if (rightsEl) rightsEl.innerHTML = 'Capabilities: <strong>Shelter Capacity Ops, Squad Deployment, Equipment Requests</strong>';
     } else if (session.tierLevel === 4) {
       if (badgeEl) badgeEl.innerText = `T4 • TACTICAL STRIKE TEAM (${session.team || session.site || 'Field'})`;
       if (scopeEl) scopeEl.innerHTML = `Jurisdiction: <strong>${session.team || session.site} Strike Scope</strong>`;
@@ -717,16 +726,22 @@ function applyRolePermissions() {
     }
   }
 
-  // 3. Gate Nav Tab Visibility (Completely hide unauthorized views)
+  // 3. Gate Nav Tab Visibility (Hide login tab when signed in, show only authorized views)
   document.querySelectorAll('.nav-tab').forEach(tab => {
     const view = tab.dataset.view;
     if (view === 'login') {
-      tab.style.display = 'flex';
+      tab.style.display = 'none'; // NEVER show login tab in navbar when authenticated
       return;
     }
     const allowed = perms.allowedViews.includes(view);
     tab.style.display = allowed ? 'flex' : 'none';
   });
+
+  // Seamless transition to tier default view if currently on login or unauthorized view
+  if (state.view === 'login' || !perms.allowedViews.includes(state.view)) {
+    const target = perms.defaultView || 'command';
+    switchView(target);
+  }
 
   // 4. Gate Action Buttons across Views (STRICTLY HIDE UNAUTHORIZED CONTROLS)
   const setControlVisible = (id, isAllowed) => {
@@ -858,7 +873,18 @@ function initNavigation() {
 
   const brandBtn = getEl('nav-brand-btn');
   if (brandBtn) {
-    brandBtn.addEventListener('click', () => switchView('command'));
+    brandBtn.addEventListener('click', () => {
+      const s = getAuthSession();
+      if (!s) {
+        switchView('login');
+      } else if (s.tierLevel === 5) {
+        switchView('landing');
+      } else if (s.tierLevel === 4) {
+        switchView('field');
+      } else {
+        switchView('command');
+      }
+    });
   }
 
   const navTabs = document.querySelectorAll('.nav-tab');
@@ -1273,6 +1299,30 @@ function renderAssets() {
     if (asset.status === 'DEPLOYED' || asset.status === 'AIRBORNE') statusClass = 'badge-saffron bg-saffron text-white';
     if (asset.status === 'OUT_OF_SERVICE') statusClass = 'badge-alert';
 
+    const session = getAuthSession();
+    const isT2 = session && session.tier === 'T2';
+    const isT3 = session && session.tier === 'T3';
+
+    let actionCellHtml = '';
+    if (isT2) {
+      actionCellHtml = `
+        <button class="btn btn-xs btn-outline cycle-status-btn" data-id="${asset.id}">
+          CYCLE
+        </button>
+        <button class="btn btn-xs btn-outline tag-loc-btn" data-id="${asset.id}">
+          TAG LOC
+        </button>
+      `;
+    } else if (isT3) {
+      actionCellHtml = `
+        <button class="btn btn-xs btn-outline tag-loc-btn" data-id="${asset.id}">
+          TAG LOC
+        </button>
+      `;
+    } else {
+      actionCellHtml = `<span class="mono text-xs text-muted">MONITORED</span>`;
+    }
+
     row.innerHTML = `
       <td><strong>${asset.name}</strong><br><span class="mono text-xs text-muted">${asset.id}</span></td>
       <td>${asset.type}</td>
@@ -1280,12 +1330,7 @@ function renderAssets() {
       <td><span class="badge ${statusClass}">${asset.status}</span></td>
       <td>${asset.loc}</td>
       <td class="asset-action-cell">
-        <button class="btn btn-xs btn-outline cycle-status-btn" data-id="${asset.id}">
-          CYCLE
-        </button>
-        <button class="btn btn-xs btn-outline tag-loc-btn" data-id="${asset.id}">
-          TAG LOC
-        </button>
+        ${actionCellHtml}
       </td>
     `;
     tbody.appendChild(row);
@@ -1667,10 +1712,26 @@ function renderVolunteerPool() {
     state.activeVolunteerFilter === 'ALL' || v.status === state.activeVolunteerFilter
   );
 
+  const session = getAuthSession();
+  const isT1 = session && session.tier === 'T1';
+  const canManageVol = session && ['T2', 'T3'].includes(session.tier);
+
   filtered.forEach(v => {
     let statusClass = 'badge-navy';
     if (v.status === 'ASSIGNED') statusClass = 'badge-emerald';
     if (v.status === 'AWAITING_ASSIGNMENT') statusClass = 'badge-gold';
+
+    let actionBtnsHtml = '';
+    if (canManageVol) {
+      actionBtnsHtml = `
+        <div style="display:flex; gap:0.4rem;">
+          ${v.status !== 'ASSIGNED' ? `<button class="btn btn-xs btn-outline assign-volunteer-btn mt-1" data-id="${v.id}">ASSIGN TO SQUAD</button>` : ''}
+          <button class="btn btn-xs btn-outline remove-volunteer-btn mt-1" data-id="${v.id}" title="Remove volunteer">REMOVE</button>
+        </div>
+      `;
+    } else if (isT1) {
+      actionBtnsHtml = `<div class="mt-1"><span class="badge badge-navy text-xs" style="font-size:0.65rem;">OVERSIGHT READ-ONLY</span></div>`;
+    }
 
     const item = document.createElement('div');
     item.className = 'aid-chip';
@@ -1680,10 +1741,7 @@ function renderVolunteerPool() {
         <span class="badge ${statusClass} text-xs">${v.status.replace('_', ' ')}</span>
       </div>
       <div style="color:var(--text-muted); font-size:0.65rem;">${v.location} | Skill: ${v.skill}${v.squad ? ` | Squad: ${v.squad}` : ''}</div>
-      <div style="display:flex; gap:0.4rem;">
-        ${v.status !== 'ASSIGNED' ? `<button class="btn btn-xs btn-outline assign-volunteer-btn mt-1" data-id="${v.id}">ASSIGN TO SQUAD</button>` : ''}
-        <button class="btn btn-xs btn-outline remove-volunteer-btn mt-1" data-id="${v.id}" title="Remove volunteer">REMOVE</button>
-      </div>
+      ${actionBtnsHtml}
     `;
     container.appendChild(item);
   });
@@ -2110,6 +2168,30 @@ export function renderKanban() {
       task.section === 'Logistics' ? 'badge-navy' :
         task.section === 'Planning' ? 'badge-gold' : 'badge-emerald';
 
+    const session = getAuthSession();
+    const isT1 = session && session.tier === 'T1';
+    const canAssign = session && ['T2', 'T3'].includes(session.tier);
+
+    let actionsHtml = '';
+    if (canAssign) {
+      actionsHtml = `
+        <div class="kanban-card-actions">
+          <div>
+            ${currentStatus !== 'open' ? `<button class="kanban-move-btn" data-action="to-open" data-task-id="${task.id}" title="Move to Open">◀ Open</button>` : ''}
+            ${currentStatus !== 'in_progress' ? `<button class="kanban-move-btn" data-action="to-progress" data-task-id="${task.id}" title="Move to In Progress">⚡ Active</button>` : ''}
+            ${currentStatus !== 'completed' ? `<button class="kanban-move-btn" data-action="to-complete" data-task-id="${task.id}" title="Mark Complete">✔ Done ▶</button>` : ''}
+          </div>
+          <button class="kanban-move-btn btn-assign-task" data-task-id="${task.id}" data-task-title="${(task.task || task.title).replace(/"/g, '&quot;')}" style="color: #0284c7;">Assign 👤</button>
+        </div>
+      `;
+    } else if (isT1) {
+      actionsHtml = `
+        <div class="kanban-card-actions" style="justify-content: flex-end;">
+          <span class="mono text-xs text-muted" style="font-size: 0.65rem;">National Rollup (Read-Only)</span>
+        </div>
+      `;
+    }
+
     card.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <span class="kanban-card-id">${task.id}</span>
@@ -2120,14 +2202,7 @@ export function renderKanban() {
         <span>👤 ${task.assignee || task.assigned_to || 'Unassigned'}</span>
         ${task.due ? `<span>⏰ ${task.due}</span>` : ''}
       </div>
-      <div class="kanban-card-actions">
-        <div>
-          ${currentStatus !== 'open' ? `<button class="kanban-move-btn" data-action="to-open" data-task-id="${task.id}" title="Move to Open">◀ Open</button>` : ''}
-          ${currentStatus !== 'in_progress' ? `<button class="kanban-move-btn" data-action="to-progress" data-task-id="${task.id}" title="Move to In Progress">⚡ Active</button>` : ''}
-          ${currentStatus !== 'completed' ? `<button class="kanban-move-btn" data-action="to-complete" data-task-id="${task.id}" title="Mark Complete">✔ Done ▶</button>` : ''}
-        </div>
-        <button class="kanban-move-btn btn-assign-task" data-task-id="${task.id}" data-task-title="${(task.task || task.title).replace(/"/g, '&quot;')}" style="color: #0284c7;">Assign 👤</button>
-      </div>
+      ${actionsHtml}
     `;
 
     targetCol.appendChild(card);
