@@ -743,6 +743,7 @@ function applyRolePermissions() {
   // Volunteer Pool Management (Tier 2/3 only)
   const canAddVolunteer = isActionAuthorized('add_volunteer', state.mode);
   setControlVisible('add-volunteer-btn', canAddVolunteer);
+  setControlVisible('btn-open-vol-register-modal', canAddVolunteer);
 
   // Incident Logging (T1-T4, hidden for T5)
   const canAddInc = isActionAuthorized('add_incident', state.mode);
@@ -1686,7 +1687,6 @@ function initVolunteerRegistrationModal() {
   const cancelBtn = getEl('cancel-vol-reg-btn');
   const submitBtn = getEl('submit-vol-reg-btn');
   const openGFormBtn = getEl('btn-open-external-gform');
-  const gformStationLink = getEl('btn-station-gform-link');
 
   const openModal = () => {
     sound.playClick();
@@ -1697,25 +1697,27 @@ function initVolunteerRegistrationModal() {
     if (modal) modal.classList.add('hidden');
   };
 
-  // Triggers to open registration modal
+  // In-app "enroll directly" modal — only reachable from the T2/T3-gated
+  // Volunteer Pool panel (btn-open-vol-register-modal), never pre-login and
+  // never from the T5 dashboard. A logged-in T5 volunteer is already
+  // registered; a not-yet-registered person has no session to enroll from.
   getEl('btn-open-vol-register-modal')?.addEventListener('click', openModal);
-  getEl('btn-login-reg-vol')?.addEventListener('click', openModal);
-  getEl('btn-station-open-reg')?.addEventListener('click', openModal);
-  getEl('btn-station-modal-link')?.addEventListener('click', openModal);
+
+  // Pre-login "I'm new here" entry point sends people to the public Google
+  // Form, not this in-app modal — there's no session yet to attach an
+  // internal enrollment to.
+  getEl('btn-login-reg-vol')?.addEventListener('click', () => {
+    sound.playClick();
+    openRegistrationForm();
+  });
 
   // Close handlers
   if (closeBtn) closeBtn.addEventListener('click', closeModal);
   if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
 
-  // Google Form external triggers
+  // Google Form external trigger (inside the modal, as an alternative)
   if (openGFormBtn) {
     openGFormBtn.addEventListener('click', () => {
-      sound.playClick();
-      openRegistrationForm();
-    });
-  }
-  if (gformStationLink) {
-    gformStationLink.addEventListener('click', () => {
       sound.playClick();
       openRegistrationForm();
     });
@@ -1725,6 +1727,15 @@ function initVolunteerRegistrationModal() {
   if (submitBtn) {
     submitBtn.addEventListener('click', () => {
       sound.playClick();
+
+      // Fail closed: only T2/T3 may enroll a volunteer directly in-app,
+      // mirroring ACTIONS.add_volunteer in server/src/config/nav.js.
+      if (!isActionAuthorized('add_volunteer', state.mode)) {
+        showToast('You are not authorized to enroll volunteers directly.', 'alert');
+        closeModal();
+        return;
+      }
+
       const name = getEl('new-vol-name')?.value?.trim();
       const phone = getEl('new-vol-phone')?.value?.trim();
       const skill = getEl('new-vol-skill')?.value;
