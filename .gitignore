@@ -16,3 +16,11 @@ server/data/
 
 # local backup of the pre-integration client-side auth simulation
 src/auth.client-sim.js.bak
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+.pytest_cache/
+
