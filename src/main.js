@@ -3694,7 +3694,9 @@ function initSimulationEngine() {
       if (!state.simPlaying) {
         sound.playClick();
         state.simPlaying = true;
-        playBtn.innerText = 'PAUSE';
+        playBtn.innerText = '⏸ PAUSE';
+        playBtn.classList.remove('btn-saffron');
+        playBtn.classList.add('btn-warning');
         state.simInterval = setInterval(() => {
           state.simTimeSec += state.simSpeed * 10;
           if (state.simTimeSec > 21600) state.simTimeSec = 21600;
@@ -3711,7 +3713,11 @@ function initSimulationEngine() {
   function pauseSimulation() {
     sound.playClick();
     state.simPlaying = false;
-    if (playBtn) playBtn.innerText = 'PLAY DRILL';
+    if (playBtn) {
+      playBtn.innerText = '▶ PLAY DRILL';
+      playBtn.classList.add('btn-saffron');
+      playBtn.classList.remove('btn-warning');
+    }
     clearInterval(state.simInterval);
   }
 
