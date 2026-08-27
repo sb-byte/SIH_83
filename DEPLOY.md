@@ -1,33 +1,46 @@
-# Deploy checklist — Unity EOC
+# Deploy & Run Checklist — Unity EOC
 
-Copy-paste, top to bottom. Roughly 20 minutes the first time.
+Production-grade disaster command center stack:
 
-Two things get deployed, because they are different kinds of thing:
-
-| | what it is | where it goes |
+| Layer | Technology | Service |
 | --- | --- | --- |
-| **UI** | static files built by Vite | Vercel |
-| **auth API** | a Node process that must stay running | Render |
-
-Vercel forwards every `/api/...` request to Render, so the browser only ever talks to
-one domain. That is the whole trick, and it is already configured in `vercel.json`.
+| **Frontend** | Vite + Vanilla JS + Leaflet + Turf | Vercel / Static Web Host |
+| **Backend API** | FastAPI + Python 3.11 | Render / Docker / EC2 |
+| **Database** | PostgreSQL 15 + PostGIS | Neon / Supabase / Managed Postgres |
+| **Real-time & Cache** | Redis 7 Pub/Sub | Upstash / Managed Redis |
 
 ---
 
-## Part 1 — Run it on your own machine first
+## Quick Start — Local Development with Docker Compose
 
-Do this before deploying. If it doesn't work locally, it won't work deployed, and
-debugging is ten times easier here.
+Run the full stack (PostgreSQL + PostGIS, Redis, FastAPI Backend, Vite UI):
 
 ```bash
-cd ~/Everything./SIH_83_fresh
+# 1. Start Database, Redis, and Backend
+docker-compose up -d --build
 
-npm install          # only needed if node_modules is missing or stale
-npm run reset        # creates the account database + 10 demo users
-npm run dev          # starts BOTH the API (:4000) and the UI (:5173)
+# 2. Start Frontend Dev Server
+npm install
+npm run dev
 ```
 
-Open **http://localhost:5173**. You should hit a login gate, not the dashboard.
+Open **http://localhost:5173** to launch Unity EOC.
+
+---
+
+## Running Backend Directly (Python Virtual Environment)
+
+```bash
+# 1. Install backend requirements
+pip install -r backend/requirements.txt
+
+# 2. Set environment variables
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/unity_eoc"
+export REDIS_URL="redis://localhost:6379/0"
+
+# 3. Run FastAPI server
+python -m uvicorn backend.app.main:app --reload --port 8000
+```
 
 Log in as a volunteer (no 2FA needed):
 

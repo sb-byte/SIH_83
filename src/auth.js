@@ -116,7 +116,7 @@ export async function fetchDemoTotp(credentialId) {
 // from the server's /api/me response every time a session is established, so
 // this object can never grant more than the server does.
 export const ROLE_PERMISSIONS = {
-  T1_AUTHORITY: { roleName: 'Tier 1 — Authority', badgeClass: 'tier1-badge', allowedViews: [], defaultView: 'landing' },
+  T1_AUTHORITY: { roleName: 'Tier 1 — Authority', badgeClass: 'tier1-badge', allowedViews: [], defaultView: 'command' },
   T2_STRATEGIST: { roleName: 'Tier 2 — Strategist', badgeClass: 'tier2-badge', allowedViews: [], defaultView: 'command' },
   T3_COORDINATOR: { roleName: 'Tier 3 — Coordinator', badgeClass: 'tier3-badge', allowedViews: [], defaultView: 'command' },
   T4_FRONTLINE: { roleName: 'Tier 4 — Frontline', badgeClass: 'tier4-badge', allowedViews: [], defaultView: 'command' },

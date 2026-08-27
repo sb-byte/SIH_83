@@ -42,8 +42,9 @@ function run(label, command, args, opts = {}) {
   pipe(child.stderr);
   child.on('exit', (code, signal) => {
     if (shuttingDown) return;
-    process.stdout.write(`${prefix}exited (${signal || code}) — shutting down the other process too.\n`);
-    stopAll(code === null ? 1 : code);
+    const exitCode = (code === 0 || signal === 'SIGINT' || signal === 'SIGTERM') ? 0 : (code ?? 1);
+    process.stdout.write(`${prefix}exited (${signal || code}) — shutting down the other process.\n`);
+    stopAll(exitCode);
   });
   children.push(child);
   return child;

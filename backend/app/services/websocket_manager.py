@@ -25,6 +25,11 @@ class WebSocketManager:
             "type": event_type,
             "payload": data
         }
+        
+        # Publish via Redis Pub/Sub for multi-instance scalability
+        from .redis_client import publish_event
+        await publish_event("unity_eoc_events", event_type, data)
+
         dead_connections = []
         for connection in self.active_connections:
             try:

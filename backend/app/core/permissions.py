@@ -11,10 +11,10 @@ NAV: Dict[str, List[str]] = {
 }
 
 DEFAULT_VIEW: Dict[str, str] = {
-    'T1': 'landing',
+    'T1': 'command',
     'T2': 'command',
     'T3': 'command',
-    'T4': 'field',
+    'T4': 'command',
     'T5': 'landing'
 }
 
@@ -32,7 +32,8 @@ ACTIONS: Dict[str, Any] = {
     'export_iap':         ['T1', 'T2', 'T3'],
     'add_asset':          ['T2'],
     'request_asset':      ['T3'],
-    'add_shelter':        ['T2', 'T3'],
+    'declare_danger_zone':{'live': ['T1', 'T2'], 'exercise': ['T1', 'T2', 'T3']},
+    'add_shelter':        ['T1', 'T2', 'T3'],
     'add_mutual_aid':     ['T2'],
     'assign_squad':       ['T2', 'T3'],
     'add_volunteer':      ['T2', 'T3'],

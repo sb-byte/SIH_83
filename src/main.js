@@ -115,6 +115,14 @@ function logActivity(category, message) {
   const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) + ' IST';
   state.activityLog.unshift({ time: timeStr, category, message });
   renderActivityLog();
+
+  try {
+    apiFetch('POST', '/audit-log', {
+      action: category,
+      target_entity: message,
+      status: 'SUCCESS'
+    });
+  } catch (e) {}
 }
 
 function renderActivityLog() {
@@ -153,16 +161,128 @@ function showToast(message, type = 'info') {
 }
 
 // =========================================================================
-// APPLICATION INITIALIZATION
+// APPLICATION INITIALIZATION & API HYDRATION
 // =========================================================================
+async function hydrateStateFromAPI() {
+  const session = getAuthSession();
+  if (!session || !session.token) return;
+
+  try {
+    const [
+      incRes, sosRes, sheltersRes, dzRes, tasksRes, assetsRes, rumorsRes,
+      dmgRes, volPoolRes, volSquadsRes, radioRes, auditRes, hazardRes
+    ] = await Promise.all([
+      apiFetch('GET', '/incidents'),
+      apiFetch('GET', '/sos'),
+      apiFetch('GET', '/shelters'),
+      apiFetch('GET', '/danger-zones'),
+      apiFetch('GET', '/tasks'),
+      apiFetch('GET', '/resources'),
+      apiFetch('GET', '/rumors'),
+      apiFetch('GET', '/damage-assessments'),
+      apiFetch('GET', '/volunteer-pool'),
+      apiFetch('GET', '/volunteer-squads'),
+      apiFetch('GET', '/radio-channels'),
+      apiFetch('GET', '/audit-log'),
+      apiFetch('GET', '/hazard-overlays')
+    ]);
+
+    if (incRes.ok && Array.isArray(incRes.body) && incRes.body.length > 0) state.incidents = incRes.body;
+    if (sosRes.ok && Array.isArray(sosRes.body) && sosRes.body.length > 0) state.sosList = sosRes.body;
+    if (sheltersRes.ok && Array.isArray(sheltersRes.body) && sheltersRes.body.length > 0) state.sheltersData = sheltersRes.body;
+    if (dzRes.ok && Array.isArray(dzRes.body) && dzRes.body.length > 0) state.dangerZones = dzRes.body;
+    if (tasksRes.ok && Array.isArray(tasksRes.body) && tasksRes.body.length > 0) state.tasksData = tasksRes.body;
+    if (assetsRes.ok && Array.isArray(assetsRes.body) && assetsRes.body.length > 0) state.assets = assetsRes.body;
+    if (rumorsRes.ok && Array.isArray(rumorsRes.body) && rumorsRes.body.length > 0) state.rumorsData = rumorsRes.body;
+    if (dmgRes.ok && Array.isArray(dmgRes.body) && dmgRes.body.length > 0) state.damageData = dmgRes.body;
+    if (volPoolRes.ok && Array.isArray(volPoolRes.body) && volPoolRes.body.length > 0) state.volunteerPoolData = volPoolRes.body;
+    if (volSquadsRes.ok && Array.isArray(volSquadsRes.body) && volSquadsRes.body.length > 0) state.volunteerSquads = volSquadsRes.body;
+    if (radioRes.ok && Array.isArray(radioRes.body) && radioRes.body.length > 0) state.radioChannels = radioRes.body;
+    if (auditRes.ok && Array.isArray(auditRes.body) && auditRes.body.length > 0) {
+      state.activityLog = auditRes.body.map(item => ({
+        time: item.timestamp ? new Date(item.timestamp).toLocaleTimeString('en-IN', { hour12: false }) + ' IST' : 'N/A',
+        category: item.action || 'AUDIT',
+        message: `[${item.role || 'USER'}] ${item.action} on ${item.target_entity || 'SYSTEM'} (${item.status})`
+      }));
+    }
+    if (hazardRes.ok && Array.isArray(hazardRes.body) && hazardRes.body.length > 0) state.hazardOverlays = hazardRes.body;
+  } catch (err) {
+    console.warn("API Hydration notice:", err);
+  }
+}
+
+function renderAllComponents() {
+  renderIncidents();
+  renderShelters();
+  renderAssets();
+  renderIcsRoster();
+  renderIcsTasks();
+  renderRumors();
+  renderDamageTable();
+  renderCorrectiveActions();
+  renderAarMutualAidSummary();
+  renderActivityLog();
+  renderVolunteerSquads();
+  renderShelterMatrix();
+  renderMutualAid();
+  renderVolunteerPool();
+  renderInjects();
+  renderTrainees();
+  renderKanban();
+  if (state.mapInitialized) {
+    renderMapMarkers();
+  }
+}
+
+function initWebSocketSync() {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${protocol}//${window.location.host}/ws`;
+  try {
+    const ws = new WebSocket(wsUrl);
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (!msg || !msg.payload) return;
+        const { type, payload } = msg;
+
+        if (type === 'shelter_created' || type === 'shelter_updated') {
+          const idx = state.sheltersData.findIndex(s => s.id === payload.id);
+          if (idx >= 0) state.sheltersData[idx] = { ...state.sheltersData[idx], ...payload };
+          else state.sheltersData.unshift(payload);
+          renderShelters();
+          renderShelterMatrix();
+        } else if (type === 'danger_zone_declared') {
+          if (!state.dangerZones) state.dangerZones = [];
+          state.dangerZones.unshift(payload);
+        } else if (type === 'danger_zone_resolved') {
+          if (state.dangerZones) {
+            state.dangerZones = state.dangerZones.filter(dz => dz.id !== payload.id);
+          }
+        } else if (type === 'incident_created') {
+          state.incidents.unshift(payload);
+          renderIncidents();
+        } else if (type === 'task_updated' || type === 'task_created') {
+          const idx = state.tasksData.findIndex(t => t.id === payload.id);
+          if (idx >= 0) state.tasksData[idx] = { ...state.tasksData[idx], ...payload };
+          else state.tasksData.unshift(payload);
+          renderIcsTasks();
+          renderKanban();
+        }
+      } catch (e) {}
+    };
+    ws.onclose = () => {
+      setTimeout(initWebSocketSync, 5000);
+    };
+  } catch (e) {}
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   initClock();
 
-  // Fetch the credential directory and revalidate any stored token BEFORE the
-  // UI paints, so gating is driven by the server rather than by a guess.
-  // If the API is down, restoreSession() returns null and we stay locked out.
   await loadDirectory();
   await restoreSession();
+  await hydrateStateFromAPI();
+  initWebSocketSync();
 
   initAuthSystem();
   initNavigation();
@@ -339,8 +459,10 @@ function initAuthSystem() {
       if (inputPassword) inputPassword.value = '';
       if (inputOtp) inputOtp.value = '';
       applyRolePermissions();
+      await hydrateStateFromAPI();
       await refreshAuditTrail();
       renderAuthAuditTable();
+      renderAllComponents();
 
       // Determine dedicated destination & configure tier focus
       const tierLevel = res.session.tierLevel || (res.session.tier === 'T1' ? 1 : res.session.tier === 'T2' ? 2 : res.session.tier === 'T3' ? 3 : res.session.tier === 'T4' ? 4 : 5);
@@ -2281,10 +2403,197 @@ function openAssignTaskModal(taskId, taskTitle) {
   modal.classList.remove('hidden');
 }
 
-// Modals for Task creation, assigning, and Resource request
+// Modals for Shelter, Danger Zone, Asset, Task, Assign, Resource Request, Mutual Aid, Rumor
 export function initTaskAndResourceModals() {
-  // 1. Create Task Modal
+  // 1. REGISTER SHELTER MODAL
+  const openShelterBtn1 = getEl('add-shelter-gis-btn');
+  const openShelterBtn2 = getEl('add-shelter-btn');
+  const modalShelter = getEl('modal-shelter');
+  const closeShelterBtn = getEl('close-shelter-modal');
+  const cancelShelterBtn = getEl('cancel-shelter-btn');
+  const saveShelterBtn = getEl('save-shelter-btn');
+
+  const openShelterModal = () => {
+    sound.playClick();
+    if (modalShelter) modalShelter.classList.remove('hidden');
+  };
+  const closeShelterModal = () => {
+    if (modalShelter) modalShelter.classList.add('hidden');
+  };
+
+  if (openShelterBtn1) openShelterBtn1.addEventListener('click', openShelterModal);
+  if (openShelterBtn2) openShelterBtn2.addEventListener('click', openShelterModal);
+  if (closeShelterBtn) closeShelterBtn.addEventListener('click', closeShelterModal);
+  if (cancelShelterBtn) cancelShelterBtn.addEventListener('click', closeShelterModal);
+
+  if (saveShelterBtn) {
+    saveShelterBtn.addEventListener('click', async () => {
+      sound.playClick();
+      const name = getEl('new-shelter-name')?.value?.trim();
+      const capacity = parseInt(getEl('new-shelter-capacity')?.value || '100', 10);
+      const region = getEl('new-shelter-region')?.value || 'Odisha';
+      const lat = parseFloat(getEl('new-shelter-lat')?.value || '20.7885');
+      const lng = parseFloat(getEl('new-shelter-lng')?.value || '86.9580');
+      const medical = getEl('new-shelter-medical')?.value?.trim() || 'Doctor On-Duty';
+      const food_rations = getEl('new-shelter-food')?.value?.trim() || '72h Stored';
+
+      if (!name) {
+        showToast('Please enter shelter name', 'alert');
+        return;
+      }
+
+      const payload = {
+        name,
+        capacity,
+        occupied: 0,
+        status: 'OPEN / OPERATIONAL',
+        region,
+        site: 'Bhadrak / Dhamra',
+        lat,
+        lng,
+        medical,
+        food_rations
+      };
+
+      try {
+        const res = await apiFetch('POST', '/shelters', payload);
+        const newShelter = (res.ok && res.body) ? res.body : { id: `SHL-${Date.now().toString().slice(-4)}`, ...payload };
+        state.sheltersData.unshift(newShelter);
+        renderShelters();
+        renderShelterMatrix();
+        if (state.mapInitialized) renderMapMarkers();
+        showToast(`Shelter registered: ${name}`);
+        logActivity('SHELTER', `Registered multi-purpose shelter: ${name} (Cap: ${capacity})`);
+      } catch (err) {
+        showToast('Error registering shelter', 'alert');
+      }
+
+      closeShelterModal();
+    });
+  }
+
+  // 2. DECLARE DANGER ZONE MODAL
+  const openDangerBtn1 = getEl('draw-danger-zone-btn');
+  const openDangerBtn2 = getEl('add-danger-btn');
+  const modalDanger = getEl('modal-danger-zone');
+  const closeDangerBtn = getEl('close-danger-modal');
+  const cancelDangerBtn = getEl('cancel-danger-modal-btn');
+  const saveDangerBtn = getEl('save-danger-zone-btn');
+
+  const openDangerModal = () => {
+    sound.playClick();
+    if (modalDanger) modalDanger.classList.remove('hidden');
+  };
+  const closeDangerModal = () => {
+    if (modalDanger) modalDanger.classList.add('hidden');
+  };
+
+  if (openDangerBtn1) openDangerBtn1.addEventListener('click', openDangerModal);
+  if (openDangerBtn2) openDangerBtn2.addEventListener('click', openDangerModal);
+  if (closeDangerBtn) closeDangerBtn.addEventListener('click', closeDangerModal);
+  if (cancelDangerBtn) cancelDangerBtn.addEventListener('click', closeDangerModal);
+
+  if (saveDangerBtn) {
+    saveDangerBtn.addEventListener('click', async () => {
+      sound.playCriticalAlert();
+      const title = getEl('new-danger-title')?.value?.trim() || 'IMPACT RED ZONE';
+      const severity = getEl('new-danger-severity')?.value || 'CRITICAL';
+      const radius_km = parseFloat(getEl('new-danger-radius')?.value || '5.0');
+      const lat = parseFloat(getEl('new-danger-lat')?.value || '20.78');
+      const lng = parseFloat(getEl('new-danger-lng')?.value || '86.95');
+      const directive = getEl('new-danger-directive')?.value?.trim() || 'Mandatory Evacuation Enforced';
+
+      const payload = {
+        title,
+        severity,
+        directive,
+        lat,
+        lng,
+        radius_km,
+        region: 'Odisha',
+        site: 'Bhadrak / Dhamra'
+      };
+
+      try {
+        const res = await apiFetch('POST', '/danger-zones', payload);
+        const newZone = (res.ok && res.body) ? res.body : { id: `DZ-${Date.now().toString().slice(-4)}`, ...payload };
+        if (!state.dangerZones) state.dangerZones = [];
+        state.dangerZones.unshift(newZone);
+        if (state.mapInitialized) renderMapMarkers();
+        showToast(`🚨 Danger Zone Declared: ${title}`, 'alert');
+        logActivity('DANGER_ZONE', `Declared impact zone: ${title} (Radius: ${radius_km}km)`);
+      } catch (err) {
+        showToast('Error declaring danger zone', 'alert');
+      }
+
+      closeDangerModal();
+    });
+  }
+
+  // 3. DEPLOY ASSET MODAL
+  const openAssetBtn = getEl('add-asset-btn');
+  const modalAsset = getEl('modal-asset');
+  const closeAssetBtn = getEl('close-asset-modal');
+  const cancelAssetBtn = getEl('cancel-asset-btn');
+  const saveAssetBtn = getEl('save-asset-btn');
+
+  const openAssetModal = () => {
+    sound.playClick();
+    if (modalAsset) modalAsset.classList.remove('hidden');
+  };
+  const closeAssetModal = () => {
+    if (modalAsset) modalAsset.classList.add('hidden');
+  };
+
+  if (openAssetBtn) openAssetBtn.addEventListener('click', openAssetModal);
+  if (closeAssetBtn) closeAssetBtn.addEventListener('click', closeAssetModal);
+  if (cancelAssetBtn) cancelAssetBtn.addEventListener('click', closeAssetModal);
+
+  if (saveAssetBtn) {
+    saveAssetBtn.addEventListener('click', async () => {
+      sound.playClick();
+      const name = getEl('new-asset-name')?.value?.trim();
+      const type = getEl('new-asset-type')?.value || 'Water Rescue';
+      const unit = getEl('new-asset-unit')?.value?.trim() || 'NDRF 03 Bn';
+      const loc = getEl('new-asset-loc')?.value?.trim() || 'Staging Base';
+
+      if (!name) {
+        showToast('Please enter asset name', 'alert');
+        return;
+      }
+
+      const payload = {
+        name,
+        type,
+        unit,
+        status: 'AVAILABLE',
+        loc,
+        crew: 4,
+        region: 'Odisha',
+        site: 'Bhadrak / Dhamra',
+        lat: 20.79,
+        lng: 86.96
+      };
+
+      try {
+        const res = await apiFetch('POST', '/resources', payload);
+        const newAsset = (res.ok && res.body) ? res.body : { id: `ASSET-${Date.now().toString().slice(-4)}`, ...payload };
+        state.assets.unshift(newAsset);
+        renderAssets();
+        if (state.mapInitialized) renderMapMarkers();
+        showToast(`Fleet asset deployed: ${name}`);
+        logActivity('FLEET', `Deployed fleet asset: ${name} [${unit}]`);
+      } catch (err) {
+        showToast('Error deploying asset', 'alert');
+      }
+
+      closeAssetModal();
+    });
+  }
+
+  // 4. CREATE TASK MODAL
   const createBtn = getEl('create-task-btn');
+  const openTaskBtn2 = getEl('add-task-btn');
   const createModal = getEl('modal-create-task');
   const closeCreateBtn = getEl('close-create-task-modal');
   const cancelCreateBtn = getEl('cancel-create-task-btn');
@@ -2293,6 +2602,12 @@ export function initTaskAndResourceModals() {
   const closeCreate = () => createModal && createModal.classList.add('hidden');
   if (createBtn && createModal) {
     createBtn.addEventListener('click', () => {
+      sound.playClick();
+      createModal.classList.remove('hidden');
+    });
+  }
+  if (openTaskBtn2 && createModal) {
+    openTaskBtn2.addEventListener('click', () => {
       sound.playClick();
       createModal.classList.remove('hidden');
     });
@@ -2328,22 +2643,28 @@ export function initTaskAndResourceModals() {
         site: session ? session.site : 'Bhadrak / Dhamra'
       };
 
-      state.tasksData.unshift(newTask);
-
       try {
-        await apiFetch('POST', '/tasks', { title, section, status, assigned_to: assignee });
-      } catch { /* demo fallback */ }
+        const res = await apiFetch('POST', '/tasks', { title, section, status, assigned_to: assignee });
+        if (res.ok && res.body) {
+          state.tasksData.unshift(res.body);
+        } else {
+          state.tasksData.unshift(newTask);
+        }
+      } catch {
+        state.tasksData.unshift(newTask);
+      }
 
       sound.playSuccess();
+      renderIcsTasks();
       renderKanban();
       closeCreate();
       if (getEl('new-task-title')) getEl('new-task-title').value = '';
       showToast(`Task created & added to board: ${title}`);
-      logActivity('TASK', `New Task created by coordinator: ${title} → Assigned to ${assignee}`);
+      logActivity('TASK', `New Task created: ${title} → Assigned to ${assignee}`);
     });
   }
 
-  // 2. Assign Task Modal
+  // 5. ASSIGN TASK MODAL
   const assignModal = getEl('modal-assign-task');
   const closeAssignBtn = getEl('close-assign-task-modal');
   const cancelAssignBtn = getEl('cancel-assign-task-btn');
@@ -2377,7 +2698,7 @@ export function initTaskAndResourceModals() {
     });
   }
 
-  // 3. Resource Request Modal (T3 Coordinator)
+  // 6. RESOURCE REQUEST MODAL (T3 COORDINATOR)
   const reqAssetBtn = getEl('request-asset-btn');
   const reqAssetModal = getEl('modal-request-asset');
   const closeReqAssetBtn = getEl('close-request-asset-modal');
@@ -2401,7 +2722,6 @@ export function initTaskAndResourceModals() {
       const priority = getEl('req-asset-priority')?.value || 'HIGH';
       const reason = getEl('req-asset-reason')?.value.trim() || `Urgent equipment request for ${qty}x ${type}`;
 
-      const session = getAuthSession();
       try {
         const res = await apiFetch('POST', '/resource-requests', {
           type,
@@ -2423,6 +2743,63 @@ export function initTaskAndResourceModals() {
       if (getEl('req-asset-reason')) getEl('req-asset-reason').value = '';
       logActivity('RESOURCE REQUEST', `Coordinator requested ${qty}x ${type} (${priority}): ${reason}`);
       renderEscalationInbox();
+    });
+  }
+
+  // 7. MUTUAL AID MODAL
+  const openMutualBtn = getEl('add-mutual-aid-btn');
+  const modalMutual = getEl('modal-mutual-aid');
+  const closeMutualBtn = getEl('close-mutual-aid-modal');
+  const cancelMutualBtn = getEl('cancel-mutual-aid-btn');
+  const saveMutualBtn = getEl('save-mutual-aid-btn');
+
+  const openMutualModal = () => {
+    sound.playClick();
+    if (modalMutual) modalMutual.classList.remove('hidden');
+  };
+  const closeMutualModal = () => {
+    if (modalMutual) modalMutual.classList.add('hidden');
+  };
+
+  if (openMutualBtn) openMutualBtn.addEventListener('click', openMutualModal);
+  if (closeMutualBtn) closeMutualBtn.addEventListener('click', closeMutualModal);
+  if (cancelMutualBtn) cancelMutualBtn.addEventListener('click', closeMutualModal);
+
+  if (saveMutualBtn) {
+    saveMutualBtn.addEventListener('click', async () => {
+      sound.playClick();
+      const agency = getEl('new-mutual-aid-agency')?.value?.trim();
+      const resource = getEl('new-mutual-aid-resource')?.value?.trim();
+      const qty = parseInt(getEl('new-mutual-aid-qty')?.value || '1', 10);
+      const priority = getEl('new-mutual-aid-priority')?.value || 'HIGH';
+
+      if (!agency || !resource) {
+        showToast('Please fill in agency and resource details', 'alert');
+        return;
+      }
+
+      const payload = {
+        agency,
+        resource,
+        qty,
+        priority,
+        status: 'PENDING',
+        requested_at: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ' IST'
+      };
+
+      try {
+        const res = await apiFetch('POST', '/mutual-aid', payload);
+        const newReq = (res.ok && res.body) ? res.body : { id: `MA-${Date.now().toString().slice(-4)}`, ...payload };
+        state.mutualAidData.unshift(newReq);
+        renderMutualAid();
+        renderAarMutualAidSummary();
+        showToast(`Mutual Aid Request Logged: ${agency}`);
+        logActivity('MUTUAL_AID', `Mutual aid request: ${resource} x${qty} for ${agency}`);
+      } catch (err) {
+        showToast('Error logging mutual aid request', 'alert');
+      }
+
+      closeMutualModal();
     });
   }
 }
@@ -2977,14 +3354,9 @@ if (addRumorBtn && rumorModal) {
   });
 }
 
-const closeRumorBtn = getEl('close-rumor-modal');
-const cancelRumorBtn = getEl('cancel-rumor-btn');
-if (closeRumorBtn) closeRumorBtn.addEventListener('click', closeRumorModal);
-if (cancelRumorBtn) cancelRumorBtn.addEventListener('click', closeRumorModal);
-
 const saveRumorBtn = getEl('save-rumor-btn');
 if (saveRumorBtn) {
-  saveRumorBtn.addEventListener('click', () => {
+  saveRumorBtn.addEventListener('click', async () => {
     const claim = getEl('new-rumor-claim')?.value.trim();
     const clarification = getEl('new-rumor-clarification')?.value.trim();
     const verifiedBy = getEl('new-rumor-verifier')?.value.trim() || 'EOC Duty Officer';
@@ -2992,25 +3364,27 @@ if (saveRumorBtn) {
     if (!claim) { showToast('Enter the claim being circulated'); return; }
     if (!clarification) { showToast('Enter the official clarification'); return; }
 
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }) + ' IST';
+    const payload = {
+      rumor: claim,
+      verdict: 'FALSE / DEBUNKED',
+      fact: clarification,
+      source: verifiedBy,
+      region: 'Odisha',
+      site: 'Bhadrak / Dhamra'
+    };
 
-    state.rumorsData.unshift({
-      claim,
-      clarification,
-      status: 'DEBUNKED',
-      verifiedBy,
-      timestamp: timeStr
-    });
-
-    sound.playClick();
-    renderRumors();
-    closeRumorModal();
-    getEl('new-rumor-claim').value = '';
-    getEl('new-rumor-clarification').value = '';
-    getEl('new-rumor-verifier').value = '';
-    showToast(`Rumor clarification posted`);
-    logActivity('RUMOR CONTROL', `Clarified: "${claim.slice(0, 60)}${claim.length > 60 ? '…' : ''}" — verified by ${verifiedBy}`);
+    try {
+      const res = await apiFetch('POST', '/rumors', payload);
+      const newRumor = (res.ok && res.body) ? res.body : { id: `RUMOR-${Date.now().toString().slice(-4)}`, ...payload };
+      state.rumorsData.unshift(newRumor);
+      sound.playClick();
+      renderRumors();
+      closeRumorModal();
+      showToast(`Rumor clarification posted`);
+      logActivity('RUMOR CONTROL', `Clarified: "${claim.slice(0, 60)}${claim.length > 60 ? '…' : ''}" — verified by ${verifiedBy}`);
+    } catch (err) {
+      showToast('Error posting rumor clarification', 'alert');
+    }
   });
 }
 function renderDamageTable() {

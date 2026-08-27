@@ -42,3 +42,17 @@ def row_in_scope(user: User, item: Any) -> bool:
 def filter_scoped(user: User, items: List[Any]) -> List[Any]:
     """Filter a list of items to only those within the user's jurisdiction."""
     return [item for item in items if row_in_scope(user, item)]
+
+def ensure_in_scope(user: User, item: Any, entity_name: str = "Resource"):
+    """
+    Ensure an item is within user's jurisdiction scope.
+    If out of scope, raises HTTP 404 Not Found (deliberately 404, not 403, to avoid confirming existence).
+    """
+    from fastapi import HTTPException, status
+    if not item or not row_in_scope(user, item):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"{entity_name} not found"
+        )
+    return item
+

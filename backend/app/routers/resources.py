@@ -64,20 +64,21 @@ def create_resource(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access Denied: Tier 5 Volunteers cannot register resources."
         )
-    if current_user.role != "T2":
+    if current_user.role not in ["T1", "T2", "T3"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Access Denied: Only Tier 2 Strategist may register fleet assets (User is {current_user.role})."
+            detail=f"Access Denied: Tier {current_user.role} may not register fleet assets."
         )
 
     # Validate jurisdiction
-    if req.region and current_user.region and req.region != current_user.region:
+    if req.region and current_user.region and req.region != current_user.region and current_user.role != "T1":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot plant assets outside your assigned state/region."
         )
 
-    target_region = current_user.region or req.region or "Odisha"
+    target_region = req.region or current_user.region or "Odisha"
+    target_site = req.site or current_user.site or "Staging Base"
     new_res = Resource(
         id=req.id or f"ASSET-{uuid.uuid4().hex[:5].upper()}",
         name=req.name,

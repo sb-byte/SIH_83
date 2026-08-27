@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 import logging
+import sys
 from .config import settings
 
 logger = logging.getLogger("unity_eoc.database")
@@ -16,21 +17,15 @@ def init_engine():
         return create_engine(target_url, connect_args=connect_args, pool_pre_ping=True)
     
     try:
-        # Try PostgreSQL connection
+        # Try PostgreSQL connection strictly
         pg_engine = create_engine(target_url, pool_pre_ping=True)
         with pg_engine.connect() as conn:
             logger.info("Connected to PostgreSQL Database successfully.")
         return pg_engine
     except Exception as e:
-        logger.warning(
-            f"Could not connect to PostgreSQL at '{target_url}' ({e}). "
-            f"Falling back to local high-performance SQLite engine '{settings.SQLITE_FALLBACK_URL}'."
-        )
-        return create_engine(
-            settings.SQLITE_FALLBACK_URL,
-            connect_args={"check_same_thread": False},
-            pool_pre_ping=True
-        )
+        error_msg = f"CRITICAL: Failed to connect to PostgreSQL database at '{target_url}': {e}. System stopping to prevent data loss."
+        logger.critical(error_msg)
+        raise RuntimeError(error_msg) from e
 
 engine = init_engine()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -41,3 +36,4 @@ def get_db():
         yield db
     finally:
         db.close()
+

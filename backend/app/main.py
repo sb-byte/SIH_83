@@ -22,7 +22,10 @@ from .routers import (
     ai_reports,
     audit,
     demo,
-    geo
+    geo,
+    shelters,
+    danger_zones,
+    auxiliary
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -74,6 +77,9 @@ app.include_router(ai_reports.router, prefix=settings.API_V1_STR)
 app.include_router(audit.router, prefix=settings.API_V1_STR)
 app.include_router(demo.router, prefix=settings.API_V1_STR)
 app.include_router(geo.router, prefix=settings.API_V1_STR)
+app.include_router(shelters.router, prefix=settings.API_V1_STR)
+app.include_router(danger_zones.router, prefix=settings.API_V1_STR)
+app.include_router(auxiliary.router, prefix=settings.API_V1_STR)
 
 # Real-Time WebSocket Endpoint
 @app.websocket("/ws")
