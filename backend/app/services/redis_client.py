@@ -6,17 +6,20 @@ from ..config import settings
 
 logger = logging.getLogger("unity_eoc.redis")
 
-_redis_client: Optional[redis.Redis] = None
+_redis_client: Any = None
+_redis_checked: bool = False
 
-async def get_redis_client() -> Optional[redis.Redis]:
-    global _redis_client
-    if _redis_client is None:
+async def get_redis_client() -> Optional[Any]:
+    global _redis_client, _redis_checked
+    if not _redis_checked:
+        _redis_checked = True
         try:
-            _redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
-            await _redis_client.ping()
+            client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+            await client.ping()
+            _redis_client = client
             logger.info("Connected to Redis Pub/Sub successfully.")
         except Exception as e:
-            logger.warning(f"Could not connect to Redis at '{settings.REDIS_URL}': {e}. Using in-memory fallback.")
+            logger.info("Redis server not active; proceeding with in-memory broadcast mode.")
             _redis_client = None
     return _redis_client
 
