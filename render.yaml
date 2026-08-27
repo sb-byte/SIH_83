@@ -27,7 +27,6 @@ services:
   - type: web
     name: unity-eoc-web
     runtime: static
-    region: singapore
     branch: main
     buildCommand: 'npm install && npm run build'
     staticPublishPath: ./dist
@@ -39,5 +38,4 @@ services:
 databases:
   - name: unity-eoc-db
     databaseName: unity_eoc
-    user: postgres
     region: singapore
