@@ -110,8 +110,16 @@ if os.path.exists("dist"):
     if os.path.exists("dist/assets"):
         app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
 
-@app.get("/")
-def root():
+@app.get("/api/health")
+def health_check():
+    return {
+        "status": "HEALTHY",
+        "system": settings.PROJECT_NAME,
+        "version": settings.VERSION
+    }
+
+@app.get("/{full_path:path}")
+def root_or_spa(full_path: str = ""):
     index_file = os.path.join("dist", "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
@@ -121,13 +129,5 @@ def root():
         "status": "ONLINE",
         "docs_url": "/docs",
         "openapi_url": "/openapi.json"
-    }
-
-@app.get("/api/health")
-def health_check():
-    return {
-        "status": "HEALTHY",
-        "system": settings.PROJECT_NAME,
-        "version": settings.VERSION
     }
 

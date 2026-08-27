@@ -1,3 +1,12 @@
+# Stage 1: Build Frontend UI
+FROM node:20-slim AS frontend-builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# Stage 2: Python Backend & Static Serving
 FROM python:3.11-slim
 WORKDIR /app
 
@@ -14,9 +23,11 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY backend /app/backend
 COPY scripts /app/scripts
 COPY alembic.ini /app/alembic.ini
+COPY --from=frontend-builder /app/dist /app/dist
 
 ENV PORT=8000
 EXPOSE 8000
 
 # Start FastAPI using Uvicorn on dynamic $PORT
 CMD uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+
