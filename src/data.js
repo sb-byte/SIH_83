@@ -139,17 +139,17 @@ export const chronoIncidents = [
   },
   {
     id: "INC-1089",
-    region: "Odisha",
-    site: "Kendrapara / Rajnagar",
+    region: "West Bengal",
+    site: "Kolkata / Sunderbans",
     time: "13:50 IST",
-    section: "IMD",
+    section: "OPS",
     severity: "HIGH",
-    title: "Doppler Radar Alert - Peak Wind Gusts Recorded",
-    details: "Doppler Weather Radar Paradip recorded sustained core winds at 115 km/h with gusts exceeding 135 km/h moving North-Northwest.",
-    location: "Paradip Coastline [20.2644° N, 86.6687° E]",
-    lat: 20.2644,
-    lng: 86.6687,
-    status: "ACTIVE RADAR"
+    title: "Gosaba Embankment Breach Alert",
+    details: "Sunderbans ring bund failure flooding coastal villages in Gosaba block. SDRF deployed with disaster relief kits.",
+    location: "Gosaba, South 24 Parganas [22.1653° N, 88.8021° E]",
+    lat: 22.1653,
+    lng: 88.8021,
+    status: "ACTIVE RESPONSE"
   },
   {
     id: "INC-1088",
@@ -211,45 +211,30 @@ export const chronoIncidents = [
 
 export const fleetAssets = [
   { id: "NDRF-IRB-101", name: "Inflatable Rescue Boat 01", type: "Water Rescue", unit: "NDRF 03 Bn", status: "DEPLOYED", loc: "Dhamra Port Jetty", crew: 6, battery: "94%", lat: 20.88, lng: 86.94, region: "Odisha", site: "Bhadrak / Dhamra" },
-  // { id: "NDRF-IRB-102", name: "Inflatable Rescue Boat 02", type: "Water Rescue", unit: "NDRF 03 Bn", status: "DEPLOYED", loc: "Kendrapara Creek", crew: 6, battery: "88%", lat: 20.58, lng: 86.83, region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "NDRF-HWV-04", name: "High-Water Rescue Truck", type: "Heavy Vehicle", unit: "SDRF Odisha", status: "DEPLOYED", loc: "Bhadrak Route 16", crew: 4, fuel: "78%", lat: 21.06, lng: 86.50, region: "Odisha", site: "Bhadrak / Dhamra" },
-  // { id: "DRONE-RECON-ALPHA", name: "Surveillance Hexacopter Alpha", type: "UAV Drone", unit: "Coast Guard Air Recon", status: "AIRBORNE", loc: "Paradip Outer Anchorage", crew: 2, battery: "82%", lat: 20.27, lng: 86.70, region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "ICG-ALH-08", name: "Advanced Light Helicopter MK-III", type: "Aviation", unit: "Indian Coast Guard", status: "AVAILABLE", loc: "Bhubaneswar Airfield", crew: 4, fuel: "95%", lat: 20.24, lng: 85.81, region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "NDRF-IRB-102", name: "Inflatable Rescue Boat 02", type: "Water Rescue", unit: "NDRF 03 Bn", status: "DEPLOYED", loc: "Kendrapara Creek", crew: 6, battery: "88%", lat: 20.58, lng: 86.83, region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "NDRF-HWV-04", name: "High-Water Rescue Truck", type: "Heavy Vehicle", unit: "SDRF Odisha", status: "DEPLOYED", loc: "Bhadrak Route 16", crew: 4, fuel: "78%", lat: 21.06, lng: 86.50, region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "DRONE-RECON-ALPHA", name: "Surveillance Hexacopter Alpha", type: "UAV Drone", unit: "Coast Guard Air Recon", status: "AIRBORNE", loc: "Paradip Outer Anchorage", crew: 2, battery: "82%", lat: 20.27, lng: 86.70, region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "ICG-ALH-08", name: "Advanced Light Helicopter MK-III", type: "Aviation", unit: "Indian Coast Guard", status: "AVAILABLE", loc: "Bhubaneswar Airfield", crew: 4, fuel: "95%", lat: 20.24, lng: 85.81, region: "Odisha", site: "Bhadrak / Dhamra" },
   { id: "NDRF-BOAT-09", name: "Deep Water Dinghy 09", type: "Water Rescue", unit: "NDRF 02 Bn", status: "OUT_OF_SERVICE", loc: "Cuttack Maintenance Bay", crew: 0, reason: "Propeller fouled with debris", lat: 20.46, lng: 85.88, region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "DEOC-GEN-02", name: "50kVA Mobile Generator Unit", type: "Heavy Vehicle", unit: "State Disaster Logistics", status: "AVAILABLE", loc: "Balasore Collectorate", crew: 2, fuel: "100%", lat: 21.49, lng: 86.92, region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "DEOC-GEN-02", name: "50kVA Mobile Generator Unit", type: "Heavy Vehicle", unit: "State Disaster Logistics", status: "AVAILABLE", loc: "Balasore Collectorate", crew: 2, fuel: "100%", lat: 21.49, lng: 86.92, region: "Odisha", site: "Bhadrak / Dhamra" }
 ];
 
 export const shelters = [
   { id: "MCS-01", name: "MCS Balasore Central High School", capacity: 500, occupied: 460, status: "NEAR FULL", lat: 21.4934, lng: 86.9135, medical: "Doctor On-Duty", foodRations: "48h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
-  // { id: "MCS-02", name: "MCS Kendrapara Cyclone Shelter", capacity: 300, occupied: 285, status: "CRITICAL", lat: 20.5028, lng: 86.4227, medical: "Nurse Station Active", foodRations: "72h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "MCS-02", name: "MCS Kendrapara Cyclone Shelter", capacity: 300, occupied: 285, status: "CRITICAL", lat: 20.5028, lng: 86.4227, medical: "Nurse Station Active", foodRations: "72h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
   { id: "MCS-03", name: "MCS Puri Seafront Multi-Purpose Shelter", capacity: 200, occupied: 184, status: "NEAR FULL", lat: 19.8135, lng: 85.8312, medical: "Paramedic Unit", foodRations: "36h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
   { id: "MCS-04", name: "MCS Bhadrak Government College", capacity: 400, occupied: 120, status: "AVAILABLE", lat: 21.0543, lng: 86.5186, medical: "Doctor On-Duty", foodRations: "96h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
   { id: "MCS-05", name: "MCS Paradip Port Community Center", capacity: 350, occupied: 340, status: "CRITICAL", lat: 20.2644, lng: 86.6687, medical: "SDRF Medical Team", foodRations: "24h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "MCS-06", name: "MCS Gosaba Sunderbans Cyclone Shelter", capacity: 450, occupied: 412, status: "NEAR FULL", lat: 22.1653, lng: 88.8021, medical: "Nurse Station Active", foodRations: "60h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
-  // { id: "MCS-07", name: "MCS Namkhana Coastal Flood Shelter", capacity: 300, occupied: 96, status: "AVAILABLE", lat: 21.7597, lng: 88.2296, medical: "Paramedic Unit", foodRations: "72h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
-  // { id: "MCS-08", name: "MCS Dhamra Port Evacuation Complex", capacity: 600, occupied: 540, status: "NEAR FULL", lat: 20.7885, lng: 86.9580, medical: "Doctor & Emergency O2", foodRations: "96h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
-  // { id: "MCS-09", name: "MCS Rajnagar Multipurpose Cyclone Shelter", capacity: 350, occupied: 290, status: "NEAR FULL", lat: 20.5732, lng: 86.8522, medical: "Medical Camp Active", foodRations: "48h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "MCS-10", name: "MCS Chandbali Riverine Flood Shelter", capacity: 250, occupied: 90, status: "AVAILABLE", lat: 20.7761, lng: 86.7420, medical: "Nurse On-Duty", foodRations: "72h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
-  // { id: "MCS-11", name: "MCS Basudevpur Block Cyclone Center", capacity: 300, occupied: 110, status: "AVAILABLE", lat: 21.1410, lng: 86.7520, medical: "First Aid Station", foodRations: "48h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
-  // { id: "MCS-12", name: "MCS Aul Flood Safe Staging Camp", capacity: 400, occupied: 380, status: "CRITICAL", lat: 20.6680, lng: 86.6430, medical: "Doctor On-Duty", foodRations: "36h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "MCS-13", name: "MCS Sagar Island South Embankment Center", capacity: 500, occupied: 310, status: "AVAILABLE", lat: 21.6420, lng: 88.0850, medical: "SDRF Paramedic", foodRations: "60h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
-  // { id: "MCS-14", name: "MCS Kakdwip Marine Flood Shelter", capacity: 350, occupied: 145, status: "AVAILABLE", lat: 21.8750, lng: 88.1880, medical: "Doctor & Pharmacy", foodRations: "84h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
-  // { id: "MCS-15", name: "MCS Digha Coastal Multi-Purpose Shelter", capacity: 450, occupied: 410, status: "NEAR FULL", lat: 21.6260, lng: 87.5070, medical: "Medical Station", foodRations: "72h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
-  // { id: "MCS-16", name: "MCS Guwahati Central Flood Relief Shelter", capacity: 600, occupied: 220, status: "AVAILABLE", lat: 26.1850, lng: 91.7480, medical: "Full Medical Bay", foodRations: "120h Stored", region: "Assam", site: "Guwahati / Brahmaputra" },
-  // { id: "MCS-17", name: "MCS Kaziranga High-Ground Evac Camp", capacity: 300, occupied: 275, status: "NEAR FULL", lat: 26.5780, lng: 93.1710, medical: "Doctor & Vet Unit", foodRations: "48h Stored", region: "Assam", site: "Kaziranga / Golaghat" },
-  // { id: "MCS-18", name: "MCS Joshimath GLOF Safe Staging Base", capacity: 250, occupied: 80, status: "AVAILABLE", lat: 30.5560, lng: 79.5670, medical: "High-Altitude Trauma Kit", foodRations: "96h Stored", region: "Uttarakhand", site: "Chamoli / Joshimath" },
-  // { id: "MCS-19", name: "MCS Chooralmala Landslide Relief Center", capacity: 350, occupied: 310, status: "CRITICAL", lat: 11.5280, lng: 76.1380, medical: "Disaster Medical Team", foodRations: "48h Stored", region: "Kerala", site: "Wayanad / Meppadi" },
-  // { id: "MCS-20", name: "MCS Jagatsinghpur Coastal Relief Hub", capacity: 450, occupied: 260, status: "AVAILABLE", lat: 20.2550, lng: 86.1710, medical: "Doctor On-Duty", foodRations: "72h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "MCS-21", name: "MCS Erasama Flood Refuge Center", capacity: 550, occupied: 495, status: "NEAR FULL", lat: 20.1100, lng: 86.3350, medical: "SDRF Medical Team", foodRations: "48h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "MCS-22", name: "MCS Jajpur Road Community Shelter", capacity: 300, occupied: 145, status: "AVAILABLE", lat: 20.8650, lng: 86.3310, medical: "Nurse Station Active", foodRations: "96h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
-  // { id: "MCS-23", name: "MCS Cuttack Municipal Cyclone Complex", capacity: 700, occupied: 420, status: "AVAILABLE", lat: 20.4625, lng: 85.8828, medical: "Full Medical Bay", foodRations: "120h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "MCS-24", name: "MCS Bhubaneswar SOC Evacuation Hub", capacity: 500, occupied: 350, status: "AVAILABLE", lat: 20.2961, lng: 85.8245, medical: "Doctor & Emergency O2", foodRations: "84h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "MCS-25", name: "MCS Marshaghai Block Cyclone Shelter", capacity: 350, occupied: 95, status: "AVAILABLE", lat: 20.4520, lng: 86.7230, medical: "First Aid Station", foodRations: "48h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "MCS-26", name: "MCS Pattamundai Riverbank Refuge", capacity: 400, occupied: 375, status: "NEAR FULL", lat: 20.5810, lng: 86.5740, medical: "Paramedic Unit", foodRations: "36h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "MCS-27", name: "MCS Tirtol Coastal Community Center", capacity: 350, occupied: 120, status: "AVAILABLE", lat: 20.1950, lng: 86.5430, medical: "Doctor On-Duty", foodRations: "72h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "MCS-28", name: "MCS Mahakalapada Mangrove High Shelter", capacity: 450, occupied: 410, status: "NEAR FULL", lat: 20.4210, lng: 86.6850, medical: "SDRF Paramedic Bay", foodRations: "60h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
-  // { id: "MCS-29", name: "MCS Chandipur Beach Defense Shelter", capacity: 300, occupied: 110, status: "AVAILABLE", lat: 21.4670, lng: 87.0140, medical: "Military Paramedics", foodRations: "96h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
-  // { id: "MCS-30", name: "MCS Konark Marine Drive Evac Center", capacity: 400, occupied: 230, status: "AVAILABLE", lat: 19.8870, lng: 86.0940, medical: "Doctor & Pharmacy", foodRations: "72h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" }
+  { id: "MCS-06", name: "MCS Gosaba Sunderbans Cyclone Shelter", capacity: 450, occupied: 412, status: "NEAR FULL", lat: 22.1653, lng: 88.8021, medical: "Nurse Station Active", foodRations: "60h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
+  { id: "MCS-07", name: "MCS Namkhana Coastal Flood Shelter", capacity: 300, occupied: 96, status: "AVAILABLE", lat: 21.7597, lng: 88.2296, medical: "Paramedic Unit", foodRations: "72h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
+  { id: "MCS-08", name: "MCS Dhamra Port Evacuation Complex", capacity: 600, occupied: 540, status: "NEAR FULL", lat: 20.7885, lng: 86.9580, medical: "Doctor & Emergency O2", foodRations: "96h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "MCS-09", name: "MCS Rajnagar Multipurpose Cyclone Shelter", capacity: 350, occupied: 290, status: "NEAR FULL", lat: 20.5732, lng: 86.8522, medical: "Medical Camp Active", foodRations: "48h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "MCS-10", name: "MCS Chandbali Riverine Flood Shelter", capacity: 250, occupied: 90, status: "AVAILABLE", lat: 20.7761, lng: 86.7420, medical: "Nurse On-Duty", foodRations: "72h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "MCS-11", name: "MCS Basudevpur Block Cyclone Center", capacity: 300, occupied: 110, status: "AVAILABLE", lat: 21.1410, lng: 86.7520, medical: "First Aid Station", foodRations: "48h Stored", region: "Odisha", site: "Bhadrak / Dhamra" },
+  { id: "MCS-12", name: "MCS Aul Flood Safe Staging Camp", capacity: 400, occupied: 380, status: "CRITICAL", lat: 20.6680, lng: 86.6430, medical: "Doctor On-Duty", foodRations: "36h Stored", region: "Odisha", site: "Kendrapara / Rajnagar" },
+  { id: "MCS-13", name: "MCS Sagar Island South Embankment Center", capacity: 500, occupied: 310, status: "AVAILABLE", lat: 21.6420, lng: 88.0850, medical: "SDRF Paramedic", foodRations: "60h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
+  { id: "MCS-14", name: "MCS Kakdwip Marine Flood Shelter", capacity: 350, occupied: 145, status: "AVAILABLE", lat: 21.8750, lng: 88.1880, medical: "Doctor & Pharmacy", foodRations: "84h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" },
+  { id: "MCS-15", name: "MCS Digha Coastal Multi-Purpose Shelter", capacity: 450, occupied: 410, status: "NEAR FULL", lat: 21.6260, lng: 87.5070, medical: "Medical Station", foodRations: "72h Stored", region: "West Bengal", site: "Kolkata / Sunderbans" }
 ];
 
 export const radioChannels = [

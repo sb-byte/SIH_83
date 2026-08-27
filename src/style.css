@@ -2278,15 +2278,23 @@ html.dark .demo-roster-callout {
 }
 
 .drone-sim-window {
-  height: 80px;
+  height: 85px;
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 0.35rem 0.5rem;
-  background-size: cover;
-  background-position: center;
+  background: #090D16;
   overflow: hidden;
+}
+
+.drone-mini-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .drone-overlay-grid {
@@ -2300,7 +2308,7 @@ html.dark .demo-roster-callout {
   font-size: 0.55rem;
   font-family: var(--font-mono);
   color: #F8FAFC;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.75);
   padding: 1px 4px;
   border-radius: 2px;
   border-left: 2px solid #38BDF8;
@@ -2310,24 +2318,9 @@ html.dark .demo-roster-callout {
   font-size: 0.55rem;
   font-family: var(--font-mono);
   color: #38BDF8;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.75);
   padding: 1px 4px;
   border-radius: 2px;
-}
-
-.video-puri {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.85)),
-              radial-gradient(ellipse at center, rgba(30, 58, 138, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
-}
-
-.video-drone {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.85)),
-              radial-gradient(ellipse at center, rgba(15, 118, 110, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
-}
-
-.video-shelter {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.85)),
-              radial-gradient(ellipse at center, rgba(180, 83, 9, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%);
 }
 
 .scanlines {
@@ -2359,7 +2352,7 @@ html.dark .demo-roster-callout {
   color: #38BDF8;
   font-weight: 700;
   z-index: 2;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.65);
   padding: 1px 4px;
   border-radius: 2px;
   align-self: flex-start;
@@ -3334,11 +3327,24 @@ html.dark .demo-roster-callout {
 .drone-inspect-body {
   height: 380px;
   position: relative;
-  background: linear-gradient(180deg, #0F766E 0%, #115E59 100%);
+  background: #060B13;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 1rem;
+  overflow: hidden;
+}
+
+.drone-inspect-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.drone-inspect-body.flir-mode {
+  filter: contrast(1.15) saturate(1.2);
 }
 
 .hud-crosshair {
@@ -3346,18 +3352,45 @@ html.dark .demo-roster-callout {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 60px;
-  height: 60px;
-  border: 2px dashed rgba(56, 189, 248, 0.6);
+  width: 70px;
+  height: 70px;
+  border: 2px dashed rgba(56, 189, 248, 0.7);
   border-radius: 50%;
   pointer-events: none;
+  z-index: 2;
+}
+
+.hud-crosshair::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -15px;
+  right: -15px;
+  height: 1px;
+  background: rgba(56, 189, 248, 0.5);
+}
+
+.hud-crosshair::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -15px;
+  bottom: -15px;
+  width: 1px;
+  background: rgba(56, 189, 248, 0.5);
 }
 
 .inspect-telemetry-hud {
-  background: rgba(0, 0, 0, 0.7);
-  padding: 0.65rem;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 0.65rem 0.85rem;
   border-radius: 4px;
   color: #38BDF8;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 /* Toast Notifications */
@@ -3922,12 +3955,12 @@ html.dark .demo-roster-callout {
   bottom: 12px;
   left: 10px;
   z-index: 1000;
-  width: 175px;
+  width: 195px;
   background: rgba(15, 23, 42, 0.94);
   backdrop-filter: blur(6px);
   border: 1px solid #334155;
-  border-radius: 5px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
   overflow: hidden;
   transition: all 0.2s ease;
 }
@@ -3936,11 +3969,11 @@ html.dark .demo-roster-callout {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 8px;
+  padding: 5px 8px;
   background: rgba(30, 41, 59, 0.95);
   cursor: pointer;
   user-select: none;
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 700;
   color: #E2E8F0;
   border-bottom: 1px solid rgba(51, 65, 85, 0.5);
@@ -3951,12 +3984,14 @@ html.dark .demo-roster-callout {
 }
 
 .gis-legend-content {
-  padding: 4px 8px;
+  padding: 6px 8px;
   display: flex;
   flex-direction: column;
-  gap: 2.5px;
+  gap: 3.5px;
   font-size: 8.5px;
   color: #CBD5E1;
+  max-height: 240px;
+  overflow-y: auto;
 }
 
 .gis-legend-content.collapsed {
@@ -3966,50 +4001,43 @@ html.dark .demo-roster-callout {
 .legend-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
+  line-height: 1.2;
 }
 
 .legend-symb {
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 2px;
   flex-shrink: 0;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .symb-core {
-  background: rgba(229, 57, 53, 0.5);
-  border: 1.5px solid #E53935;
+  background: rgba(229, 57, 53, 0.2);
 }
 
 .symb-squall {
-  background: rgba(255, 111, 0, 0.4);
-  border: 1.5px solid #FF6F00;
+  background: rgba(255, 111, 0, 0.2);
 }
 
 .symb-surge-extreme {
-  background: rgba(220, 38, 38, 0.45);
-  border: 1px solid #DC2626;
+  background: rgba(220, 38, 38, 0.2);
 }
 
 .symb-surge-high {
-  background: rgba(234, 88, 12, 0.4);
-  border: 1px solid #EA580C;
+  background: rgba(234, 88, 12, 0.2);
 }
 
 .symb-evac {
-  background: rgba(220, 38, 38, 0.25);
-  border: 1.5px dashed #DC2626;
+  background: rgba(220, 38, 38, 0.2);
 }
 
 .symb-route {
-  height: 4px;
-  background: #38BDF8;
-  border-radius: 2px;
-  box-shadow: 0 0 6px #38BDF8;
+  font-size: 10px;
 }
 
 /* Enhanced Tactical Popup Actions & Telemetry */
@@ -4104,6 +4132,118 @@ html.dark .demo-roster-callout {
   border: 1px solid #F87171;
   box-shadow: 0 0 12px rgba(220, 38, 38, 0.8);
   animation: map-sos-pulse 1.5s infinite;
+}
+
+/* Interactive Map Drawing Mode & Guidance HUD */
+.gis-map-canvas.drawing-mode,
+.gis-map-canvas.drawing-mode .leaflet-grab,
+.gis-map-canvas.drawing-mode .leaflet-interactive {
+  cursor: crosshair !important;
+}
+
+.gis-draw-guidance-banner {
+  position: absolute;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1.5px solid #EF4444;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #F8FAFC;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(239, 68, 68, 0.4);
+  backdrop-filter: blur(8px);
+  animation: slideDownFade 0.25s ease-out;
+  pointer-events: auto;
+  max-width: 90%;
+}
+
+.gis-draw-guidance-banner.mode-pin {
+  border-color: #38BDF8;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(56, 189, 248, 0.4);
+}
+
+.gis-draw-guidance-banner.hidden {
+  display: none !important;
+}
+
+.guidance-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+.guidance-pulse-icon {
+  font-size: 1rem;
+  animation: map-sos-pulse 1.2s infinite;
+}
+
+.guidance-title {
+  color: #FCA5A5;
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.gis-draw-guidance-banner.mode-pin .guidance-title {
+  color: #7DD3FC;
+}
+
+.guidance-msg {
+  color: #E2E8F0;
+  font-size: 0.82rem;
+}
+
+.guidance-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guidance-badge {
+  background: #991B1B;
+  color: #FEF2F2;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #F87171;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.5);
+  white-space: nowrap;
+}
+
+.danger-radius-tooltip {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid #EF4444 !important;
+  color: #FFFFFF !important;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.danger-radius-tooltip::before {
+  border-top-color: #EF4444 !important;
+}
+
+.tac-action-btn.btn-danger-action {
+  background: rgba(220, 38, 38, 0.2);
+  border: 1px solid #EF4444;
+  color: #FCA5A5;
+}
+
+.tac-action-btn.btn-danger-action:hover {
+  background: #DC2626;
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
 }
 
 

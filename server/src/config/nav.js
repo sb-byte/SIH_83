@@ -114,7 +114,7 @@ const CHANNELS = {
 };
 
 /** Where each tier lands after login. */
-const DEFAULT_VIEW = { T1: 'landing', T2: 'command', T3: 'command', T4: 'field', T5: 'landing' };
+const DEFAULT_VIEW = { T1: 'command', T2: 'command', T3: 'command', T4: 'field', T5: 'landing' };
 
 function allowedViews(role) { return NAV[role] || []; }
 function channelsFor(role) { return CHANNELS[role] || []; }

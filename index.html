@@ -605,16 +605,13 @@
             </div>
             <!-- Map Layers & Tool Palette -->
             <div class="map-layers-group">
-              <button id="drop-pin-tool-btn" class="chip" title="Click on map to drop tactical hotspot pin">DROP
-                PIN</button>
+              <button id="drop-pin-tool-btn" class="chip" title="Click on map to drop tactical hotspot pin">DROP PIN</button>
               <button id="toggle-radar-btn" class="chip chip-active"
                 title="Toggle IMD Doppler Radar storm bands">RADAR</button>
               <button id="toggle-flood-btn" class="chip chip-active"
                 title="Toggle GeoJSON storm surge & flood inundation risk polygons">FLOOD RISK</button>
-              <button id="toggle-evac-btn" class="chip chip-active" title="Toggle mandatory evacuation polygon">EVAC
-                ZONES</button>
-              <button id="toggle-assets-btn" class="chip chip-active" title="Toggle NDRF & Coast Guard assets">NDRF
-                FLEET</button>
+              <button id="toggle-evac-btn" class="chip chip-active" title="Toggle mandatory evacuation polygon">EVAC ZONES</button>
+              <button id="toggle-assets-btn" class="chip chip-active" title="Toggle NDRF & Coast Guard assets">NDRF FLEET</button>
               <button id="toggle-shelters-btn" class="chip chip-active"
                 title="Toggle Multi-Purpose Cyclone Shelters">SHELTERS</button>
               <button id="toggle-incidents-btn" class="chip chip-active"
@@ -622,7 +619,7 @@
               <button id="toggle-sos-btn" class="chip chip-active"
                 title="Toggle citizen distress SOS markers">SOS QUEUE</button>
               <button id="add-shelter-gis-btn" class="chip chip-action"
-                title="Register a new cyclone/flood shelter on the GIS map">+ ADD SHELTER</button>
+                title="Register a new cyclone/flood shelter on the GIS map">ADD SHELTER</button>
               <button id="draw-danger-zone-btn" class="chip chip-danger-action"
                 title="Declare a red danger or impact zone on the map">DANGER ZONE</button>
             </div>
@@ -657,7 +654,7 @@
             <!-- OpenStreetMap Nominatim Location Search Bar -->
             <div class="gis-search-wrapper" id="gis-search-container">
               <div class="gis-search-bar">
-                <span class="gis-search-icon">[SEARCH]</span>
+                <span class="gis-search-icon">🔎</span>
                 <input type="text" id="gis-search-input"
                   placeholder="Search OpenStreetMap location (e.g. Kendrapara, Dhamra, Puri)..." autocomplete="off" />
                 <button id="gis-search-clear" class="gis-search-clear-btn" title="Clear search"
@@ -665,6 +662,19 @@
                 <div class="gis-search-spinner" id="gis-search-spinner" style="display: none;"></div>
               </div>
               <div id="gis-search-results" class="gis-search-dropdown hidden"></div>
+            </div>
+
+            <!-- Floating Tactical Draw & Action Guidance Banner (Visible during Danger Zone Drawing / Drop Pin Mode) -->
+            <div id="gis-draw-guidance" class="gis-draw-guidance-banner hidden">
+              <div class="guidance-content">
+                <span class="guidance-pulse-icon" id="guidance-icon">🔴</span>
+                <span class="guidance-title font-bold" id="guidance-title">DANGER ZONE DRAWING MODE</span>
+                <span class="guidance-msg" id="guidance-msg">Step 1: Click on map to set circle center</span>
+              </div>
+              <div class="guidance-actions">
+                <span class="guidance-badge font-mono" id="guidance-metric" style="display: none;">0.0 KM</span>
+                <button id="cancel-gis-mode-btn" class="btn btn-outline-danger btn-xs font-bold" title="Cancel operation (or press ESC)">✕ CANCEL (ESC)</button>
+              </div>
             </div>
 
             <!-- Main Leaflet Map Canvas -->
@@ -700,19 +710,18 @@
             <!-- Floating Tactical GIS Legend Widget (Collapsible & Compact) -->
             <div id="gis-legend-panel" class="gis-legend-box">
               <div class="gis-legend-header" id="gis-legend-toggle" title="Toggle Legend">
-                <span class="legend-title">[MAP] GIS SYMBOLOGY</span>
+                <span class="legend-title">🗺️ GIS SYMBOLOGY</span>
                 <span class="legend-chevron" id="legend-chevron">▾</span>
               </div>
               <div class="gis-legend-content" id="gis-legend-body">
                 <div class="legend-row"><span class="legend-symb symb-core"></span><span>Gale Core (&gt;120 km/h)</span></div>
                 <div class="legend-row"><span class="legend-symb symb-squall"></span><span>Squall Band (90-110 km/h)</span></div>
                 <div class="legend-row"><span class="legend-symb symb-surge-extreme"></span><span>Storm Surge +3.5m</span></div>
-                <div class="legend-row"><span class="legend-symb symb-surge-high"></span><span>River Flood +2.0m</span></div>
-                <div class="legend-row"><span class="legend-symb symb-evac"></span><span>Evac Zone Polygon</span></div>
-                <div class="legend-row"><span class="legend-symb symb-shelter"></span><span class="legend-symb symb-shelter">🏢</span><span>Cyclone Shelter (MCS)</span></div>
-                <div class="legend-row"><span class="legend-symb symb-ndrf">NDRF</span><span class="legend-symb symb-ndrf">🚤</span><span>NDRF Fleet Asset</span></div>
+                <div class="legend-row"><span class="legend-symb symb-shelter">🏢</span><span>Cyclone Shelter (MCS)</span></div>
+                <div class="legend-row"><span class="legend-symb symb-ndrf">🚤</span><span>NDRF Fleet Asset</span></div>
+                <div class="legend-row"><span class="legend-symb symb-inc">⚠️</span><span>Chrono Incident</span></div>
                 <div class="legend-row"><span class="legend-symb symb-sos">🆘</span><span>Citizen Distress SOS</span></div>
-                <div class="legend-row"><span class="legend-symb symb-route"></span><span>OSRM Road Route</span></div>
+                <div class="legend-row"><span class="legend-symb symb-route">🛣️</span><span>OSRM Road Route</span></div>
               </div>
             </div>
           </div>
@@ -722,17 +731,18 @@
             <div class="drone-dock-header">
               <div class="drone-dock-title-group">
                 <span class="pulse-beacon-dot"></span>
-                <span class="font-bold text-xs">LIVE TACTICAL RECON FEEDS (WEBRTC LOW-LATENCY 0.12s)</span>
+                <span class="font-bold text-xs">🎥 LIVE TACTICAL RECON FEEDS (WEBRTC LOW-LATENCY 0.12s)</span>
               </div>
               <span class="mono text-xs text-saffron">3 FEEDS STREAMING • CLICK CARD TO INSPECT FLIR THERMAL</span>
             </div>
             <div class="drone-cards-row">
               <div class="drone-card active" data-cam="1">
                 <div class="drone-card-top">
-                  <span>CAM 01 | PURI SEAFRONT (CCTV-04)</span>
+                  <span>📹 CAM 01 | PURI SEAFRONT (CCTV-04)</span>
                   <span class="rec-indicator">● LIVE</span>
                 </div>
                 <div class="drone-sim-window video-puri">
+                  <canvas id="drone-canvas-1" class="drone-mini-canvas"></canvas>
                   <div class="scanlines"></div>
                   <div class="drone-overlay-grid">
                     <span class="drone-hud-tag">SURGE: +3.2M | WIND: 118 KM/H</span>
@@ -743,10 +753,11 @@
               </div>
               <div class="drone-card" data-cam="2">
                 <div class="drone-card-top">
-                  <span>CAM 02 | NDRF UAV FALCON-9 (DHAMRA)</span>
+                  <span>🛸 CAM 02 | NDRF UAV FALCON-9 (DHAMRA)</span>
                   <span class="rec-indicator">● LIVE</span>
                 </div>
                 <div class="drone-sim-window video-drone">
+                  <canvas id="drone-canvas-2" class="drone-mini-canvas"></canvas>
                   <div class="scanlines"></div>
                   <div class="drone-overlay-grid">
                     <span class="drone-hud-tag">ALT: 145M | BATT: 88% | FLIR ON</span>
@@ -757,10 +768,11 @@
               </div>
               <div class="drone-card" data-cam="3">
                 <div class="drone-card-top">
-                  <span>CAM 03 | KENDRAPARA MCS GATE-02</span>
+                  <span>🏢 CAM 03 | KENDRAPARA MCS GATE-02</span>
                   <span class="rec-indicator">● LIVE</span>
                 </div>
                 <div class="drone-sim-window video-shelter">
+                  <canvas id="drone-canvas-3" class="drone-mini-canvas"></canvas>
                   <div class="scanlines"></div>
                   <div class="drone-overlay-grid">
                     <span class="drone-hud-tag">IR NIGHT-OPTIC | HEADCOUNT: 42</span>
@@ -2089,19 +2101,20 @@
   <div id="modal-drone-inspect" class="modal-backdrop hidden">
     <div class="drone-inspect-modal">
       <div class="drone-inspect-head">
-        <div class="inspect-title font-bold" id="inspect-cam-title">DRONE RECON FEED INSPECTOR</div>
+        <div class="inspect-title font-bold" id="inspect-cam-title">🎥 DRONE RECON FEED INSPECTOR</div>
         <div class="inspect-tools">
           <button id="toggle-flir-btn" class="btn btn-xs btn-gold font-bold">FLIR THERMAL: OFF</button>
           <button class="modal-x-btn text-white" id="close-drone-modal">✕</button>
         </div>
       </div>
       <div class="drone-inspect-body" id="inspect-video-canvas">
+        <canvas id="drone-flir-canvas" class="drone-inspect-canvas"></canvas>
         <div class="scanlines"></div>
         <div class="hud-crosshair"></div>
         <div class="inspect-telemetry-hud mono text-xs">
-          <div>ALTITUDE: 120m | AZIMUTH: 184° | SPEED: 24 km/h</div>
-          <div>OPTICAL ZOOM: 12X | ENCRYPTION: AES-256</div>
-          <div class="text-saffron font-bold">SECTOR: DHAMRA JETTY BREACH POINT</div>
+          <div id="inspect-hud-line1">ALTITUDE: 120m | AZIMUTH: 184° | SPEED: 24 km/h</div>
+          <div id="inspect-hud-line2">OPTICAL ZOOM: 12X | ENCRYPTION: AES-256 | LATENCY: 0.12s</div>
+          <div class="text-saffron font-bold" id="inspect-hud-sector">SECTOR: DHAMRA JETTY BREACH POINT</div>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-# Render blueprint for Unity EOC FastAPI Backend + Frontend + PostgreSQL database.
+# Render blueprint for Unity EOC FastAPI Backend API.
 # Deploy: push to GitHub, then Render → New → Blueprint → pick this repo.
 
 services:
@@ -6,39 +6,20 @@ services:
     name: unity-eoc-api
     runtime: python
     region: singapore
+    plan: free
     branch: main
     buildCommand: 'pip install -r backend/requirements.txt'
-    startCommand: 'python -m uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}'
+    startCommand: 'uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT'
     healthCheckPath: /
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: unity-eoc-db
-          property: connectionString
-      - key: REDIS_URL
-        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: UNITY_DEMO_MODE
         value: "1"
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
 
-  - type: web
-    name: unity-eoc-web
-    runtime: static
-    branch: main
-    buildCommand: 'npm install && npm run build'
-    staticPublishPath: ./dist
-    routes:
-      - type: rewrite
-        source: /api/*
-        destination: https://unity-eoc-api.onrender.com/api/*
-      - type: rewrite
-        source: /*
-        destination: /index.html
-
-databases:
-  - name: unity-eoc-db
-    databaseName: unity_eoc
-    region: singapore
