@@ -1,4 +1,4 @@
-# Render blueprint for the Unity EOC FastAPI Backend + PostgreSQL database.
+# Render blueprint for Unity EOC FastAPI Backend + Frontend + PostgreSQL database.
 # Deploy: push to GitHub, then Render → New → Blueprint → pick this repo.
 
 services:
@@ -23,6 +23,18 @@ services:
         generateValue: true
       - key: UNITY_DEMO_MODE
         value: "1"
+
+  - type: web
+    name: unity-eoc-web
+    runtime: static
+    region: singapore
+    branch: main
+    buildCommand: 'npm install && npm run build'
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
 
 databases:
   - name: unity-eoc-db
