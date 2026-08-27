@@ -45,7 +45,7 @@ def get_current_user(
         
     # Check if token was issued before account revocation/logout
     iat = payload.get("iat", 0)
-    if user.revoked_at and iat <= user.revoked_at:
+    if user.revoked_at and iat < user.revoked_at:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Session has been revoked by logout."

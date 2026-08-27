@@ -125,9 +125,10 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
                 detail={"error": "invalid_tfa", "message": "Incorrect or expired 2FA code."}
             )
 
-    # Success: Reset failed attempts
+    # Success: Reset failed attempts and session revocation marker
     user.failed_attempts = 0
     user.locked_until = None
+    user.revoked_at = None
     db.commit()
 
     # Mint JWT token carrying identity & jurisdiction

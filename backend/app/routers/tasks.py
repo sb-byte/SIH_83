@@ -57,7 +57,7 @@ def get_task_by_id(
 @router.post("", response_model=TaskOut, status_code=status.HTTP_201_CREATED)
 async def create_task(
     req: TaskCreate,
-    current_user: User = Depends(require_tier(["T2", "T3"])),
+    current_user: User = Depends(require_tier(["T1", "T2", "T3"])),
     db: Session = Depends(get_db)
 ):
     """Create a new task (Tier 2/Tier 3 coordinators)."""

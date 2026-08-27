@@ -190,25 +190,25 @@ async function hydrateStateFromAPI() {
       apiFetch('GET', '/hazard-overlays')
     ]);
 
-    if (incRes.ok && Array.isArray(incRes.body) && incRes.body.length > 0) state.incidents = incRes.body;
-    if (sosRes.ok && Array.isArray(sosRes.body) && sosRes.body.length > 0) state.sosList = sosRes.body;
-    if (sheltersRes.ok && Array.isArray(sheltersRes.body) && sheltersRes.body.length > 0) state.sheltersData = sheltersRes.body;
-    if (dzRes.ok && Array.isArray(dzRes.body) && dzRes.body.length > 0) state.dangerZones = dzRes.body;
-    if (tasksRes.ok && Array.isArray(tasksRes.body) && tasksRes.body.length > 0) state.tasksData = tasksRes.body;
-    if (assetsRes.ok && Array.isArray(assetsRes.body) && assetsRes.body.length > 0) state.assets = assetsRes.body;
-    if (rumorsRes.ok && Array.isArray(rumorsRes.body) && rumorsRes.body.length > 0) state.rumorsData = rumorsRes.body;
-    if (dmgRes.ok && Array.isArray(dmgRes.body) && dmgRes.body.length > 0) state.damageData = dmgRes.body;
-    if (volPoolRes.ok && Array.isArray(volPoolRes.body) && volPoolRes.body.length > 0) state.volunteerPoolData = volPoolRes.body;
-    if (volSquadsRes.ok && Array.isArray(volSquadsRes.body) && volSquadsRes.body.length > 0) state.volunteerSquads = volSquadsRes.body;
-    if (radioRes.ok && Array.isArray(radioRes.body) && radioRes.body.length > 0) state.radioChannels = radioRes.body;
-    if (auditRes.ok && Array.isArray(auditRes.body) && auditRes.body.length > 0) {
+    if (incRes.ok && Array.isArray(incRes.body)) state.incidents = incRes.body;
+    if (sosRes.ok && Array.isArray(sosRes.body)) state.sosList = sosRes.body;
+    if (sheltersRes.ok && Array.isArray(sheltersRes.body)) state.sheltersData = sheltersRes.body;
+    if (dzRes.ok && Array.isArray(dzRes.body)) state.dangerZones = dzRes.body;
+    if (tasksRes.ok && Array.isArray(tasksRes.body)) state.tasksData = tasksRes.body;
+    if (assetsRes.ok && Array.isArray(assetsRes.body)) state.assets = assetsRes.body;
+    if (rumorsRes.ok && Array.isArray(rumorsRes.body)) state.rumorsData = rumorsRes.body;
+    if (dmgRes.ok && Array.isArray(dmgRes.body)) state.damageData = dmgRes.body;
+    if (volPoolRes.ok && Array.isArray(volPoolRes.body)) state.volunteerPoolData = volPoolRes.body;
+    if (volSquadsRes.ok && Array.isArray(volSquadsRes.body)) state.volunteerSquads = volSquadsRes.body;
+    if (radioRes.ok && Array.isArray(radioRes.body)) state.radioChannels = radioRes.body;
+    if (auditRes.ok && Array.isArray(auditRes.body)) {
       state.activityLog = auditRes.body.map(item => ({
         time: item.timestamp ? new Date(item.timestamp).toLocaleTimeString('en-IN', { hour12: false }) + ' IST' : 'N/A',
         category: item.action || 'AUDIT',
         message: `[${item.role || 'USER'}] ${item.action} on ${item.target_entity || 'SYSTEM'} (${item.status})`
       }));
     }
-    if (hazardRes.ok && Array.isArray(hazardRes.body) && hazardRes.body.length > 0) state.hazardOverlays = hazardRes.body;
+    if (hazardRes.ok && Array.isArray(hazardRes.body)) state.hazardOverlays = hazardRes.body;
   } catch (err) {
     console.warn("API Hydration notice:", err);
   }
