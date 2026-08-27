@@ -137,20 +137,20 @@ export const chronoIncidents = [
   //   lng: 86.5186,
   //   status: "STAGED"
   // },
-  {
-    id: "INC-1089",
-    region: "West Bengal",
-    site: "Kolkata / Sunderbans",
-    time: "13:50 IST",
-    section: "OPS",
-    severity: "HIGH",
-    title: "Gosaba Embankment Breach Alert",
-    details: "Sunderbans ring bund failure flooding coastal villages in Gosaba block. SDRF deployed with disaster relief kits.",
-    location: "Gosaba, South 24 Parganas [22.1653° N, 88.8021° E]",
-    lat: 22.1653,
-    lng: 88.8021,
-    status: "ACTIVE RESPONSE"
-  },
+  // {
+  //   id: "INC-1089",
+  //   region: "West Bengal",
+  //   site: "Kolkata / Sunderbans",
+  //   time: "13:50 IST",
+  //   section: "OPS",
+  //   severity: "HIGH",
+  //   title: "Gosaba Embankment Breach Alert",
+  //   details: "Sunderbans ring bund failure flooding coastal villages in Gosaba block. SDRF deployed with disaster relief kits.",
+  //   location: "Gosaba, South 24 Parganas [22.1653° N, 88.8021° E]",
+  //   lat: 22.1653,
+  //   lng: 88.8021,
+  //   status: "ACTIVE RESPONSE"
+  // },
   {
     id: "INC-1088",
     region: "Odisha",
@@ -179,34 +179,34 @@ export const chronoIncidents = [
     lng: 86.55,
     status: "BROADCAST COMPLETE"
   },
-  {
-    id: "INC-1086",
-    region: "West Bengal",
-    site: "Kolkata / Sunderbans",
-    time: "12:58 IST",
-    section: "OPS",
-    severity: "HIGH",
-    title: "Sunderbans Embankment Breach - Gosaba Block",
-    details: "60m earthen embankment breached along Bidya river. Ingress water threatening 3 revenue villages. WBDMA deploying 4 inflatable rescue boats.",
-    location: "Gosaba, South 24 Parganas [22.1653° N, 88.8021° E]",
-    lat: 22.1653,
-    lng: 88.8021,
-    status: "RESPONSE DEPLOYED"
-  },
-  {
-    id: "INC-1085",
-    region: "West Bengal",
-    site: "Kolkata / Sunderbans",
-    time: "12:40 IST",
-    section: "LOGISTICS",
-    severity: "MEDIUM",
-    title: "Kakdwip Multipurpose Cyclone Shelter Activated",
-    details: "Capacity 1,200 persons reached 85% occupancy. Additional drinking water pouches and chlorine tablets requisitioned from Diamond Harbour hub.",
-    location: "Kakdwip, South 24 Parganas [21.8750° N, 88.1880° E]",
-    lat: 21.8750,
-    lng: 88.1880,
-    status: "OPERATIONAL"
-  }
+  // {
+  //   id: "INC-1086",
+  //   region: "West Bengal",
+  //   site: "Kolkata / Sunderbans",
+  //   time: "12:58 IST",
+  //   section: "OPS",
+  //   severity: "HIGH",
+  //   title: "Sunderbans Embankment Breach - Gosaba Block",
+  //   details: "60m earthen embankment breached along Bidya river. Ingress water threatening 3 revenue villages. WBDMA deploying 4 inflatable rescue boats.",
+  //   location: "Gosaba, South 24 Parganas [22.1653° N, 88.8021° E]",
+  //   lat: 22.1653,
+  //   lng: 88.8021,
+  //   status: "RESPONSE DEPLOYED"
+  // },
+  // {
+  //   id: "INC-1085",
+  //   region: "West Bengal",
+  //   site: "Kolkata / Sunderbans",
+  //   time: "12:40 IST",
+  //   section: "LOGISTICS",
+  //   severity: "MEDIUM",
+  //   title: "Kakdwip Multipurpose Cyclone Shelter Activated",
+  //   details: "Capacity 1,200 persons reached 85% occupancy. Additional drinking water pouches and chlorine tablets requisitioned from Diamond Harbour hub.",
+  //   location: "Kakdwip, South 24 Parganas [21.8750° N, 88.1880° E]",
+  //   lat: 21.8750,
+  //   lng: 88.1880,
+  //   status: "OPERATIONAL"
+  // }
 ];
 
 export const fleetAssets = [
