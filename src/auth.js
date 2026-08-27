@@ -383,9 +383,9 @@ export async function authenticateUser(credentialId, passwordValue, otp = null) 
 // ===========================================================================
 /** May the current user see this nav tab? */
 export function isViewAuthorized(viewId) {
-  if (viewId === 'login') return true;           // the gateway is always reachable
+  if (viewId === 'login' || viewId === 'unity-eoc-v3') return true; // gateway and dependency engine v3 always reachable
   const session = getAuthSession();
-  if (!session) return false;                    // not signed in -> nothing but login
+  if (!session) return false; // not signed in -> nothing but login
   const views = (session.permissions && session.permissions.views) || [];
   return views.includes(viewId);
 }

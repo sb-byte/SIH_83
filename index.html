@@ -165,6 +165,9 @@
         <button class="nav-tab" data-view="simulation" id="nav-tab-simulation">
           SIMULATION LAB
         </button>
+        <button class="nav-tab" data-view="unity-eoc-v3" id="nav-tab-unity-eoc-v3">
+          DEPENDENCY ENGINE v3
+        </button>
         <button class="nav-tab" data-view="reports" id="nav-tab-reports">
           AAR & DAMAGE AUDIT
         </button>
@@ -1240,6 +1243,13 @@
     </section>
 
     <!-- ========================================================================= -->
+    <!-- VIEW: DEPENDENCY GRAPH ENGINE V3 (UNITY EOC)                              -->
+    <!-- ========================================================================= -->
+    <section id="view-unity-eoc-v3" class="view-section" style="padding: 0;">
+      <div id="react-unity-eoc-v3-root"></div>
+    </section>
+
+    <!-- ========================================================================= -->
     <!-- VIEW 5: SIMULATION LAB & TIME MACHINE (EXERCISE MODE)                     -->
     <!-- ========================================================================= -->
     <section id="view-simulation" class="view-section">
@@ -1307,12 +1317,6 @@
               <div class="injects-scroll-box" id="inject-list-feed"></div>
             </div>
 
-            <!-- Trainee Matrix -->
-            <div class="panel trainee-panel">
-              <div class="panel-head">
-                <h3 class="head-text">TRAINEE SCORECARD &amp; TASK BOOKS (PTB)</h3>
-                <span class="badge badge-emerald">AVG READINESS: 87.0%</span>
-              </div>
               <div class="trainees-scroll-box" id="trainee-score-list"></div>
               <div class="sim-export-strip">
                 <button class="btn btn-saffron btn-block font-bold launch-view-btn" data-view="reports">
@@ -1325,162 +1329,7 @@
 
         <!-- SUB-TAB 2: HAZARD CLUSTER DEPENDENCY CASCADE & COMPOUND FAILURE SIMULATOR -->
         <div id="sim-tab-dependency" class="sim-tab-content">
-
-          <div class="dep-cluster-engine-wrap" id="dep-cluster-engine">
-            <!-- Cluster Picker Grid -->
-            <div class="cluster-picker">
-              <div class="cluster-picker-label">Hazard Cluster — choose one to load its template</div>
-              <div class="cluster-picker-grid" id="cluster-picker-grid">
-                <button class="cluster-card active" data-cluster="evacuation" id="cluster-card-evacuation">
-                  <div class="cluster-card-label">Directional Evacuation</div>
-                  <div class="cluster-card-status">Engine ready</div>
-                </button>
-                <button class="cluster-card" data-cluster="threshold" id="cluster-card-threshold">
-                  <div class="cluster-card-label">Sustained-Load / Threshold</div>
-                  <div class="cluster-card-status">New engine required</div>
-                </button>
-                <button class="cluster-card" data-cluster="containment" id="cluster-card-containment">
-                  <div class="cluster-card-label">Point-Source Containment</div>
-                  <div class="cluster-card-status">Engine ready</div>
-                </button>
-                <button class="cluster-card" data-cluster="crowd" id="cluster-card-crowd">
-                  <div class="cluster-card-label">Crowd / Security</div>
-                  <div class="cluster-card-status">Blocked — research</div>
-                </button>
-              </div>
-            </div>
-
-            <!-- Cluster Blurb Bar -->
-            <div class="cluster-blurb-bar" id="cluster-blurb-bar">
-              Existing cascade engine (hop-1 / hop-2), extended with threat-zone geometry — radial, directional, or
-              point-then-radiating.
-            </div>
-
-            <!-- Subbar: Specific Crisis & Crisis Scale Slider -->
-            <div class="subbar" id="dep-subbar">
-              <div>
-                <div class="field-label">
-                  <span>Specific crisis</span>
-                  <span class="optional-tag">optional — the generic template covers scale 1–5</span>
-                </div>
-                <select class="hazard-select" id="dep-hazard-select">
-                  <option value="">Generic Directional Evacuation template</option>
-                </select>
-              </div>
-              <div>
-                <div class="field-label">
-                  <span>Crisis scale</span>
-                </div>
-                <div class="severity-row">
-                  <input type="range" min="1" max="10" step="1" value="5" class="severity-slider"
-                    id="dep-severity-slider" />
-                  <span class="severity-readout mono" id="dep-severity-readout">5/10</span>
-                </div>
-                <div class="severity-scale-labels">
-                  <span>1 · minor</span>
-                  <span>5 · basic template fine</span>
-                  <span>10 · catastrophic</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Advisory Warning Banner -->
-            <div class="advisory-banner" id="dep-advisory-banner" style="display:none;">
-              <span id="dep-advisory-text">Crisis scale 6/10 — at this level, hazard behavior tends to diverge enough
-                that picking the exact crisis above gives a materially better model.</span>
-            </div>
-
-            <!-- Mode Banner (Exercise vs Live) -->
-            <div class="mode-banner exercise" id="dep-mode-banner">
-              Exercise, exercise, exercise — synthetic data, no operational effect
-            </div>
-
-            <!-- READY ENGINE INTERFACE (For Evacuation & Containment) -->
-            <div id="dep-engine-view" class="eoc-layout">
-
-              <!-- LEFT: Controls & Injects -->
-              <div class="eoc-panel">
-                <div class="panel-title">Inject Failure</div>
-                <div id="dep-presets-list"></div>
-                <button class="reset-btn" id="dep-reset-btn">
-                  Reset to baseline
-                </button>
-
-                <div class="panel-title" style="margin-top: 22px;">Leverage</div>
-                <div class="leverage-note" id="dep-leverage-note">
-                  Protecting <strong id="dep-top-leverage-name" style="margin: 0 3px;">Power Grid</strong> prevents the
-                  most downstream cascade right now.
-                </div>
-              </div>
-
-              <!-- CENTER: Readiness Overview & SVG Graph -->
-              <div class="eoc-panel">
-                <div class="overall-card">
-                  <div
-                    style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <span class="tpl-badge full" id="dep-tpl-badge">Full Template</span>
-                    </div>
-                    <span class="confidence-tag High" id="dep-confidence-tag">Confidence: High</span>
-                  </div>
-                  <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 8px;">
-                    <span class="overall-score mono text-emerald" id="dep-overall-score">8</span>
-                    <span style="font-size: 15px; color: var(--text-muted);">/10</span>
-                  </div>
-                  <div class="overall-label" id="dep-overall-label">Flood — Overall system readiness — Nominal</div>
-                  <div style="margin-top: 10px;" id="dep-alert-chips-box">
-                    <span style="font-size: 11.5px; color: var(--text-muted);">No active alerts.</span>
-                  </div>
-                </div>
-
-                <!-- Interactive SVG Graph Viewport -->
-                <div class="graph-wrap">
-                  <svg id="dep-graph-svg" viewBox="0 0 800 470" width="100%"
-                    style="max-width: 700px; display: block;"></svg>
-                </div>
-              </div>
-
-              <!-- RIGHT: Capabilities List & Event Log -->
-              <div class="eoc-panel">
-                <div class="panel-title">Capabilities</div>
-                <div id="dep-nodes-status-list"></div>
-
-                <div class="panel-title" style="margin-top: 20px;">
-                  <span>Event Log</span>
-                  <span class="mono text-xs text-muted">LIVE AUDIT</span>
-                </div>
-                <div id="dep-event-log-box" style="max-height: 300px; overflow-y: auto;"></div>
-              </div>
-
-            </div>
-
-            <!-- BLOCKED PANEL: SUSTAINED-LOAD / THRESHOLD -->
-            <div id="dep-threshold-blocked-view" class="blocked-wrap" style="display:none;">
-              <div class="blocked-hero">
-                <div class="blocked-hero-top">
-                  <div class="blocked-title">Sustained-Load / Threshold — new engine mode required</div>
-                </div>
-                <div class="blocked-body" id="dep-threshold-body-text">
-                  This cluster has no discrete trigger event to inject — capacity erodes under sustained demand instead
-                  of failing all at once.
-                </div>
-              </div>
-            </div>
-
-            <!-- BLOCKED PANEL: CROWD / SECURITY -->
-            <div id="dep-crowd-blocked-view" class="blocked-wrap" style="display:none;">
-              <div class="blocked-hero">
-                <div class="blocked-hero-top">
-                  <div class="blocked-title">Crowd / Security — blocked on unresolved research</div>
-                </div>
-                <div class="blocked-body" id="dep-crowd-body-text">
-                  This cluster needs the agent-based population model already flagged in the handoff specification.
-                </div>
-              </div>
-            </div>
-
-          </div>
-
+          <div id="react-sim-dependency-root"></div>
         </div>
 
       </div>

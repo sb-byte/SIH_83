@@ -1,13 +1,11 @@
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 /**
- * The access-control API (server/) runs as a separate zero-dependency Node
- * process on :4000. Proxying /api through the dev server keeps the browser on a
- * single origin, so there is no CORS to configure and the JWT is sent normally.
- *
- * Run both with one command: `npm run dev`.
+ * Unity EOC Vite Configuration with React support and FastAPI proxying.
  */
 export default defineConfig({
+  plugins: [react()],
   server: {
     port: 5173,
     proxy: {

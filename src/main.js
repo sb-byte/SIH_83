@@ -2,6 +2,9 @@ import L from 'leaflet';
 window.L = L;
 import 'leaflet.heat';
 import * as turf from '@turf/turf';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import UnityEOC from './UnityEOC.jsx';
 import { sound } from './audio.js';
 import { openRegistrationForm, startAutoSync, filterRemovedVolunteers, removeVolunteer } from './volunteerSync.js';
 import {
@@ -276,8 +279,22 @@ function initWebSocketSync() {
   } catch (e) {}
 }
 
+function mountReactComponents() {
+  const root1 = document.getElementById('react-unity-eoc-v3-root');
+  if (root1 && !root1.dataset.mounted) {
+    root1.dataset.mounted = 'true';
+    ReactDOM.createRoot(root1).render(React.createElement(UnityEOC));
+  }
+  const root2 = document.getElementById('react-sim-dependency-root');
+  if (root2 && !root2.dataset.mounted) {
+    root2.dataset.mounted = 'true';
+    ReactDOM.createRoot(root2).render(React.createElement(UnityEOC));
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   initClock();
+  mountReactComponents();
 
   await loadDirectory();
   await restoreSession();
