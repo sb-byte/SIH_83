@@ -209,10 +209,10 @@ export function openRegistrationForm() {
 
 /** Starts the periodic background sync. Call once on app init. */
 export function startAutoSync(state, onSync) {
-  const runSync = async () => {
+  const runSync = async (isInitial = false) => {
     const added = await syncVolunteerRegistrations(state);
-    if (onSync) onSync(added);
+    if (onSync) onSync(added, isInitial);
   };
-  runSync(); // sync immediately on load
-  setInterval(runSync, AUTO_SYNC_INTERVAL_MS);
+  runSync(true); // sync immediately on load silently
+  setInterval(() => runSync(false), AUTO_SYNC_INTERVAL_MS);
 }

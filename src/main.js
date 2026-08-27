@@ -2095,11 +2095,13 @@ if (addVolunteerBtn) {
 }
 
 // Auto-sync volunteer registrations from the Google Form's response Sheet.
-startAutoSync(state, (addedCount) => {
+startAutoSync(state, (addedCount, isInitial) => {
   if (addedCount > 0) {
     renderVolunteerPool();
-    showToast(`${addedCount} new volunteer${addedCount > 1 ? 's' : ''} synced from registration form`);
-    logActivity('VOLUNTEER', `${addedCount} new volunteer${addedCount > 1 ? 's' : ''} synced from Google Form registration`);
+    if (!isInitial) {
+      showToast(`${addedCount} new volunteer${addedCount > 1 ? 's' : ''} synced from registration form`);
+      logActivity('VOLUNTEER', `${addedCount} new volunteer${addedCount > 1 ? 's' : ''} synced from Google Form registration`);
+    }
   }
 });
 
