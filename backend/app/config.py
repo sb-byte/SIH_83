@@ -25,7 +25,8 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "http://localhost:8000",
-        "*"
+        "https://unity-eoc-web.onrender.com",
+        "https://unity-eoc-api.onrender.com"
     ]
     
     # Demo Mode allows fetching current rotating TOTP code for seeded credentials
