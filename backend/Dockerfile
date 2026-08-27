@@ -13,8 +13,10 @@ COPY backend/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY backend /app/backend
+COPY scripts /app/scripts
 COPY alembic.ini /app/alembic.ini
 
 EXPOSE 8000
 
-CMD ["python", "-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use shell format to respect $PORT assigned dynamically by Render/Cloud platforms
+CMD uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}

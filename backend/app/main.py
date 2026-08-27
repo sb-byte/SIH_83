@@ -35,14 +35,18 @@ logger = logging.getLogger("unity_eoc")
 async def lifespan(app: FastAPI):
     """Application lifespan: initialize database tables and seed baseline data."""
     logger.info("Initializing Unity EOC Database tables...")
-    Base.metadata.create_all(bind=engine)
-    
-    db = SessionLocal()
     try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        logger.warning(f"Notice initializing database schema: {e}")
+    
+    try:
+        db = SessionLocal()
         seed_database(db)
         logger.info("Database baseline seed complete.")
-    finally:
         db.close()
+    except Exception as e:
+        logger.warning(f"Notice during database seed: {e}")
         
     yield
     logger.info("Shutting down Unity EOC backend...")
