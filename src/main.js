@@ -529,6 +529,19 @@ function initAuthSystem() {
     sound.playClick();
     if (roleModal) {
       roleModal.classList.remove('hidden');
+      const session = getAuthSession();
+      const currentBox = getEl('current-session-card') || roleModal.querySelector('.current-session-box');
+      if (session && session.name) {
+        if (currentBox) currentBox.style.display = 'block';
+        const curAvatar = getEl('switcher-current-avatar');
+        const curName = getEl('switcher-current-name');
+        const curMeta = getEl('switcher-current-meta');
+        if (curAvatar) curAvatar.innerText = session.avatar || '🏛️';
+        if (curName) curName.innerText = session.name;
+        if (curMeta) curMeta.innerText = `${session.credentialId} • ${session.tierName || session.role} (${session.jurisdictionLabel || 'Assigned Scope'})`;
+      } else {
+        if (currentBox) currentBox.style.display = 'none';
+      }
       renderDemoProfiles('modal-profiles-container');
     }
   };
@@ -639,12 +652,22 @@ function renderDemoProfiles(containerId) {
   const session = getAuthSession();
   const currentId = session ? session.credentialId : '';
 
-  container.innerHTML = USERS_DB.map(u => {
+  // Strictly sort by Tier 1 -> Tier 2 -> Tier 3 -> Tier 4 -> Tier 5
+  const sortedUsers = [...USERS_DB].sort((a, b) => {
+    const tA = Number(a.tierLevel) || (a.role === 'T1' ? 1 : a.role === 'T2' ? 2 : a.role === 'T3' ? 3 : a.role === 'T4' ? 4 : 5);
+    const tB = Number(b.tierLevel) || (b.role === 'T1' ? 1 : b.role === 'T2' ? 2 : b.role === 'T3' ? 3 : b.role === 'T4' ? 4 : 5);
+    if (tA !== tB) return tA - tB;
+    return (a.credentialId || '').localeCompare(b.credentialId || '');
+  });
+
+  container.innerHTML = sortedUsers.map(u => {
     const isCur = u.credentialId === currentId;
-    const badgeClass = u.tierLevel === 1 ? 'tier1-badge' :
-      u.tierLevel === 2 ? 'tier2-badge' :
-        u.tierLevel === 3 ? 'tier3-badge' :
-          u.tierLevel === 4 ? 'tier4-badge' : 'tier5-badge';
+    const tierNum = u.tierLevel || (u.role === 'T1' ? 1 : u.role === 'T2' ? 2 : u.role === 'T3' ? 3 : u.role === 'T4' ? 4 : 5);
+    const badgeClass = tierNum === 1 ? 'tier1-badge' :
+      tierNum === 2 ? 'tier2-badge' :
+        tierNum === 3 ? 'tier3-badge' :
+          tierNum === 4 ? 'tier4-badge' : 'tier5-badge';
+    const cleanTierName = u.tierName ? u.tierName.split('•')[0].trim() : `Tier ${tierNum}`;
 
     return `
       <div class="demo-profile-card ${isCur ? 'active-profile' : ''}" data-credential="${u.credentialId}">
@@ -653,7 +676,7 @@ function renderDemoProfiles(containerId) {
           <div>
             <div class="demo-profile-name">${u.name}</div>
             <div class="demo-profile-meta font-bold">
-              <span class="tier-pill-badge ${badgeClass}">${u.tierName.split('•')[0].trim()}</span>
+              <span class="tier-pill-badge ${badgeClass}">${cleanTierName}</span>
               <span class="mono text-xs text-muted">ID: ${u.credentialId}</span>
               ${u.requires2FA ? '<span class="badge badge-alert" style="font-size:0.6rem;">2FA</span>' : ''}
             </div>
@@ -2174,12 +2197,16 @@ function renderIcsRoster() {
   const t = state.icsTree;
   let vacancyCount = 0;
 
+  const session = getAuthSession();
+  const icName = (session && session.tierLevel <= 2) ? session.name : (t.incidentCommander?.name || 'Authorized Incident Commander');
+  const icAgency = (session && session.tierLevel <= 2) ? (session.jurisdictionLabel || `${session.region || 'National'} SDMA / NDMA`) : (t.incidentCommander?.agency || 'SDMA / NDMA');
+
   const icCard = document.createElement('div');
   icCard.className = 'tree-card ic-card';
   icCard.innerHTML = `
     <div class="tree-role">INCIDENT COMMANDER (IC)</div>
-    <div class="tree-name">${t.incidentCommander.name}</div>
-    <div class="tree-agency">${t.incidentCommander.agency} | Phone: ${t.incidentCommander.phone}</div>
+    <div class="tree-name">${icName}</div>
+    <div class="tree-agency">${icAgency} | Status: ACTIVE COMMAND</div>
   `;
   container.appendChild(icCard);
 
@@ -3516,7 +3543,7 @@ function initIapForms() {
 
 function renderIapForm(formNum, container) {
   const session = getAuthSession();
-  const approverName = (session && session.name) ? `${session.name} (${session.designation || 'NDMA Authority'})` : 'Shri Rajesh Verma, IAS (NDMA National Command)';
+  const approverName = (session && session.name) ? `${session.name} (${session.designation || session.tierName || 'Incident Commander'})` : 'Authorized EOC Officer';
   const now = new Date();
   const certDateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + ' ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ' IST';
 
@@ -3603,8 +3630,8 @@ function renderIapForm(formNum, container) {
     }, 50);
 
   } else if (formNum === '203') {
-    const icName = (session && session.tierLevel <= 2) ? session.name : 'Shri R. Mohanty, IAS';
-    const icAgency = (session && session.region) ? `${session.region} SDMA` : 'SDMA Odisha / NDMA';
+    const icName = (session && session.name) ? session.name : 'Authorized Incident Commander';
+    const icAgency = (session && session.jurisdictionLabel) ? session.jurisdictionLabel : ((session && session.region) ? `${session.region} SDMA / NDMA` : 'National Disaster Management Authority');
     container.innerHTML = `
       <div class="nims-form-wrapper">
         <div class="nims-form-header" style="border-bottom: 2px solid var(--border-color); padding-bottom: 6px;">

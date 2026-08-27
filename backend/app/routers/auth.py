@@ -20,8 +20,8 @@ LOCKOUT_DURATION_SECS = 300 # 5 minutes
 
 @router.get("/directory", response_model=dict)
 def get_directory(db: Session = Depends(get_db)):
-    """Public credential directory (no password hashes or secrets)."""
-    users = db.query(User).all()
+    """Public credential directory (no password hashes or secrets), ordered strictly by tier."""
+    users = db.query(User).order_by(User.tier_level.asc(), User.credential_id.asc()).all()
     out = []
     for u in users:
         out.append(DirectoryUserOut(

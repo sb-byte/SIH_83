@@ -115,14 +115,13 @@
         <!-- Active User Profile & Tier Security Pill -->
         <div id="auth-header-pill" class="auth-header-pill" role="button"
           title="View Security Credentials / Switch Profile">
-          <div class="auth-avatar-circle" id="header-user-avatar">NDMA</div>
+          <div class="auth-avatar-circle" id="header-user-avatar">🏛️</div>
           <div class="auth-pill-text">
             <div class="flex items-center gap-1.5">
-              <span id="header-user-name" class="font-bold text-xs">Shri Rajesh Verma, IAS</span>
-              <span id="header-tier-chip" class="tier-pill-badge tier1-badge">T1 • AUTHORITY</span>
+              <span id="header-user-name" class="font-bold text-xs">OFFICIAL GATEWAY</span>
+              <span id="header-tier-chip" class="tier-pill-badge">NIC PARICHAY</span>
             </div>
-            <div class="text-xs text-muted" id="header-jurisdiction" style="display: none;">National Command (NDMA)
-            </div>
+            <div class="text-xs text-muted" id="header-jurisdiction">Awaiting agency credential</div>
           </div>
           <span class="auth-switch-arrow">▾</span>
         </div>
@@ -284,7 +283,7 @@
                 </label>
                 <div class="input-with-icon">
                   <input type="text" id="auth-input-id" class="field-input font-bold mono"
-                    placeholder="e.g. NDMA-AUTH-01" required value="NDMA-AUTH-01" autocomplete="username" />
+                    placeholder="e.g. NDMA-AUTH-01, ODISHA-SEOC-01, AM-VOL-01" required value="" autocomplete="username" />
                 </div>
                 <span class="field-hint">Enter your designated NDMA / SDMA / DDMA / NDRF officer credential ID.</span>
               </div>
@@ -296,13 +295,13 @@
                 </label>
                 <div class="input-with-icon">
                   <input type="password" id="auth-input-password" class="field-input font-bold"
-                    placeholder="••••••••••••" value="Unity@2026" required autocomplete="current-password" />
+                    placeholder="Enter security passkey" value="" required autocomplete="current-password" />
                 </div>
                 <span class="field-hint">Verified server-side via scrypt cryptographic hash.</span>
               </div>
 
               <!-- Dynamic 2FA Container (Mandatory for Tier 1 & Tier 2) -->
-              <div id="auth-2fa-container" class="auth-2fa-box">
+              <div id="auth-2fa-container" class="auth-2fa-box" style="display: none;">
                 <div class="auth-2fa-header">
                   <div class="auth-2fa-title font-bold text-navy">
                     <span>Two-Factor Authentication (2FA) Mandatory</span>
@@ -2174,13 +2173,13 @@
       </div>
       <div class="modal-content">
         <!-- Active Session Card -->
-        <div class="current-session-box">
+        <div class="current-session-box" id="current-session-card" style="display: none;">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
               <div class="text-3xl" id="switcher-current-avatar">🏛️</div>
               <div>
-                <div class="font-bold text-navy" id="switcher-current-name">Shri Rajesh Verma, IAS</div>
-                <div class="text-xs text-muted" id="switcher-current-meta">NDMA-AUTH-01 • Tier 1 Authority</div>
+                <div class="font-bold text-navy" id="switcher-current-name">OFFICIAL GATEWAY</div>
+                <div class="text-xs text-muted" id="switcher-current-meta">Awaiting login credential</div>
               </div>
             </div>
             <span class="status-chip online">SESSION ACTIVE</span>

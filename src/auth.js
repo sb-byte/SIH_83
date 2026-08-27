@@ -89,7 +89,15 @@ export const USERS_DB = [];
 export async function loadDirectory() {
   const r = await api('GET', '/directory');
   USERS_DB.length = 0;
-  if (r.ok && Array.isArray(r.body.users)) USERS_DB.push(...r.body.users);
+  if (r.ok && Array.isArray(r.body.users)) {
+    const sorted = [...r.body.users].sort((a, b) => {
+      const tA = Number(a.tierLevel) || (a.role === 'T1' ? 1 : a.role === 'T2' ? 2 : a.role === 'T3' ? 3 : a.role === 'T4' ? 4 : 5);
+      const tB = Number(b.tierLevel) || (b.role === 'T1' ? 1 : b.role === 'T2' ? 2 : b.role === 'T3' ? 3 : b.role === 'T4' ? 4 : 5);
+      if (tA !== tB) return tA - tB;
+      return (a.credentialId || '').localeCompare(b.credentialId || '');
+    });
+    USERS_DB.push(...sorted);
+  }
   return USERS_DB;
 }
 
