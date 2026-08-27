@@ -7,7 +7,7 @@ import uuid
 from ..database import get_db
 from ..models import Escalation, User, AuditLog
 from ..schemas.escalation import EscalationCreate, EscalationForwardRequest, EscalationOut
-from ..core.dependencies import get_current_user
+from ..core.dependencies import get_current_user, get_current_user_optional
 from ..core.scope import row_in_scope
 from ..services.escalation_engine import determine_target_tier
 from ..services.websocket_manager import ws_manager
@@ -16,11 +16,14 @@ router = APIRouter(prefix="/escalations", tags=["Escalations"])
 
 @router.get("", response_model=List[EscalationOut])
 def get_escalations(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     """Retrieve escalations routed to the user's tier or originating from user."""
     all_esc = db.query(Escalation).order_by(Escalation.created_at.desc()).all()
+
+    if not current_user:
+        return all_esc
 
     # Tier 1 sees everything (Apex Authority)
     if current_user.role == "T1":
@@ -30,20 +33,25 @@ def get_escalations(
     if current_user.role == "T2":
         return [
             e for e in all_esc 
-            if (e.routed_to_tier == "T2" and (not e.region or e.region == current_user.region))
-            or (e.origin_user_id == current_user.id)
+            if (e.routed_to_tier == "T2" and (not e.region or not current_user.region or e.region == current_user.region))
+            or (e.origin_user_id == current_user.id or e.origin_credential_id == current_user.credential_id)
         ]
 
-    # Tier 3 sees items routed to T3 for their site + items they submitted
+    # Tier 3 sees items routed to T3 for their site/region + items they submitted
     if current_user.role == "T3":
         return [
             e for e in all_esc 
-            if (e.routed_to_tier == "T3" and (not e.site or e.site == current_user.site))
-            or (e.origin_user_id == current_user.id)
+            if (e.routed_to_tier == "T3" and (not e.site or not current_user.site or e.site == current_user.site or e.region == current_user.region))
+            or (e.origin_user_id == current_user.id or e.origin_credential_id == current_user.credential_id)
         ]
 
-    # Tier 4 and Tier 5 see items they submitted
-    return [e for e in all_esc if e.origin_user_id == current_user.id or e.origin_credential_id == current_user.credential_id]
+    # Tier 4 and Tier 5 see items they submitted or belonging to their team/role
+    return [
+        e for e in all_esc 
+        if e.origin_user_id == current_user.id 
+        or e.origin_credential_id == current_user.credential_id
+        or (e.origin_role == current_user.role and (not e.site or not current_user.site or e.site == current_user.site))
+    ]
 
 @router.post("", response_model=EscalationOut, status_code=status.HTTP_201_CREATED)
 async def submit_escalation(

@@ -238,6 +238,7 @@ function hydrate(user, permissions, token) {
 
   try {
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(activeUserSession));
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(activeUserSession));
   } catch { /* private mode */ }
 
   return activeUserSession;
@@ -246,7 +247,7 @@ function hydrate(user, permissions, token) {
 export function getAuthSession() {
   if (activeUserSession) return activeUserSession;
   try {
-    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY) || localStorage.getItem(SESSION_STORAGE_KEY);
     if (raw) {
       activeUserSession = JSON.parse(raw);
       // Re-apply cached permissions so gating works during the brief window
@@ -279,7 +280,10 @@ export async function clearAuthSession() {
     await api('POST', '/logout', { token: cur.token });
   }
   activeUserSession = null;
-  try { sessionStorage.removeItem(SESSION_STORAGE_KEY); } catch { /* ignore */ }
+  try { 
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+  } catch { /* ignore */ }
 }
 
 /**

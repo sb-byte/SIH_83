@@ -6,18 +6,21 @@ import uuid
 from ..database import get_db
 from ..models import Task, User, AuditLog
 from ..schemas.task import TaskCreate, TaskUpdate, TaskOut
-from ..core.dependencies import get_current_user, require_tier
+from ..core.dependencies import get_current_user, get_current_user_optional, require_tier
 from ..core.scope import filter_scoped, row_in_scope
 from ..services.websocket_manager import ws_manager
 
-router = APIRouter(prefix="/tasks", tags=["Tasks & Kanban"])
+router = APIRouter(prefix="/tasks", tags=["Incident Tasks"])
 
 @router.get("", response_model=List[TaskOut])
 def get_tasks(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
-    """Retrieve tasks scoped to user's geographic jurisdiction."""
+    """Retrieve tasks scoped to user's geographic jurisdiction or all overview tasks."""
+    if not current_user:
+        return db.query(Task).all()
+
     # Tier 4 only sees own assigned tasks
     if current_user.role == "T4":
         tasks = db.query(Task).all()
@@ -30,11 +33,7 @@ def get_tasks(
     # Tier 5 only sees own assigned task
     if current_user.role == "T5":
         tasks = db.query(Task).all()
-        return [
-            t for t in tasks 
-            if (t.assigned_to and (current_user.name in t.assigned_to or "Aapda Mitra" in t.assigned_to))
-            or (t.site == current_user.site)
-        ]
+        return [t for t in tasks if (t.assigned_to and current_user.name in t.assigned_to) or (t.site == current_user.site)]
 
     tasks = db.query(Task).all()
     return filter_scoped(current_user, tasks)

@@ -7,7 +7,7 @@ import uuid
 from ..database import get_db
 from ..models import DangerZone, User, AuditLog
 from ..schemas.danger_zone import DangerZoneCreate, DangerZoneUpdate, DangerZoneOut
-from ..core.dependencies import get_current_user
+from ..core.dependencies import get_current_user, get_current_user_optional
 from ..core.permissions import can_act
 from ..core.scope import filter_scoped, ensure_in_scope
 from ..services.websocket_manager import ws_manager
@@ -17,14 +17,16 @@ router = APIRouter(prefix="/danger-zones", tags=["Danger Zones"])
 @router.get("", response_model=List[DangerZoneOut])
 def get_danger_zones(
     include_resolved: bool = False,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
-    """Retrieve danger zones within jurisdiction."""
+    """Retrieve danger zones within jurisdiction or all public active danger zones."""
     query = db.query(DangerZone)
     if not include_resolved:
         query = query.filter(DangerZone.resolved_at.is_(None))
     zones = query.order_by(DangerZone.declared_at.desc()).all()
+    if not current_user:
+        return zones
     return filter_scoped(current_user, zones)
 
 @router.post("", response_model=DangerZoneOut, status_code=status.HTTP_201_CREATED)

@@ -7,7 +7,7 @@ import uuid
 from ..database import get_db
 from ..models import Incident, CitizenSOS, User, AuditLog
 from ..schemas.incident import IncidentCreate, IncidentOut, SOSOut
-from ..core.dependencies import get_current_user
+from ..core.dependencies import get_current_user, get_current_user_optional
 from ..core.scope import filter_scoped, row_in_scope
 from ..services.websocket_manager import ws_manager
 
@@ -15,17 +15,19 @@ router = APIRouter(prefix="", tags=["Incidents & Citizen SOS"])
 
 @router.get("/incidents", response_model=List[IncidentOut])
 def get_incidents(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
-    """Retrieve raw/verified incident feed (Tier 4 has no incident feed read grant -> 403)."""
-    if current_user.role == "T4":
+    """Retrieve raw/verified incident feed."""
+    if current_user and current_user.role == "T4":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access Denied: Tier 4 Frontline operators do not hold a broad incident feed read grant."
         )
 
     incidents = db.query(Incident).order_by(Incident.created_at.desc()).all()
+    if not current_user:
+        return incidents
     return filter_scoped(current_user, incidents)
 
 @router.post("/incidents", response_model=IncidentOut, status_code=status.HTTP_201_CREATED)

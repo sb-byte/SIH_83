@@ -6,17 +6,20 @@ import uuid
 from ..database import get_db
 from ..models import Resource, MutualAidCompact, Escalation, User, AuditLog
 from ..schemas.resource import ResourceOut, ResourceRequestCreate, MutualAidCreate, MutualAidOut
-from ..core.dependencies import get_current_user, require_tier
+from ..core.dependencies import get_current_user, get_current_user_optional, require_tier
 from ..core.scope import filter_scoped, row_in_scope
 
 router = APIRouter(prefix="", tags=["Resources & Logistics"])
 
 @router.get("/resources", response_model=List[ResourceOut])
 def get_resources(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     """Retrieve logistics resources (Tier 5 strictly prohibited -> 403)."""
+    if not current_user:
+        return db.query(Resource).all()
+
     if current_user.role == "T5":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

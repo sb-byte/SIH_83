@@ -167,13 +167,10 @@ function showToast(message, type = 'info') {
 // APPLICATION INITIALIZATION & API HYDRATION
 // =========================================================================
 async function hydrateStateFromAPI() {
-  const session = getAuthSession();
-  if (!session || !session.token) return;
-
   try {
     const [
       incRes, sosRes, sheltersRes, dzRes, tasksRes, assetsRes, rumorsRes,
-      dmgRes, volPoolRes, volSquadsRes, radioRes, auditRes, hazardRes
+      dmgRes, volPoolRes, volSquadsRes, radioRes, auditRes, hazardRes, escRes
     ] = await Promise.all([
       apiFetch('GET', '/incidents'),
       apiFetch('GET', '/sos'),
@@ -187,7 +184,8 @@ async function hydrateStateFromAPI() {
       apiFetch('GET', '/volunteer-squads'),
       apiFetch('GET', '/radio-channels'),
       apiFetch('GET', '/audit-log'),
-      apiFetch('GET', '/hazard-overlays')
+      apiFetch('GET', '/hazard-overlays'),
+      apiFetch('GET', '/escalations')
     ]);
 
     if (incRes.ok && Array.isArray(incRes.body)) state.incidents = incRes.body;
@@ -201,6 +199,7 @@ async function hydrateStateFromAPI() {
     if (volPoolRes.ok && Array.isArray(volPoolRes.body)) state.volunteerPoolData = volPoolRes.body;
     if (volSquadsRes.ok && Array.isArray(volSquadsRes.body)) state.volunteerSquads = volSquadsRes.body;
     if (radioRes.ok && Array.isArray(radioRes.body)) state.radioChannels = radioRes.body;
+    if (escRes.ok && Array.isArray(escRes.body)) state.escalations = escRes.body;
     if (auditRes.ok && Array.isArray(auditRes.body)) {
       state.activityLog = auditRes.body.map(item => ({
         time: item.timestamp ? new Date(item.timestamp).toLocaleTimeString('en-IN', { hour12: false }) + ' IST' : 'N/A',
@@ -3147,7 +3146,8 @@ export async function renderEscalationInbox() {
 
   try {
     const res = await apiFetch('GET', '/escalations');
-    const rows = (res.ok && Array.isArray(res.body.data)) ? res.body.data : [];
+    const rows = (res.ok && Array.isArray(res.body)) ? res.body : ((res.ok && Array.isArray(res.body.data)) ? res.body.data : (Array.isArray(state.escalations) ? state.escalations : []));
+    if (res.ok && Array.isArray(res.body)) state.escalations = res.body;
 
     // Calculate Summary Stats
     const pendingCount = rows.filter(r => r.status === 'pending').length;

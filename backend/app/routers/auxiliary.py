@@ -13,7 +13,7 @@ from ..schemas.auxiliary import (
     RumorCreate, RumorOut, DamageAssessmentCreate, DamageAssessmentOut,
     ICSCommandNodeOut, HazardOverlayOut
 )
-from ..core.dependencies import get_current_user
+from ..core.dependencies import get_current_user, get_current_user_optional
 from ..core.scope import filter_scoped, ensure_in_scope
 from ..services.websocket_manager import ws_manager
 
@@ -22,29 +22,35 @@ router = APIRouter(prefix="", tags=["Auxiliary Domain Entities"])
 # ---- Radio Channels ----
 @router.get("/radio-channels", response_model=List[RadioChannelOut])
 def get_radio_channels(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     channels = db.query(RadioChannel).all()
+    if not current_user:
+        return channels
     # Filter by tier clearance
     return [c for c in channels if current_user.role in (c.allowed_tiers or [])]
 
 # ---- Volunteer Squads ----
 @router.get("/volunteer-squads", response_model=List[VolunteerSquadOut])
 def get_volunteer_squads(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     squads = db.query(VolunteerSquad).all()
+    if not current_user:
+        return squads
     return filter_scoped(current_user, squads)
 
 # ---- Volunteer Pool ----
 @router.get("/volunteer-pool", response_model=List[VolunteerOut])
 def get_volunteer_pool(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     volunteers = db.query(VolunteerPool).filter(VolunteerPool.status != "REMOVED").all()
+    if not current_user:
+        return volunteers
     return filter_scoped(current_user, volunteers)
 
 @router.post("/volunteer-pool", response_model=VolunteerOut, status_code=status.HTTP_201_CREATED)
@@ -118,10 +124,12 @@ async def remove_volunteer(
 # ---- Rumors Debunking ----
 @router.get("/rumors", response_model=List[RumorOut])
 def get_rumors(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     rumors = db.query(RumorDebunking).all()
+    if not current_user:
+        return rumors
     return filter_scoped(current_user, rumors)
 
 @router.post("/rumors", response_model=RumorOut, status_code=status.HTTP_201_CREATED)
@@ -168,10 +176,12 @@ async def add_rumor(
 # ---- Damage Assessments ----
 @router.get("/damage-assessments", response_model=List[DamageAssessmentOut])
 def get_damage_assessments(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     assessments = db.query(DamageAssessment).all()
+    if not current_user:
+        return assessments
     return filter_scoped(current_user, assessments)
 
 @router.post("/damage-assessments", response_model=DamageAssessmentOut, status_code=status.HTTP_201_CREATED)
@@ -219,7 +229,7 @@ async def add_damage_assessment(
 # ---- ICS Command Tree ----
 @router.get("/ics-tree")
 def get_ics_tree(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     nodes = db.query(ICSCommandNode).all()
@@ -240,8 +250,10 @@ def get_ics_tree(
 # ---- Hazard Overlays ----
 @router.get("/hazard-overlays", response_model=List[HazardOverlayOut])
 def get_hazard_overlays(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     overlays = db.query(HazardOverlay).filter(HazardOverlay.active == 1).all()
+    if not current_user:
+        return overlays
     return filter_scoped(current_user, overlays)

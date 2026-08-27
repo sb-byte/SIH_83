@@ -243,46 +243,164 @@ def seed_database(db: Session):
             db.add(Incident(**inc_data))
             existing_inc_ids.add(inc_data["id"])
 
-    # 6. Seed Initial Escalations
+    # 6. Seed Initial Escalations (2-3 per tier for requests and approvals)
     existing_esc_ids = {e.id for e in db.query(Escalation.id).all()}
     default_escalations = [
+        # Tier 5 (Volunteer Station • AM-VOL-01/02) -> Routed to Tier 3
         {
-            "id": "ESC-1001",
-            "origin_credential_id": "NDMA-AUTH-04",
+            "id": "ESC-VOL-501",
+            "origin_credential_id": "AM-VOL-01",
+            "origin_role": "T5",
+            "routed_to_tier": "T3",
+            "region": "Odisha",
+            "site": "Bhadrak / Dhamra",
+            "kind": "resource",
+            "reason": "Dhamra Coastal Shelter medical kit depleted; requesting immediate dispatch of 250 ORS electrolyte packs & sterile wound dressings.",
+            "status": "pending"
+        },
+        {
+            "id": "ESC-VOL-502",
+            "origin_credential_id": "AM-VOL-02",
+            "origin_role": "T5",
+            "routed_to_tier": "T3",
+            "region": "Odisha",
+            "site": "Kendrapara / Rajnagar",
+            "kind": "backup_request",
+            "reason": "Rajnagar creek embankment mudslide encroaching rural access footpath; requesting urgent barrier sandbagging squad.",
+            "status": "approved"
+        },
+        {
+            "id": "ESC-VOL-503",
+            "origin_credential_id": "AM-VOL-01",
+            "origin_role": "T5",
+            "routed_to_tier": "T3",
+            "region": "Odisha",
+            "site": "Bhadrak / Dhamra",
+            "kind": "general",
+            "reason": "3 elderly evacuees with acute mobility impairments need specialized stretcher transport from Bhadrak college annex.",
+            "status": "approved"
+        },
+
+        # Tier 4 (Frontline Tactical Strike • NDRF-STRIKE-01 / SDRF-SAR-01) -> Routed to Tier 2
+        {
+            "id": "ESC-TAC-401",
+            "origin_credential_id": "NDRF-STRIKE-01",
             "origin_role": "T4",
             "routed_to_tier": "T2",
             "region": "Odisha",
             "site": "Bhadrak / Dhamra",
             "kind": "resource",
-            "reason": "Requesting immediate air-lifting support & heavy winch machinery for 200 stranded civilians at Dhamra jetty.",
+            "reason": "Extreme tidal surge (+3.5m) at Dhamra Port jetty; requesting heavy winch crane machinery and inflatable pontoon bridges.",
             "status": "pending"
         },
         {
-            "id": "ESC-1002",
-            "origin_credential_id": "NDMA-AUTH-03",
-            "origin_role": "T3",
+            "id": "ESC-TAC-402",
+            "origin_credential_id": "SDRF-SAR-01",
+            "origin_role": "T4",
             "routed_to_tier": "T2",
             "region": "Odisha",
             "site": "Kendrapara / Rajnagar",
             "kind": "backup_request",
-            "reason": "High-capacity dewatering pumps depleted in Rajnagar sub-division; requesting inter-state mutual aid deployment.",
+            "reason": "Deep Water Dinghy 09 engine fouled; requesting secondary 40HP outboard motor and searchlight drone support for night creek rescue.",
             "status": "pending"
         },
         {
-            "id": "ESC-1003",
-            "origin_credential_id": "NDMA-AUTH-05",
-            "origin_role": "T5",
-            "routed_to_tier": "T3",
+            "id": "ESC-TAC-403",
+            "origin_credential_id": "NDRF-STRIKE-01",
+            "origin_role": "T4",
+            "routed_to_tier": "T2",
+            "region": "Odisha",
+            "site": "Bhadrak / Dhamra",
+            "kind": "backup_request",
+            "reason": "Search & rescue perimeter extended across Satbhaya mangrove belt; requesting additional 12-member SDRF dive squad reinforcement.",
+            "status": "approved"
+        },
+
+        # Tier 3 (District Coordination Hub • BHADRAK-DIST-01 / KENDRAPARA-DIST-01) -> Routed to Tier 2
+        {
+            "id": "ESC-DST-301",
+            "origin_credential_id": "BHADRAK-DIST-01",
+            "origin_role": "T3",
+            "routed_to_tier": "T2",
+            "region": "Odisha",
+            "site": "Bhadrak / Dhamra",
+            "kind": "resource",
+            "reason": "High-capacity 500GPM mobile dewatering pumps depleted across Bhadrak sub-division; requesting inter-district asset surge from Cuttack depot.",
+            "status": "pending"
+        },
+        {
+            "id": "ESC-DST-302",
+            "origin_credential_id": "KENDRAPARA-DIST-01",
+            "origin_role": "T3",
+            "routed_to_tier": "T2",
+            "region": "Odisha",
+            "site": "Kendrapara / Rajnagar",
+            "kind": "resource",
+            "reason": "Kendrapara Cyclone Shelter reached 95% capacity; requesting State Transport bus fleet authorization to route 350 overflow evacuees to Balasore.",
+            "status": "approved"
+        },
+        {
+            "id": "ESC-DST-303",
+            "origin_credential_id": "BHADRAK-DIST-01",
+            "origin_role": "T3",
+            "routed_to_tier": "T2",
+            "region": "Odisha",
+            "site": "Bhadrak / Dhamra",
+            "kind": "general",
+            "reason": "Auxiliary diesel generator backup down to 4 hours at District Headquarters Hospital; requesting emergency green corridor for fuel tanker transit.",
+            "status": "approved"
+        },
+
+        # Tier 2 (State Strategic TOC • ODISHA-SEOC-01 / WB-SEOC-01) -> Routed to Tier 1
+        {
+            "id": "ESC-ST-201",
+            "origin_credential_id": "ODISHA-SEOC-01",
+            "origin_role": "T2",
+            "routed_to_tier": "T1",
+            "region": "Odisha",
+            "site": "Bhadrak / Dhamra",
+            "kind": "resource",
+            "reason": "Requesting National Disaster Response Reserve deployment of 4 Indian Air Force Mi-17 heavy transport helicopters for food packet airdrops across inundated Dhamra & Sunderbans sectors.",
+            "status": "pending"
+        },
+        {
+            "id": "ESC-ST-202",
+            "origin_credential_id": "ODISHA-SEOC-01",
+            "origin_role": "T2",
+            "routed_to_tier": "T1",
+            "region": "Odisha",
+            "site": "Bhadrak / Dhamra",
+            "kind": "authority",
+            "reason": "Requesting National Disaster Mitigation Fund advance allocation of ₹25 Crore for urgent emergency coastal armor rock reinforcement.",
+            "status": "approved"
+        },
+        {
+            "id": "ESC-ST-203",
+            "origin_credential_id": "WB-SEOC-01",
+            "origin_role": "T2",
+            "routed_to_tier": "T1",
             "region": "West Bengal",
             "site": "Kolkata / Sunderbans",
-            "kind": "general",
-            "reason": "Sunderbans Gosaba shelter capacity reached 95%; requesting emergency allotment of high-capacity water purification units.",
+            "kind": "resource",
+            "reason": "Requesting Indian Coast Guard pollution control & coastal SAR cutter repositioning off Dhamra/Sunderbans channel.",
+            "status": "pending"
+        },
+        {
+            "id": "ESC-ST-204",
+            "origin_credential_id": "ODISHA-SEOC-01",
+            "origin_role": "T2",
+            "routed_to_tier": "T1",
+            "region": "Odisha",
+            "site": "Bhadrak / Dhamra",
+            "kind": "authority",
+            "reason": "Requesting Inter-State Mutual Aid Compact authorization to mobilize 6 SDRF flood rescue battalions from Andhra Pradesh into southern Odisha.",
             "status": "approved"
         }
     ]
     for esc_data in default_escalations:
         if esc_data["id"] not in existing_esc_ids:
             db.add(Escalation(**esc_data))
+            existing_esc_ids.add(esc_data["id"])
             existing_esc_ids.add(esc_data["id"])
 
     # Seed rich datasets from dump file if available

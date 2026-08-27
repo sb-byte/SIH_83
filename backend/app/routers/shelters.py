@@ -6,7 +6,7 @@ import uuid
 from ..database import get_db
 from ..models import Shelter, User, AuditLog
 from ..schemas.shelter import ShelterCreate, ShelterUpdate, ShelterOut
-from ..core.dependencies import get_current_user, require_action
+from ..core.dependencies import get_current_user, get_current_user_optional, require_action
 from ..core.scope import filter_scoped, ensure_in_scope, row_in_scope
 from ..services.websocket_manager import ws_manager
 
@@ -14,11 +14,13 @@ router = APIRouter(prefix="/shelters", tags=["Shelters"])
 
 @router.get("", response_model=List[ShelterOut])
 def get_shelters(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
-    """Get all shelters filtered by caller's jurisdiction."""
+    """Get all shelters filtered by caller's jurisdiction or all public shelters."""
     shelters = db.query(Shelter).all()
+    if not current_user:
+        return shelters
     return filter_scoped(current_user, shelters)
 
 @router.get("/{shelter_id}", response_model=ShelterOut)

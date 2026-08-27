@@ -62,6 +62,28 @@ def get_current_user(
         
     return user
 
+def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """Extract and validate JWT Bearer token if present, returning None if unauthenticated."""
+    if not credentials:
+        return None
+    token = credentials.credentials
+    payload = decode_access_token(token)
+    if not payload:
+        return None
+    credential_id = payload.get("credential_id")
+    if not credential_id:
+        return None
+    user = db.query(User).filter(User.credential_id == credential_id).first()
+    if not user:
+        return None
+    iat = payload.get("iat", 0)
+    if user.revoked_at and iat < user.revoked_at:
+        return None
+    return user
+
 def require_tier(allowed_tiers: List[str]):
     """Guard dependency ensuring the authenticated user possesses an authorized tier."""
     def tier_checker(current_user: User = Depends(get_current_user)):
