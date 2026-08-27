@@ -62,7 +62,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
-    allow_origin_regex=r"https://.*\.onrender\.com|https://.*\.vercel\.app|http://localhost:.*|http://127\.0\.0\.1:.*",
+    allow_origin_regex=r"https://.*\.onrender\.com|https://.*\.vercel\.app|https://.*\.railway\.app|https://.*\.up\.railway\.app|http://localhost:.*|http://127\.0\.0\.1:.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -101,8 +101,20 @@ async def websocket_endpoint(websocket: WebSocket):
         logger.warning(f"WebSocket error: {e}")
         ws_manager.disconnect(websocket)
 
+import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+# Serve built frontend assets if dist exists
+if os.path.exists("dist"):
+    if os.path.exists("dist/assets"):
+        app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
+
 @app.get("/")
 def root():
+    index_file = os.path.join("dist", "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
     return {
         "system": "Unity EOC — Disaster Operations Center API",
         "version": settings.VERSION,
@@ -110,3 +122,12 @@ def root():
         "docs_url": "/docs",
         "openapi_url": "/openapi.json"
     }
+
+@app.get("/api/health")
+def health_check():
+    return {
+        "status": "HEALTHY",
+        "system": settings.PROJECT_NAME,
+        "version": settings.VERSION
+    }
+
