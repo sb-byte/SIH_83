@@ -4,10 +4,11 @@ import {
   RotateCcw, ShieldAlert, ShieldPlus, Activity, Star, GitMerge, ClipboardList,
   Lock, Target, Layers, Gauge, Play, Pause, Square, Rewind, Eye, UserCog,
   FileText, Plus, X, Send, ListChecks, Radar, CalendarClock, Flame, Wind,
+  CheckCircle2, XCircle, ArrowUpRight, ShieldCheck,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
-// Unity EOC — dependency graph engine demo (v3)
+// Unity EOC — dependency graph engine demo (v3 - Light Mode Edition)
 //
 // Selection model, rebuilt:
 //   1. Pick one of the 4 CLUSTERS. Each cluster ships a GENERIC template —
@@ -34,13 +35,15 @@ import {
 //      this prototype is the wrong shape for sustained-load and crowd
 //      dynamics, so those two show their Management Plan instead of a
 //      graph that would misrepresent what the model can actually do.
+//   6. Escalation Requests & Approvals: Field & agency escalation workflow
+//      with multi-tier authorization, resource replenishment, and capability reinforcement.
 // ---------------------------------------------------------------------------
 
 const CLUSTERS = {
   1: {
     title: "Directional Evacuation",
     short: "Evacuation",
-    color: "#5b7fa6",
+    color: "#2563eb",
     buildable: true,
     plan: {
       engineMode: "Cascade engine (hop-1 / hop-2 propagation) with a spreading threat geometry.",
@@ -421,7 +424,6 @@ const CLUSTERS = {
       },
       dam: { label: "Dam or Levee Failure", full: false },
       coldstorm: { label: "Extreme Cold / Winter Storm", full: false },
-      // non-disaster additions (WIP — dropdown option only, no nodes/injects yet)
       gas_leak_evac: { label: "Gas Leak Requiring Area Evacuation", full: false },
       building_fire_evac: { label: "Building/High-Rise Fire Evacuation", full: false },
     },
@@ -430,7 +432,7 @@ const CLUSTERS = {
   2: {
     title: "Sustained-Load / Threshold",
     short: "Threshold",
-    color: "#b3893f",
+    color: "#d97706",
     buildable: false,
     plan: {
       engineMode: "Needs a new engine mode: tiered threshold escalation, not cascade propagation. No discrete trigger event to inject.",
@@ -452,7 +454,6 @@ const CLUSTERS = {
       outbreak: { label: "Infectious Disease Outbreak", full: false },
       pandemic: { label: "Pandemic", full: false },
       hospital_overload: { label: "Hospital System Overload", full: false },
-      // non-disaster additions (WIP — dropdown option only, no nodes/injects yet)
       water_contamination: { label: "Water Supply Contamination", full: false },
       food_poisoning: { label: "Mass Food / Water Poisoning Event", full: false },
       prison_riot: { label: "Prison Riot / Sustained Unrest", full: false },
@@ -464,7 +465,7 @@ const CLUSTERS = {
   3: {
     title: "Point-Source Containment",
     short: "Containment",
-    color: "#4f9d78",
+    color: "#059669",
     buildable: true,
     plan: {
       engineMode: "Cascade engine — closest fit of any cluster, one clear origin node.",
@@ -554,7 +555,6 @@ const CLUSTERS = {
       gas: { label: "Gas Pipeline Failure or Explosion", full: false },
       hazmat: { label: "Hazardous Materials Spill", full: false },
       fire: { label: "Major Structural Fire (non-wildfire)", full: false },
-      // non-disaster additions (WIP — dropdown option only, no nodes/injects yet)
       crane_collapse: { label: "Crane / Construction Site Collapse", full: false },
       train_derailment: { label: "Train Derailment (hazmat involved)", full: false },
     },
@@ -563,7 +563,7 @@ const CLUSTERS = {
   4: {
     title: "Crowd / Security",
     short: "Crowd",
-    color: "#a16a5c",
+    color: "#e11d48",
     buildable: true,
     plan: {
       engineMode: "Cascade engine (same hop-1/hop-2 propagation as Clusters 1 & 3) run as a stopgap. This is a simplification: it treats crowd pressure as an aggregate node score rather than true per-exit egress modeling, which remains the real open research problem.",
@@ -653,7 +653,6 @@ const CLUSTERS = {
       crowd_crush: { label: "Stadium or Venue Crowd Crush", full: false },
       public_event: { label: "Large Public Event Emergency", full: false },
       transit_crowd: { label: "Transit Hub Crowd Emergency", full: false },
-      // non-disaster additions (WIP — dropdown option only, no nodes/injects yet)
       bomb_threat: { label: "Bomb Threat / Suspicious Device", full: false },
       hostage: { label: "Hostage Situation", full: false },
       vip_security: { label: "VIP Security Breach / Protest Breach", full: false },
@@ -662,12 +661,50 @@ const CLUSTERS = {
 };
 
 // ---------------------------------------------------------------------------
-// EXERCISE-only machinery. None of this exists in LIVE mode: a live event
-// has no learning objective, no scripted timeline, no pause button, no
-// roster of "players" (roles are already fixed by real job function), and
-// it doesn't stop to grade itself. Everything below is how EXERCISE and
-// LIVE actually diverge, not just a re-skin of the same mode.
+// 3 Initial Multi-Agency Escalations (Realistic District / State / Regional Assets)
 // ---------------------------------------------------------------------------
+const INITIAL_ESCALATIONS = [
+  {
+    id: "esc-1",
+    title: "SDRF / NDRF Heavy Rescue Battalion Deployment",
+    agency: "State Emergency Operations Center (SEOC)",
+    tier: "Tier 2 — State Mutual Aid",
+    urgency: "High",
+    requestedAt: "00:01:20",
+    status: "pending", // 'pending' | 'approved' | 'rejected'
+    grantUnits: 3,
+    targetNodeHint: ["rescue", "response", "relief", "suppression"],
+    description: "Multi-point infrastructure failure reported. Requesting 3 specialized heavy search & rescue task teams with boat/amphibious gear.",
+    justification: "Local first responders have exhausted 100% of forward deployed capacity.",
+  },
+  {
+    id: "esc-2",
+    title: "Inter-District Medical Evacuation & Trauma Corridor",
+    agency: "Directorate of Health Services",
+    tier: "Tier 2 — Regional Health Authority",
+    urgency: "Critical",
+    requestedAt: "00:02:45",
+    status: "pending",
+    grantUnits: 2,
+    targetNodeHint: ["medical", "hospital"],
+    description: "Requesting immediate priority green corridor clearance, 12 Advanced Life Support ambulances, and 50 trauma bed reservations in adjacent district.",
+    justification: "Zonal hospital triage index has reached critical overload.",
+  },
+  {
+    id: "esc-3",
+    title: "Emergency Mobile Substation & Generator Bank Authorization",
+    agency: "State Electricity Transmission Utility",
+    tier: "Tier 1 — Critical Infrastructure",
+    urgency: "Medium",
+    requestedAt: "00:03:10",
+    status: "approved",
+    approvedAt: "00:03:40",
+    grantUnits: 2,
+    targetNodeHint: ["power", "utilities", "backup"],
+    description: "4x 500kVA mobile diesel generators authorized for emergency backup at primary communication towers and water pumping facilities.",
+    justification: "Pre-emptive containment against total telemetry and municipal blackout.",
+  }
+];
 
 const EXERCISE_TYPES = {
   tabletop: { label: "Tabletop", pool: 6, note: "Discussion-based walkthrough. Low time pressure, decisions talked through rather than raced." },
@@ -716,15 +753,17 @@ function statusColor(v) {
   if (v >= 4) return "var(--warn)";
   return "var(--crit)";
 }
+
 function statusLabel(v) {
   if (v >= 7) return "Nominal";
   if (v >= 4) return "Degraded";
   return "Critical";
 }
+
 function freshness(ageSec) {
   if (ageSec < 20) return { tier: "fresh", label: "fresh", opacity: 1 };
-  if (ageSec < 50) return { tier: "aging", label: "aging", opacity: 0.82 };
-  return { tier: "stale", label: "stale", opacity: 0.55 };
+  if (ageSec < 50) return { tier: "aging", label: "aging", opacity: 0.85 };
+  return { tier: "stale", label: "stale", opacity: 0.6 };
 }
 
 function severityBaseline(sev) {
@@ -740,7 +779,7 @@ function ManagementPlan({ clusterId, cluster, standalone }) {
   return (
     <div className={standalone ? "plan-standalone" : "plan-card"}>
       <div className="plan-header">
-        <span className="cluster-badge" style={{ background: cluster.color + "22", color: cluster.color, border: `1px solid ${cluster.color}55` }}>
+        <span className="cluster-badge" style={{ background: "#eff6ff", color: cluster.color, border: `1px solid #bfdbfe` }}>
           <Layers size={11} /> Cluster {clusterId} — {cluster.title}
         </span>
         <span className={`buildable-tag ${cluster.buildable ? "yes" : "no"}`}>
@@ -775,10 +814,10 @@ function ControllerBar({
     <div className="controller-bar">
       <span className="controller-tag"><UserCog size={13} /> Exercise Controller</span>
       <span className={`status-pill ${exerciseStatus}`}>{exerciseStatus}</span>
-      <span className="isolated-badge"><Radar size={11} /> Isolated channel — DRILL-NET, not connected to real alert systems</span>
+      <span className="isolated-badge"><Radar size={11} /> DRILL-NET Simulated Link</span>
       <div className="ctrl-spacer" />
-      <span style={{ fontSize: 10.5, color: "var(--text-dim)" }}>
-        Objective: <strong style={{ color: "var(--text)" }}>{objectiveLabel}</strong> · {EXERCISE_TYPES[exerciseType].label} · {timelineCount} scripted inject{timelineCount === 1 ? "" : "s"}
+      <span style={{ fontSize: 11, color: "var(--text-dim)" }}>
+        Objective: <strong style={{ color: "var(--text)" }}>{objectiveLabel}</strong> · {EXERCISE_TYPES[exerciseType].label} · {timelineCount} inject{timelineCount === 1 ? "" : "s"}
       </span>
       <button className="ctrl-btn" onClick={onOpenSetup}><ListChecks size={12} /> Setup</button>
       <label className="observer-toggle">
@@ -806,11 +845,11 @@ function SetupPanel({
           <div className="setup-title"><ListChecks size={16} /> Exercise Setup</div>
           <button className="setup-close" onClick={onClose}><X size={18} /></button>
         </div>
-        <div className="setup-sub">Everything here exists because a drill needs it and a real event doesn't: a learning objective, a scripted timeline, a roster, and success metrics to grade against. None of it runs in LIVE mode.</div>
+        <div className="setup-sub">Drill-specific controls: learning objective, scripted timeline, roster, and success metrics to grade against.</div>
 
         <div className="setup-notional-note">
           <ShieldAlert size={14} style={{ flexShrink: 0, marginTop: 1 }} />
-          All resources, teams, and outcomes in this exercise are notional. No real evacuations, aid disbursement, or casualties are tracked here — see the Resource pool in the left panel once the exercise starts.
+          All resources, teams, and outcomes in this exercise are notional. Units replenish as inter-agency escalations are approved.
         </div>
 
         <div className="setup-section">
@@ -985,9 +1024,9 @@ function AARView({ objective, customObjective, exerciseType, roster, metrics, ev
 
 export default function UnityEOC() {
   const [clusterId, setClusterId] = useState(1);
-  const [specificId, setSpecificId] = useState(null); // null = generic template
+  const [specificId, setSpecificId] = useState(null);
   const [severity, setSeverity] = useState(5);
-  const [mode, setMode] = useState("exercise"); // 'exercise' | 'live'
+  const [mode, setMode] = useState("exercise");
   const [scores, setScores] = useState({});
   const [log, setLog] = useState([]);
   const [pulsingEdges, setPulsingEdges] = useState([]);
@@ -997,10 +1036,14 @@ export default function UnityEOC() {
   const [showPlan, setShowPlan] = useState(false);
   const [hoveredNode, setHoveredNode] = useState(null);
   const [showLegend, setShowLegend] = useState(true);
-  const [cascadeToast, setCascadeToast] = useState(null); // { text, kind }
+  const [cascadeToast, setCascadeToast] = useState(null);
   const [, forceTick] = useState(0);
 
-  // --- Exercise-only state (Section 1-7 layer) ---
+  // --- Escalation State (3 Pre-loaded Requests & Tab Selector) ---
+  const [escalations, setEscalations] = useState(INITIAL_ESCALATIONS);
+  const [leftTab, setLeftTab] = useState("injects"); // 'injects' | 'escalations'
+
+  // --- Exercise State ---
   const [setupOpen, setSetupOpen] = useState(false);
   const [objective, setObjective] = useState("");
   const [customObjective, setCustomObjective] = useState("");
@@ -1008,10 +1051,10 @@ export default function UnityEOC() {
   const [metrics, setMetrics] = useState([]);
   const [roster, setRoster] = useState([]);
   const [briefing, setBriefing] = useState("");
-  const [timeline, setTimeline] = useState([]); // {id, presetId, triggerMin, fired}
-  const [exerciseStatus, setExerciseStatus] = useState("idle"); // idle|running|paused|stopped
+  const [timeline, setTimeline] = useState([]);
+  const [exerciseStatus, setExerciseStatus] = useState("idle");
   const [observerMode, setObserverMode] = useState(false);
-  const [evalLog, setEvalLog] = useState([]); // {t, tag, text}
+  const [evalLog, setEvalLog] = useState([]);
   const [gapNote, setGapNote] = useState("");
   const [gapTag, setGapTag] = useState("gap");
   const [debrief, setDebrief] = useState("");
@@ -1028,9 +1071,10 @@ export default function UnityEOC() {
   const buildable = cluster.buildable;
   const specificEntry = specificId ? cluster.specific[specificId] : null;
   const usingFallback = !!specificId && specificEntry && !specificEntry.full;
-  // Effective template actually rendered: full specific build, else generic.
   const T = (specificEntry && specificEntry.full) ? specificEntry : cluster.generic;
   const templateLabel = (specificEntry && specificEntry.full) ? specificEntry.label : `${cluster.title} (generic)`;
+
+  const pendingEscalationsCount = escalations.filter(e => e.status === "pending").length;
 
   const buildBaseline = useCallback((m, sev) => {
     const base = severityBaseline(sev);
@@ -1050,8 +1094,8 @@ export default function UnityEOC() {
     setContainmentRadius(100);
     clockRef.current = 0;
     setPulsingEdges([]);
+    setEscalations(INITIAL_ESCALATIONS);
     setLog([{ t: "00:00:00", text: note, kind: "info" }]);
-    // Exercise runtime resets — the run itself, not the controller's setup
     setExerciseStatus("idle");
     setExerciseStartClock(0);
     setEvalLog([]);
@@ -1062,8 +1106,6 @@ export default function UnityEOC() {
     setResourcePool({ total: poolTotal, available: poolTotal });
   }, [buildable, T, buildBaseline, exerciseType]);
 
-  // Cluster switch → clear specific crisis, reload template, wipe the
-  // exercise setup entirely (a new scenario is a new drill, not a rerun)
   useEffect(() => {
     setSpecificId(null);
     setShowPlan(!CLUSTERS[clusterId].buildable);
@@ -1076,15 +1118,12 @@ export default function UnityEOC() {
     setDebrief("");
     setTimeline([]);
     setObserverMode(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clusterId]);
 
-  // Template (specific crisis) or severity change → reload baseline
   useEffect(() => {
     if (!buildable) return;
     resetScenario(severity, mode, `Scenario loaded: ${templateLabel}. Severity ${severity}/10. All capabilities at baseline.`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clusterId, specificId]);
+  }, [clusterId, specificId, buildable, resetScenario, severity, mode, templateLabel]);
 
   const isPaused = mode === "exercise" && exerciseStatus === "paused";
 
@@ -1092,7 +1131,7 @@ export default function UnityEOC() {
     const clockTimer = setInterval(() => {
       if (!isPaused) clockRef.current += 1;
     }, 1000);
-    const tickTimer = setInterval(() => forceTick((x) => x + 1), 5000);
+    const tickTimer = setInterval(() => forceTick((x) => x + 1), 4000);
     return () => { clearInterval(clockTimer); clearInterval(tickTimer); };
   }, [isPaused]);
 
@@ -1109,7 +1148,7 @@ export default function UnityEOC() {
         next[pick] = { value: Math.max(2, Math.min(10, cur.value + delta)), updatedAt: clockRef.current, source: "live feed" };
         return next;
       });
-    }, 9000);
+    }, 8500);
     return () => clearInterval(feed);
   }, [mode, buildable, T]);
 
@@ -1120,6 +1159,7 @@ export default function UnityEOC() {
     const ss = String(s % 60).padStart(2, "0");
     return `${hh}:${mm}:${ss}`;
   };
+
   const addLog = useCallback((text, kind = "info") => {
     setLog((l) => [{ t: stamp(), text, kind }, ...l].slice(0, 50));
   }, []);
@@ -1133,8 +1173,8 @@ export default function UnityEOC() {
     sourceMapRef.current[nodeId] = set;
     if (set.size >= 2 && before < 2 && !conflictLoggedRef.current.has(nodeId)) {
       conflictLoggedRef.current.add(nodeId);
-      const label = T.nodes.find((n) => n.id === nodeId).label;
-      addLog(`CONFLICT DETECTED — ${label} is being degraded by more than one active failure at once. A contingency written for a single failure may not hold here.`, "conflict");
+      const label = T.nodes.find((n) => n.id === nodeId)?.label || nodeId;
+      addLog(`CONFLICT DETECTED — ${label} is being degraded by more than one active failure at once.`, "conflict");
     }
   };
 
@@ -1152,10 +1192,10 @@ export default function UnityEOC() {
       return next;
     });
     markSource(preset.target, preset.id);
-    addLog(`INJECT — ${T.nodes.find((n) => n.id === preset.target).label}: ${preset.note} (severity-scaled impact: -${scaledDrop})`, "trigger");
-    const originLabel = T.nodes.find((n) => n.id === preset.target).label;
-    setCascadeToast({ text: `${originLabel} hit → watch it ripple to dependent capabilities`, kind: "crit" });
-    setTimeout(() => setCascadeToast((cur) => (cur && cur.text.startsWith(originLabel) ? null : cur)), 4200);
+    const targetLabel = T.nodes.find((n) => n.id === preset.target)?.label || preset.target;
+    addLog(`INJECT — ${targetLabel}: ${preset.note} (severity-scaled impact: -${scaledDrop})`, "trigger");
+    setCascadeToast({ text: `${targetLabel} hit → watch it ripple to dependent capabilities`, kind: "crit" });
+    setTimeout(() => setCascadeToast((cur) => (cur && cur.text.startsWith(targetLabel) ? null : cur)), 4200);
 
     setTimeout(() => {
       setPulseKind("crit");
@@ -1179,13 +1219,13 @@ export default function UnityEOC() {
         const affected = [];
         neighbors(preset.target).forEach((e) => {
           if (current[e.to].value < 7) {
-            const toLabel = T.nodes.find((n) => n.id === e.to).label;
-            addLog(`CASCADE — hop 1 — ${toLabel} degraded to ${current[e.to].value}/10 (depends on ${T.nodes.find((n) => n.id === preset.target).label})`, "cascade");
+            const toLabel = T.nodes.find((n) => n.id === e.to)?.label || e.to;
+            addLog(`CASCADE — hop 1 — ${toLabel} degraded to ${current[e.to].value}/10`, "cascade");
             affected.push(toLabel);
           }
         });
         if (affected.length) {
-          setCascadeToast({ text: `${T.nodes.find((n) => n.id === preset.target).label} → ${affected.join(", ")}`, kind: "crit" });
+          setCascadeToast({ text: `${targetLabel} → ${affected.join(", ")}`, kind: "crit" });
           setTimeout(() => setCascadeToast(null), 4200);
         }
         return current;
@@ -1202,7 +1242,7 @@ export default function UnityEOC() {
             if (impact > 0) {
               next[e2.to] = { value: Math.max(0, next[e2.to].value - impact), updatedAt: clockRef.current, source: "cascade" };
               markSource(e2.to, preset.id);
-              addLog(`CASCADE — hop 2 — ${T.nodes.find((n) => n.id === e2.to).label} affected via ${T.nodes.find((n) => n.id === e1.to).label}`, "cascade2");
+              addLog(`CASCADE — hop 2 — ${T.nodes.find((n) => n.id === e2.to)?.label} affected via ${T.nodes.find((n) => n.id === e1.to)?.label}`, "cascade2");
             }
           });
         });
@@ -1216,10 +1256,11 @@ export default function UnityEOC() {
   const dispatch = (nodeId) => {
     if (isPaused) return;
     if (mode === "exercise" && resourcePool.available <= 0) {
-      addLog("DISPATCH BLOCKED — no notional response units available. All resources in the pool are already committed.", "controller");
+      addLog("DISPATCH BLOCKED — no notional response units available. Approve pending escalations to release more units.", "controller");
+      setCascadeToast({ text: "Zero units available! Approve an escalation request.", kind: "crit" });
       return;
     }
-    const label = T.nodes.find((n) => n.id === nodeId).label;
+    const label = T.nodes.find((n) => n.id === nodeId)?.label || nodeId;
     const isOriginContainment = T.containment && nodeId === "origin";
 
     if (mode === "exercise") {
@@ -1253,8 +1294,8 @@ export default function UnityEOC() {
         });
         return next;
       });
-      neighbors(nodeId).forEach((e) => addLog(`RELIEF CASCADE — hop 1 — ${T.nodes.find((n) => n.id === e.to).label} eased by reinforcement of ${label}`, "dispatch"));
-      const eased = neighbors(nodeId).map((e) => T.nodes.find((n) => n.id === e.to).label);
+      neighbors(nodeId).forEach((e) => addLog(`RELIEF CASCADE — hop 1 — ${T.nodes.find((n) => n.id === e.to)?.label} eased by reinforcement of ${label}`, "dispatch"));
+      const eased = neighbors(nodeId).map((e) => T.nodes.find((n) => n.id === e.to)?.label).filter(Boolean);
       if (eased.length) {
         setCascadeToast({ text: `${label} reinforced → ${eased.join(", ")} recovering`, kind: "good" });
         setTimeout(() => setCascadeToast(null), 4200);
@@ -1263,24 +1304,76 @@ export default function UnityEOC() {
     setTimeout(() => setPulsingEdges([]), 1400);
   };
 
+  // --- Escalation Handlers ---
+  const handleApproveEscalation = (esc) => {
+    setEscalations((prev) => prev.map((item) => item.id === esc.id ? { ...item, status: "approved", approvedAt: stamp() } : item));
+    
+    // Replenish notional resource pool
+    setResourcePool((p) => ({
+      total: p.total + esc.grantUnits,
+      available: p.available + esc.grantUnits,
+    }));
+
+    // Find and boost any matching target capability node
+    const matchingNode = T.nodes.find((n) => esc.targetNodeHint.some((hint) => n.id.toLowerCase().includes(hint) || n.label.toLowerCase().includes(hint)));
+    if (matchingNode) {
+      setScores((prev) => ({
+        ...prev,
+        [matchingNode.id]: {
+          value: Math.min(10, (prev[matchingNode.id]?.value || 5) + 2),
+          updatedAt: clockRef.current,
+          source: "escalation surge"
+        }
+      }));
+    }
+
+    addLog(`ESCALATION APPROVED — ${esc.title} authorized by SEOC (+${esc.grantUnits} units released)`, "dispatch");
+    setCascadeToast({ text: `Escalation Authorized: +${esc.grantUnits} Units Released`, kind: "good" });
+  };
+
+  const handleRejectEscalation = (esc) => {
+    setEscalations((prev) => prev.map((item) => item.id === esc.id ? { ...item, status: "rejected", rejectedAt: stamp() } : item));
+    addLog(`ESCALATION DECLINED — ${esc.title} held at command level.`, "info");
+  };
+
+  const handleRequestNewEscalation = () => {
+    const newId = `esc-${Date.now()}`;
+    const newEsc = {
+      id: newId,
+      title: "Armed Forces / Engineering Task Force Mutual Aid",
+      agency: "HQ Integrated Defence Staff",
+      tier: "Tier 3 — National Command",
+      urgency: "Critical",
+      requestedAt: stamp(),
+      status: "pending",
+      grantUnits: 3,
+      targetNodeHint: ["roads", "infra", "rescue", "perimeter"],
+      description: "Air-droppable heavy Bailey bridge units, heavy plant machinery, and satellite mobile terminal uplink.",
+      justification: "District transport arteries severed by primary hazard escalation.",
+    };
+    setEscalations((prev) => [newEsc, ...prev]);
+    addLog(`ESCALATION FILED — ${newEsc.title} requested by Field Commander.`, "trigger");
+    setLeftTab("escalations");
+  };
+
   const reset = () => resetScenario(severity, mode, "Reset to baseline. All active injects cleared.");
 
   const switchMode = (next) => {
     if (next === mode) return;
     setMode(next);
     resetScenario(severity, next, next === "live"
-      ? "Data source switched to LIVE. Manual injection disabled; capabilities now driven by feed. No pause, no scripted injects, no AAR — this is a real, continuous, irreversible event."
+      ? "Data source switched to LIVE. Manual injection disabled; capabilities now driven by telemetry."
       : "Data source switched to EXERCISE. Synthetic inputs enabled.");
     if (next === "live") { setSetupOpen(false); setShowAAR(false); }
   };
 
-  // --- Checkpoint + rewind (Section 7: "you can freeze the exercise, rewind") ---
   const saveCheckpoint = (label) => {
     setCheckpoints((c) => [
       ...c.slice(-4),
       { clock: clockRef.current, label, scores, log, activePresets, containmentRadius },
     ]);
   };
+
   const rewind = () => {
     setCheckpoints((c) => {
       if (c.length === 0) return c;
@@ -1290,12 +1383,11 @@ export default function UnityEOC() {
       setActivePresets(last.activePresets);
       setContainmentRadius(last.containmentRadius);
       clockRef.current = last.clock;
-      setTimeout(() => addLog(`REWIND — controller restored the exercise to the ${fmtClock(last.clock)} checkpoint (${last.label}).`, "controller"), 0);
+      setTimeout(() => addLog(`REWIND — restored exercise to ${fmtClock(last.clock)} checkpoint (${last.label}).`, "controller"), 0);
       return c.slice(0, -1);
     });
   };
 
-  // --- Exercise controller actions ---
   const startExercise = () => {
     setExerciseStatus("running");
     setExerciseStartClock(clockRef.current);
@@ -1304,7 +1396,7 @@ export default function UnityEOC() {
   };
   const pauseExercise = () => {
     setExerciseStatus("paused");
-    addLog("EXERCISE PAUSED by controller — clock and scripted injects frozen.", "controller");
+    addLog("EXERCISE PAUSED by controller.", "controller");
   };
   const resumeExercise = () => {
     setExerciseStatus("running");
@@ -1313,7 +1405,7 @@ export default function UnityEOC() {
   const stopExercise = () => {
     setExerciseStatus("stopped");
     setShowAAR(true);
-    addLog("EXERCISE STOPPED by controller — generating After-Action Review.", "controller");
+    addLog("EXERCISE STOPPED — generating After-Action Review.", "controller");
   };
   const addEvalNote = () => {
     if (!gapNote.trim()) return;
@@ -1356,7 +1448,6 @@ export default function UnityEOC() {
       setTimeline((tl) => tl.map((it) => (due.find((d) => d.id === it.id) ? { ...it, fired: true } : it)));
     }, 1000);
     return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, exerciseStatus, timeline, T]);
 
   const commitSeverity = (val) => {
@@ -1369,212 +1460,229 @@ export default function UnityEOC() {
   const rootStyle = (
     <style>{`
       .eoc-root {
-        --bg: #101214; --panel: #17191c; --panel-2: #1d2023; --line: #2b2e33; --line-soft: #2b2e3355;
-        --text: #e4e6e9; --text-dim: #8b9198; --text-dimmer: #565b62;
-        --good: #4f9d78; --warn: #c1902f; --crit: #b8534f; --live: #a8433e; --exercise: #3f6d94; --conflict: #b9925a;
+        --bg: #f8fafc; --panel: #ffffff; --panel-2: #f1f5f9; --line: #e2e8f0; --line-soft: #f1f5f9;
+        --text: #0f172a; --text-dim: #475569; --text-dimmer: #94a3b8;
+        --good: #16a34a; --good-bg: #ecfdf5; --warn: #d97706; --warn-bg: #fffbeb;
+        --crit: #dc2626; --crit-bg: #fef2f2; --live: #dc2626; --exercise: #2563eb; --conflict: #b45309;
         font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh;
       }
       .eoc-root * { box-sizing: border-box; }
       .mono { font-family: 'JetBrains Mono', 'SF Mono', monospace; }
 
-      .eoc-topbar { display: flex; flex-direction: column; gap: 10px; padding: 14px 24px; border-bottom: 1px solid var(--line); background: linear-gradient(180deg, var(--panel), var(--bg)); }
+      .eoc-topbar { display: flex; flex-direction: column; gap: 10px; padding: 12px 24px; border-bottom: 1px solid var(--line); background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
       .topbar-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
       .eoc-brand { display: flex; align-items: center; gap: 10px; }
-      .eoc-brand-mark { width: 30px; height: 30px; border: 1.5px solid var(--text-dim); border-radius: 6px; display: flex; align-items: center; justify-content: center; position: relative; }
-      .eoc-brand-mark::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 8px var(--good); }
-      .eoc-brand-text { font-weight: 700; font-size: 15px; letter-spacing: 0.02em; }
-      .eoc-brand-sub { font-size: 10.5px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 1px; }
+      .eoc-brand-mark { width: 32px; height: 32px; border: 1.5px solid #bfdbfe; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; position: relative; }
+      .eoc-brand-mark::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
+      .eoc-brand-text { font-weight: 800; font-size: 15px; letter-spacing: -0.01em; color: var(--text); }
+      .eoc-brand-sub { font-size: 10.5px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.05em; text-transform: uppercase; margin-top: 1px; }
 
       .topbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-      .cluster-toggle { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
-      .seg-btn { padding: 7px 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; background: transparent; border: none; color: var(--text-dim); cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; gap: 6px; }
-      .seg-btn.active { background: var(--panel-2); color: var(--text); }
+      .cluster-toggle { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel-2); padding: 2px; }
+      .seg-btn { padding: 6px 11px; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; background: transparent; border: none; border-radius: 6px; color: var(--text-dim); cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; gap: 6px; }
+      .seg-btn.active { background: #ffffff; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
       .seg-btn .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
       .mode-btn.active.exercise { background: var(--exercise); color: #fff; }
       .mode-btn.active.live { background: var(--live); color: #fff; }
       .seg-btn:not(.active):hover { color: var(--text); }
-      .mode-toggle { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+      .mode-toggle { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel-2); padding: 2px; }
 
-      .plan-toggle-btn { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text-dim); font-size: 11px; font-weight: 700; cursor: pointer; }
-      .plan-toggle-btn:hover { color: var(--text); border-color: var(--text-dim); }
-      .plan-toggle-btn.active { color: #c7d4e0; border-color: var(--exercise); background: #1e2c38; }
+      .plan-toggle-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: #ffffff; color: var(--text-dim); font-size: 11px; font-weight: 700; cursor: pointer; }
+      .plan-toggle-btn:hover { color: var(--text); background: var(--panel-2); }
+      .plan-toggle-btn.active { color: var(--exercise); border-color: #bfdbfe; background: #eff6ff; }
 
       .topbar-bottom { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
       .severity-block { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 260px; }
-      .severity-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-      .severity-slider { flex: 1; accent-color: var(--exercise); }
-      .severity-value { font-size: 13px; font-weight: 800; min-width: 42px; text-align: right; }
-      .severity-band { font-size: 9.5px; color: var(--text-dimmer); white-space: nowrap; }
-      .specific-select { background: var(--panel-2); border: 1px solid var(--line); color: var(--text); font-size: 11.5px; font-weight: 600; padding: 6px 10px; border-radius: 7px; min-width: 240px; }
+      .severity-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-dim); display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+      .severity-slider { flex: 1; accent-color: var(--exercise); cursor: pointer; }
+      .severity-value { font-size: 13px; font-weight: 800; min-width: 44px; text-align: right; }
+      .severity-band { font-size: 10px; color: var(--text-dimmer); white-space: nowrap; }
+      .specific-select { background: #ffffff; border: 1px solid var(--line); color: var(--text); font-size: 11.5px; font-weight: 600; padding: 6px 10px; border-radius: 7px; min-width: 240px; cursor: pointer; }
 
-      .mode-banner { text-align: center; padding: 7px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
-      .mode-banner.exercise { background: #23303d; color: #a7c1d6; border-bottom: 1px solid #34495c; }
-      .mode-banner.live { background: #3a2321; color: #d9a9a5; border-bottom: 1px solid #55322f; animation: livepulse 2.2s ease-in-out infinite; }
-      @keyframes livepulse { 0%, 100% { background: #3a2321; } 50% { background: #45201d; } }
+      .mode-banner { text-align: center; padding: 7px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+      .mode-banner.exercise { background: #eff6ff; color: #1e40af; border-bottom: 1px solid #bfdbfe; }
+      .mode-banner.live { background: #fef2f2; color: #b91c1c; border-bottom: 1px solid #fecaca; animation: livepulse 2.2s ease-in-out infinite; }
+      @keyframes livepulse { 0%, 100% { background: #fef2f2; } 50% { background: #fee2e2; } }
 
-      .fallback-banner { display: flex; align-items: center; gap: 8px; background: #1e2a10; border-bottom: 1px solid #3c4d1d; color: #cbe08a; padding: 8px 24px; font-size: 11.5px; font-weight: 600; }
+      .fallback-banner { display: flex; align-items: center; gap: 8px; background: #f0fdf4; border-bottom: 1px solid #bbf7d0; color: #166534; padding: 8px 24px; font-size: 11.5px; font-weight: 600; }
 
-      .eoc-layout { display: grid; grid-template-columns: 260px 1fr 300px; gap: 1px; background: var(--line); }
-      .eoc-panel { background: var(--bg); padding: 16px; }
-      .panel-title { font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+      .eoc-layout { display: grid; grid-template-columns: 310px 1fr 310px; gap: 1px; background: var(--line); min-height: calc(100vh - 120px); }
+      .eoc-panel { background: #ffffff; padding: 16px; overflow-y: auto; }
+      .panel-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
 
-      .preset-btn { width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; margin-bottom: 8px; color: var(--text); cursor: pointer; transition: all 0.15s ease; font-size: 12.5px; font-weight: 600; display: flex; align-items: flex-start; gap: 8px; }
-      .preset-btn:hover:not(:disabled) { border-color: var(--exercise); background: var(--panel-2); }
-      .preset-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-      .preset-btn.is-active { border-color: var(--crit); }
-      .preset-note { font-size: 10.5px; color: var(--text-dim); font-weight: 400; margin-top: 2px; }
+      /* Tab Switcher in Left Column */
+      .tab-switcher { display: flex; background: var(--panel-2); border-radius: 8px; padding: 3px; margin-bottom: 14px; border: 1px solid var(--line); }
+      .tab-btn { flex: 1; padding: 6px 8px; font-size: 11px; font-weight: 700; background: transparent; border: none; border-radius: 6px; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease; }
+      .tab-btn.active { background: #ffffff; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+      .badge-count { font-size: 9.5px; padding: 1px 6px; border-radius: 10px; background: var(--crit); color: #ffffff; font-weight: 800; }
+
+      .preset-btn { width: 100%; text-align: left; background: #ffffff; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; margin-bottom: 8px; color: var(--text); cursor: pointer; transition: all 0.15s ease; font-size: 12px; font-weight: 600; display: flex; align-items: flex-start; gap: 8px; }
+      .preset-btn:hover:not(:disabled) { border-color: #93c5fd; background: #f8fafc; }
+      .preset-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .preset-btn.is-active { border-color: var(--crit); background: var(--crit-bg); }
+      .preset-note { font-size: 10px; color: var(--text-dim); font-weight: 400; margin-top: 2px; }
       .active-tag { font-size: 9px; color: var(--crit); font-weight: 800; letter-spacing: 0.05em; margin-top: 3px; }
 
-      .reset-btn { width: 100%; margin-top: 4px; background: transparent; border: 1px dashed var(--line); border-radius: 7px; padding: 7px; color: var(--text-dimmer); font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-      .reset-btn:hover:not(:disabled) { color: var(--text-dim); border-color: var(--text-dim); }
+      .reset-btn { width: 100%; margin-top: 4px; background: transparent; border: 1px dashed var(--line); border-radius: 7px; padding: 7px; color: var(--text-dim); font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+      .reset-btn:hover:not(:disabled) { color: var(--text); border-color: var(--text-dim); background: var(--panel-2); }
       .reset-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-      .overall-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 16px; }
-      .overall-score { font-size: 34px; font-weight: 800; line-height: 1; }
-      .overall-label { font-size: 10.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; }
-      .confidence-tag { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; letter-spacing: 0.04em; }
-      .confidence-tag.High { background: #103524; color: var(--good); }
-      .confidence-tag.Medium { background: #3a2c10; color: var(--warn); }
-      .confidence-tag.Low { background: #3a1414; color: var(--crit); }
+      /* Escalation Cards */
+      .escalation-card { background: #ffffff; border: 1px solid var(--line); border-radius: 9px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+      .escalation-card.pending { border-left: 4px solid var(--warn); background: #fffdfa; }
+      .escalation-card.approved { border-left: 4px solid var(--good); background: #fafdfb; }
+      .escalation-card.rejected { border-left: 4px solid var(--text-dimmer); background: #f8fafc; opacity: 0.75; }
+      .esc-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
+      .esc-title { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.3; }
+      .esc-tag { font-size: 9.5px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.03em; white-space: nowrap; }
+      .esc-tag.pending { background: var(--warn-bg); color: var(--warn); border: 1px solid #fde68a; }
+      .esc-tag.approved { background: var(--good-bg); color: var(--good); border: 1px solid #bbf7d0; }
+      .esc-tag.rejected { background: #e2e8f0; color: var(--text-dim); }
+      .esc-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; line-height: 1.4; }
+      .esc-meta { font-size: 9.5px; color: var(--text-dimmer); margin-bottom: 10px; }
+      .esc-actions { display: flex; gap: 6px; }
+      .esc-btn { flex: 1; padding: 6px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; border: none; }
+      .esc-btn.approve { background: var(--good); color: #ffffff; }
+      .esc-btn.approve:hover { filter: brightness(1.08); }
+      .esc-btn.reject { background: #f1f5f9; color: var(--text-dim); border: 1px solid var(--line); }
+      .esc-btn.reject:hover { background: #e2e8f0; }
 
-      .leverage-note { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #e9c85e; background: #2c2410; border: 1px solid #4a3e18; border-radius: 7px; padding: 7px 10px; margin-top: 10px; }
+      .overall-card { background: #ffffff; border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+      .overall-score { font-size: 34px; font-weight: 800; line-height: 1; }
+      .overall-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 6px; font-weight: 700; }
+      .confidence-tag { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 5px; }
+      .confidence-tag.High { background: var(--good-bg); color: var(--good); border: 1px solid #bbf7d0; }
+      .confidence-tag.Medium { background: var(--warn-bg); color: var(--warn); border: 1px solid #fde68a; }
+      .confidence-tag.Low { background: var(--crit-bg); color: var(--crit); border: 1px solid #fecaca; }
+
+      .leverage-note { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #854d0e; background: #fefce8; border: 1px solid #fef08a; border-radius: 7px; padding: 8px 10px; margin-top: 10px; }
       .geometry-note { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--text-dim); margin-top: 8px; }
       .geometry-note .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--exercise); flex-shrink: 0; }
 
-      .containment-card { background: var(--panel); border: 1px solid #1d4a3a; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; }
-      .containment-head { display: flex; align-items: center; justify-content: space-between; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #6fcf9a; margin-bottom: 8px; }
+      .containment-card { background: #ffffff; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+      .containment-head { display: flex; align-items: center; justify-content: space-between; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--good); margin-bottom: 8px; }
       .containment-bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
       .containment-fill { height: 100%; background: linear-gradient(90deg, var(--crit), var(--warn), var(--good)); transition: width 0.5s ease; }
       .containment-caption { font-size: 10px; color: var(--text-dim); margin-top: 6px; }
 
-      .graph-wrap { display: flex; align-items: center; justify-content: center; padding: 4px; }
-      .eoc-layout > .eoc-panel:nth-child(2) { display: flex; flex-direction: column; }
-      .graph-context { flex: 1; min-height: 190px; margin-top: 12px; padding: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
-      .graph-context-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+      .graph-wrap { display: flex; align-items: center; justify-content: center; padding: 8px; background: #f8fafc; border: 1px solid var(--line); border-radius: 10px; position: relative; }
+      .graph-context { flex: 1; min-height: 180px; margin-top: 12px; padding: 14px; background: #ffffff; border: 1px solid var(--line); border-radius: 10px; }
+      .graph-context-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
       .graph-context-title { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); }
-      .graph-context-geometry { font-size: 10px; color: #a7c1d6; text-align: right; }
-      .graph-context-copy { font-size: 12px; color: var(--text); line-height: 1.5; margin-bottom: 12px; }
+      .graph-context-geometry { font-size: 10px; color: var(--exercise); text-align: right; }
+      .graph-context-copy { font-size: 12px; color: var(--text); line-height: 1.5; margin-bottom: 10px; }
       .graph-paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
-      .graph-path { padding: 8px 9px; background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 6px; font-size: 10.5px; color: var(--text-dim); line-height: 1.4; }
+      .graph-path { padding: 7px 9px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; font-size: 10.5px; color: var(--text-dim); line-height: 1.4; }
       .graph-path strong { color: var(--text); }
-      @media (max-width: 900px) { .graph-context { min-height: 0; } .graph-paths { grid-template-columns: 1fr; } }
 
-      .graph-legend { position: absolute; top: 6px; left: 6px; z-index: 2; background: rgba(16,18,20,0.9); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; max-width: 240px; }
+      .graph-legend { position: absolute; top: 8px; left: 8px; z-index: 5; background: rgba(255,255,255,0.98); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; max-width: 240px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
       .graph-legend-close { position: absolute; top: 6px; right: 6px; background: none; border: none; color: var(--text-dimmer); cursor: pointer; padding: 2px; display: flex; }
       .graph-legend-close:hover { color: var(--text); }
       .graph-legend-title { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text); margin-bottom: 8px; padding-right: 14px; }
-      .graph-legend-row { display: flex; align-items: center; gap: 7px; font-size: 10.5px; color: var(--text-dim); margin-top: 6px; line-height: 1.3; }
-      .legend-node-sample { width: 12px; height: 12px; border-radius: 50%; border: 2px solid; flex-shrink: 0; background: var(--panel); }
+      .graph-legend-row { display: flex; align-items: center; gap: 7px; font-size: 10.5px; color: var(--text-dim); margin-top: 5px; line-height: 1.3; }
+      .legend-node-sample { width: 12px; height: 12px; border-radius: 50%; border: 2px solid; flex-shrink: 0; background: #ffffff; }
       .legend-line-sample { width: 16px; height: 0; border-top: 1.5px solid var(--line); flex-shrink: 0; }
       .legend-pulse-sample { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--crit); flex-shrink: 0; opacity: 0.7; }
-      .graph-legend-reopen { position: absolute; top: 6px; left: 6px; z-index: 2; display: flex; align-items: center; gap: 5px; background: rgba(16,18,20,0.9); border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; color: var(--text-dim); font-size: 10.5px; cursor: pointer; }
-      .graph-legend-reopen:hover { color: var(--text); border-color: var(--text-dimmer); }
+      .graph-legend-reopen { position: absolute; top: 8px; left: 8px; z-index: 5; display: flex; align-items: center; gap: 5px; background: #ffffff; border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; color: var(--text-dim); font-size: 10.5px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 
-      .cascade-toast { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); z-index: 3; display: flex; align-items: center; gap: 7px; background: rgba(16,18,20,0.95); border: 1px solid var(--line); border-radius: 20px; padding: 7px 14px; font-size: 11px; font-weight: 600; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.4); animation: toast-in 0.25s ease; }
-      .cascade-toast.crit { color: var(--crit); border-color: #4a2624; }
-      .cascade-toast.good { color: var(--good); border-color: #1d4a3a; }
+      .cascade-toast { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; align-items: center; gap: 7px; background: #ffffff; border: 1px solid var(--line); border-radius: 20px; padding: 7px 16px; font-size: 11px; font-weight: 700; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.08); animation: toast-in 0.25s ease; }
+      .cascade-toast.crit { color: var(--crit); border-color: #fca5a5; background: #fff5f5; }
+      .cascade-toast.good { color: var(--good); border-color: #86efac; background: #f0fdf4; }
       @keyframes toast-in { from { opacity: 0; transform: translateX(-50%) translateY(-6px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
-      .node-tooltip { background: rgba(16,18,20,0.97); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
-      .node-tooltip-title { font-size: 11px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+      .node-tooltip { background: #ffffff; border: 1px solid var(--line); border-radius: 8px; padding: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+      .node-tooltip-title { font-size: 11.5px; font-weight: 800; color: var(--text); margin-bottom: 3px; }
       .node-tooltip-desc { font-size: 10.5px; color: var(--text-dim); line-height: 1.4; }
-      .node-tooltip-loc { font-size: 9.5px; color: var(--text-dimmer); font-style: italic; margin-top: 5px; }
+      .node-tooltip-loc { font-size: 9.5px; color: var(--text-dimmer); font-style: italic; margin-top: 4px; }
 
-      .node-card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; margin-bottom: 6px; }
+      .node-card { background: #ffffff; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; margin-bottom: 7px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
       .node-row { display: flex; align-items: center; justify-content: space-between; }
-      .node-name { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+      .node-name { font-size: 11.5px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
       .node-score { font-size: 13px; font-weight: 800; }
-      .node-bar { height: 3px; background: var(--line); border-radius: 2px; margin-top: 6px; overflow: hidden; }
-      .node-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease, background 0.4s ease; }
+      .node-bar { height: 4px; background: var(--line); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+      .node-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
       .node-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
       .node-source { font-size: 9.5px; color: var(--text-dimmer); }
       .node-source.fresh { color: var(--text-dim); }
-      .dispatch-btn { background: transparent; border: 1px solid var(--line); border-radius: 5px; padding: 3px 7px; color: #6fcf9a; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 9.5px; font-weight: 700; }
-      .dispatch-btn:hover { border-color: var(--good); background: #0f2c20; }
+      .dispatch-btn { background: #ffffff; border: 1px solid #86efac; border-radius: 5px; padding: 3px 8px; color: var(--good); cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 9.5px; font-weight: 700; }
+      .dispatch-btn:hover { background: var(--good-bg); border-color: var(--good); }
 
-      .log-entry { padding: 8px 0; border-bottom: 1px solid var(--line-soft); font-size: 11.5px; line-height: 1.5; }
+      .log-entry { padding: 7px 0; border-bottom: 1px solid var(--line-soft); font-size: 11px; line-height: 1.4; }
       .log-entry:first-child { padding-top: 0; }
-      .log-time { color: var(--text-dimmer); margin-right: 8px; }
-      .log-entry.trigger { color: #ffb199; }
-      .log-entry.cascade { color: #ffd699; }
-      .log-entry.cascade2 { color: #e8c46a; opacity: 0.85; padding-left: 10px; }
-      .log-entry.dispatch { color: #7fe3ae; }
+      .log-time { color: var(--text-dimmer); margin-right: 6px; }
+      .log-entry.trigger { color: var(--crit); }
+      .log-entry.cascade { color: #b45309; }
+      .log-entry.cascade2 { color: #92400e; padding-left: 8px; opacity: 0.9; }
+      .log-entry.dispatch { color: var(--good); }
       .log-entry.conflict { color: var(--conflict); font-weight: 700; }
-      .log-entry.mode { color: #9fc3f5; }
       .log-entry.info { color: var(--text-dim); }
-      .log-entry.controller { color: #c7d4e0; font-weight: 600; }
+      .log-entry.controller { color: #1e40af; font-weight: 600; }
 
-      .alert-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 5px; margin-right: 6px; margin-bottom: 6px; }
-      .alert-chip.crit { background: #3a1414; color: var(--crit); }
-      .alert-chip.warn { background: #3a2c10; color: var(--warn); }
+      .alert-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 5px; margin-right: 6px; margin-top: 6px; }
+      .alert-chip.crit { background: var(--crit-bg); color: var(--crit); border: 1px solid #fecaca; }
+      .alert-chip.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid #fde68a; }
 
       .plan-standalone { max-width: 760px; margin: 24px auto; padding: 22px 26px; }
-      .plan-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin: 16px 24px; }
+      .plan-card { background: #ffffff; border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin: 16px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
       .plan-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
       .cluster-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 6px; }
-      .buildable-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; padding: 4px 9px; border-radius: 6px; letter-spacing: 0.02em; }
-      .buildable-tag.yes { background: #103524; color: var(--good); border: 1px solid #1d5c3f; }
-      .buildable-tag.no { background: #3a2c10; color: var(--warn); border: 1px solid #5c4a1d; }
+      .buildable-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; padding: 4px 9px; border-radius: 6px; }
+      .buildable-tag.yes { background: var(--good-bg); color: var(--good); border: 1px solid #bbf7d0; }
+      .buildable-tag.no { background: var(--warn-bg); color: var(--warn); border: 1px solid #fde68a; }
       .plan-row { display: grid; grid-template-columns: 140px 1fr; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line-soft); font-size: 12.5px; }
       .plan-row-block { padding: 10px 0; border-bottom: 1px solid var(--line-soft); font-size: 12.5px; }
       .plan-row-block.plan-demo { border-bottom: none; }
       .plan-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); }
       .plan-text { color: var(--text); line-height: 1.5; }
       .plan-list { margin: 8px 0 0; padding-left: 18px; }
-      .plan-list li { margin-bottom: 6px; line-height: 1.5; color: var(--text); font-size: 12.5px; }
-      .plan-empty-banner { display: flex; align-items: center; gap: 8px; background: #3a2c10; border: 1px solid #5c4a1d; color: #f0c25e; border-radius: 8px; padding: 10px 14px; margin: 8px 24px 0; font-size: 12px; font-weight: 600; }
+      .plan-list li { margin-bottom: 6px; line-height: 1.5; color: var(--text); font-size: 12px; }
+      .plan-empty-banner { display: flex; align-items: center; gap: 8px; background: var(--warn-bg); border: 1px solid #fde68a; color: var(--warn); border-radius: 8px; padding: 10px 14px; margin: 12px 24px 0; font-size: 12px; font-weight: 600; }
 
-      @media (max-width: 900px) { .eoc-layout { grid-template-columns: 1fr; } .plan-card { margin: 16px; } .plan-empty-banner { margin: 8px 16px 0; } }
-
-      /* --- Resource pool --- */
-      .resource-pool-card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 14px; }
-      .resource-pool-head { display: flex; align-items: center; justify-content: space-between; font-size: 10.5px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-      .resource-pool-bar { display: flex; gap: 4px; }
-      .resource-pip { flex: 1; height: 8px; border-radius: 2px; background: var(--line); }
+      .resource-pool-card { background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 12px; }
+      .resource-pool-head { display: flex; align-items: center; justify-content: space-between; font-size: 10.5px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 7px; }
+      .resource-pool-bar { display: flex; gap: 3px; }
+      .resource-pip { flex: 1; height: 7px; border-radius: 2px; background: var(--line); }
       .resource-pip.on { background: var(--good); }
-      .resource-pip.off { background: var(--line); }
-      .resource-pool-caption { font-size: 9.5px; color: var(--text-dimmer); margin-top: 7px; line-height: 1.4; }
+      .resource-pool-caption { font-size: 9.5px; color: var(--text-dimmer); margin-top: 6px; line-height: 1.4; }
 
-      /* --- Controller bar --- */
-      .controller-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 24px; background: #181c20; border-bottom: 1px solid #2e3540; }
-      .controller-tag { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #c7d0d9; }
-      .isolated-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 5px; background: #20252b; color: #9aa7b3; border: 1px solid #313944; letter-spacing: 0.04em; }
-      .ctrl-btn { display: flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 6px; border: 1px solid #313944; background: #20252b; color: #c7d0d9; font-size: 11px; font-weight: 700; cursor: pointer; }
-      .ctrl-btn:hover:not(:disabled) { background: #262c33; border-color: #47525f; }
-      .ctrl-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-      .ctrl-btn.primary { background: var(--exercise); color: #f2f6fa; border-color: var(--exercise); }
-      .ctrl-btn.primary:hover:not(:disabled) { filter: brightness(1.1); }
-      .ctrl-btn.danger { color: #d99a97; border-color: #5a3532; }
-      .ctrl-btn.danger:hover:not(:disabled) { background: #2e1e1d; }
+      .controller-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 24px; background: #f1f5f9; border-bottom: 1px solid var(--line); }
+      .controller-tag { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #334155; }
+      .isolated-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 5px; background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; }
+      .ctrl-btn { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--line); background: #ffffff; color: var(--text); font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.1s ease; }
+      .ctrl-btn:hover:not(:disabled) { background: var(--panel-2); }
+      .ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+      .ctrl-btn.primary { background: var(--exercise); color: #ffffff; border-color: var(--exercise); }
+      .ctrl-btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+      .ctrl-btn.danger { color: var(--crit); border-color: #fca5a5; }
+      .ctrl-btn.danger:hover:not(:disabled) { background: var(--crit-bg); }
       .ctrl-spacer { flex: 1; }
       .observer-toggle { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; color: var(--text-dim); cursor: pointer; user-select: none; }
       .observer-toggle input { accent-color: var(--exercise); }
-      .status-pill { font-size: 9.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; }
-      .status-pill.idle { background: #24303f; color: var(--text-dim); }
-      .status-pill.running { background: #1c3327; color: var(--good); }
-      .status-pill.paused { background: #3a2c10; color: var(--warn); }
-      .status-pill.stopped { background: #33201f; color: var(--crit); }
+      .status-pill { font-size: 9.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 8px; border-radius: 12px; }
+      .status-pill.idle { background: #e2e8f0; color: var(--text-dim); }
+      .status-pill.running { background: var(--good-bg); color: var(--good); border: 1px solid #bbf7d0; }
+      .status-pill.paused { background: var(--warn-bg); color: var(--warn); border: 1px solid #fde68a; }
+      .status-pill.stopped { background: var(--crit-bg); color: var(--crit); border: 1px solid #fecaca; }
 
-      .gap-note-row { display: flex; gap: 6px; padding: 8px 24px; background: #14171a; border-bottom: 1px solid #2e3540; align-items: center; }
-      .gap-note-row select { background: #20252b; border: 1px solid #313944; color: #c7d0d9; font-size: 11px; font-weight: 700; padding: 6px 8px; border-radius: 6px; }
-      .gap-note-row input { flex: 1; background: #20252b; border: 1px solid #313944; color: var(--text); font-size: 11.5px; padding: 6px 10px; border-radius: 6px; }
-      .gap-note-row button { background: var(--exercise); border: none; color: #f2f6fa; padding: 6px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; }
+      .gap-note-row { display: flex; gap: 6px; padding: 8px 24px; background: #f8fafc; border-bottom: 1px solid var(--line); align-items: center; }
+      .gap-note-row select { background: #ffffff; border: 1px solid var(--line); color: var(--text); font-size: 11px; font-weight: 700; padding: 6px 8px; border-radius: 6px; }
+      .gap-note-row input { flex: 1; background: #ffffff; border: 1px solid var(--line); color: var(--text); font-size: 11.5px; padding: 6px 10px; border-radius: 6px; }
+      .gap-note-row button { background: var(--exercise); border: none; color: #ffffff; padding: 6px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; }
 
-      /* --- Setup panel (modal) --- */
-      .setup-overlay { position: fixed; inset: 0; background: rgba(6,9,16,0.72); z-index: 40; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 40px 20px; }
-      .setup-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; width: 100%; max-width: 680px; padding: 22px 26px 26px; }
+      .setup-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 50; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 40px 20px; }
+      .setup-panel { background: #ffffff; border: 1px solid var(--line); border-radius: 12px; width: 100%; max-width: 680px; padding: 22px 26px 26px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
       .setup-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
       .setup-title { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
       .setup-close { background: transparent; border: none; color: var(--text-dim); cursor: pointer; padding: 4px; }
-      .setup-sub { font-size: 11.5px; color: var(--text-dim); margin-bottom: 18px; line-height: 1.5; }
-      .setup-section { margin-bottom: 20px; }
+      .setup-sub { font-size: 11.5px; color: var(--text-dim); margin-bottom: 16px; line-height: 1.5; }
+      .setup-section { margin-bottom: 18px; }
       .setup-section-title { font-size: 10.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
       .setup-field-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
       .setup-select, .setup-input, .setup-textarea { background: var(--panel-2); border: 1px solid var(--line); color: var(--text); font-size: 12px; padding: 8px 10px; border-radius: 7px; width: 100%; }
       .setup-textarea { min-height: 60px; resize: vertical; font-family: inherit; }
       .type-options { display: flex; gap: 8px; }
       .type-card { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 10px; cursor: pointer; background: var(--panel-2); }
-      .type-card.active { border-color: var(--exercise); background: #1e2c38; }
+      .type-card.active { border-color: var(--exercise); background: #eff6ff; }
       .type-card-label { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
       .type-card-note { font-size: 9.5px; color: var(--text-dim); line-height: 1.4; }
       .table-row-2 { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 7px; align-items: center; }
@@ -1583,15 +1691,14 @@ export default function UnityEOC() {
       .row-x-btn:hover { color: var(--crit); border-color: var(--crit); }
       .add-row-btn { display: flex; align-items: center; gap: 5px; background: transparent; border: 1px dashed var(--line); color: var(--text-dim); font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
       .add-row-btn:hover { color: var(--text); border-color: var(--text-dim); }
-      .setup-notional-note { display: flex; gap: 8px; align-items: flex-start; background: #1e2c38; border: 1px solid #34495c; color: #a7c1d6; font-size: 11px; line-height: 1.5; padding: 10px 12px; border-radius: 8px; margin-bottom: 18px; }
+      .setup-notional-note { display: flex; gap: 8px; align-items: flex-start; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; font-size: 11px; line-height: 1.5; padding: 10px 12px; border-radius: 8px; margin-bottom: 16px; }
       .setup-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
 
-      /* --- AAR view --- */
       .aar-view { max-width: 820px; margin: 24px auto; padding: 0 24px 40px; }
-      .aar-header { text-align: center; margin-bottom: 22px; }
+      .aar-header { text-align: center; margin-bottom: 20px; }
       .aar-header h1 { font-size: 22px; margin: 0 0 4px; }
       .aar-header .sub { font-size: 11.5px; color: var(--text-dim); }
-      .aar-section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; }
+      .aar-section { background: #ffffff; border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
       .aar-section-title { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
       .aar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
       .aar-stat { background: var(--panel-2); border-radius: 8px; padding: 10px 12px; }
@@ -1603,24 +1710,26 @@ export default function UnityEOC() {
       .aar-metric-actual { color: var(--good); font-weight: 600; }
       .aar-eval-entry { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line-soft); font-size: 12px; align-items: flex-start; }
       .aar-eval-tag { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 5px; text-transform: uppercase; flex-shrink: 0; margin-top: 1px; }
-      .aar-eval-tag.gap { background: #3a1414; color: var(--crit); }
-      .aar-eval-tag.strength { background: #103524; color: var(--good); }
-      .aar-eval-tag.note { background: #24303f; color: var(--text-dim); }
+      .aar-eval-tag.gap { background: var(--crit-bg); color: var(--crit); }
+      .aar-eval-tag.strength { background: var(--good-bg); color: var(--good); }
+      .aar-eval-tag.note { background: #e2e8f0; color: var(--text-dim); }
       .aar-empty { font-size: 11.5px; color: var(--text-dimmer); font-style: italic; }
       .aar-actions { display: flex; justify-content: center; gap: 10px; margin-top: 6px; }
+
+      @media (max-width: 960px) { .eoc-layout { grid-template-columns: 1fr; } .graph-paths { grid-template-columns: 1fr; } }
     `}</style>
   );
-
-  const specificOptions = Object.entries(cluster.specific);
 
   const topbar = (
     <div className="eoc-topbar">
       <div className="topbar-top">
         <div className="eoc-brand">
-          <div className="eoc-brand-mark" />
+          <div className="eoc-brand-mark">
+            <ShieldCheck size={18} color="var(--exercise)" />
+          </div>
           <div>
             <div className="eoc-brand-text">UNITY EOC</div>
-            <div className="eoc-brand-sub">Dependency Command Platform</div>
+            <div className="eoc-brand-sub">Dependency &amp; Escalation Command Platform</div>
           </div>
         </div>
         <div className="topbar-right">
@@ -1657,7 +1766,7 @@ export default function UnityEOC() {
         </div>
         <select className="specific-select" value={specificId || ""} onChange={(e) => setSpecificId(e.target.value || null)}>
           <option value="">Generic Cluster Template {severity <= 5 ? "(recommended)" : ""}</option>
-          {specificOptions.map(([id, s]) => (
+          {Object.entries(cluster.specific).map(([id, s]) => (
             <option key={id} value={id}>{s.label} {s.full ? "— full build" : "— coming soon"}</option>
           ))}
         </select>
@@ -1671,7 +1780,7 @@ export default function UnityEOC() {
         {rootStyle}
         {topbar}
         <div className="plan-empty-banner">
-          <Lock size={14} /> Cluster {clusterId} — {cluster.title} isn't buildable on the current engine yet, regardless of severity or specific crisis selected. Showing the management plan.
+          <Lock size={14} /> Cluster {clusterId} — {cluster.title} isn't buildable on the current engine yet. Showing the management plan.
         </div>
         <ManagementPlan clusterId={clusterId} cluster={cluster} standalone />
       </div>
@@ -1680,11 +1789,11 @@ export default function UnityEOC() {
 
   if (!scores[T.nodes[0]?.id]) return <div className="eoc-root">{rootStyle}{topbar}</div>;
 
-  const overall = Math.round(T.nodes.reduce((sum, n) => sum + scores[n.id].value, 0) / T.nodes.length);
-  const avgAge = T.nodes.reduce((sum, n) => sum + (clockRef.current - scores[n.id].updatedAt), 0) / T.nodes.length;
+  const overall = Math.round(T.nodes.reduce((sum, n) => sum + (scores[n.id]?.value || 0), 0) / T.nodes.length);
+  const avgAge = T.nodes.reduce((sum, n) => sum + (clockRef.current - (scores[n.id]?.updatedAt || 0)), 0) / T.nodes.length;
   const confidence = avgAge < 20 ? "High" : avgAge < 50 ? "Medium" : "Low";
-  const critNodes = T.nodes.filter((n) => scores[n.id].value < 4);
-  const warnNodes = T.nodes.filter((n) => scores[n.id].value >= 4 && scores[n.id].value < 7);
+  const critNodes = T.nodes.filter((n) => (scores[n.id]?.value || 0) < 4);
+  const warnNodes = T.nodes.filter((n) => (scores[n.id]?.value || 0) >= 4 && (scores[n.id]?.value || 0) < 7);
 
   const leverage = {};
   T.nodes.forEach((n) => { leverage[n.id] = 0; });
@@ -1692,7 +1801,7 @@ export default function UnityEOC() {
   let topLeverageId = T.nodes[0].id;
   let topLeverageScore = -1;
   T.nodes.forEach((n) => {
-    const degradation = (10 - scores[n.id].value) / 10;
+    const degradation = (10 - (scores[n.id]?.value || 0)) / 10;
     const score = leverage[n.id] * (0.4 + degradation);
     if (score > topLeverageScore) { topLeverageScore = score; topLeverageId = n.id; }
   });
@@ -1741,7 +1850,7 @@ export default function UnityEOC() {
             <option value="strength">Strength</option>
             <option value="note">Note</option>
           </select>
-          <input placeholder="Log an observer note (feeds the After-Action Review)…" value={gapNote} onChange={(e) => setGapNote(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addEvalNote(); }} />
+          <input placeholder="Log an observer note (feeds After-Action Review)…" value={gapNote} onChange={(e) => setGapNote(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addEvalNote(); }} />
           <button onClick={addEvalNote}><Send size={13} /></button>
         </div>
       )}
@@ -1762,62 +1871,119 @@ export default function UnityEOC() {
 
       <div className={`mode-banner ${mode}`}>
         {mode === "exercise"
-          ? "Exercise, exercise, exercise — synthetic data, no operational effect"
-          : "Live mode — continuous & irreversible. No pause, no rewind, no scripted injects, no do-overs."}
+          ? "Exercise mode — synthetic data, simulated operational feedback"
+          : "Live mode — continuous telemetry feed. Real-time monitoring."}
       </div>
 
       {usingFallback && (
         <div className="fallback-banner">
-          <AlertTriangle size={13} /> "{specificEntry.label}" doesn't have a detailed build yet — running Cluster {clusterId}'s generic template in its place (severity {severity}/10 still applies).
+          <AlertTriangle size={13} /> "{specificEntry.label}" running Cluster {clusterId}'s generic baseline.
         </div>
       )}
 
       {showPlan && <ManagementPlan clusterId={clusterId} cluster={cluster} />}
 
       <div className="eoc-layout">
+        {/* Left Column: Tabbed Injects & Escalations */}
         <div className="eoc-panel">
-          <div className="panel-title">Inject Failure</div>
-          {T.presets.map((p) => {
-            const active = activePresets.includes(p.id);
-            return (
-              <button key={p.id} className={`preset-btn ${active ? "is-active" : ""}`} disabled={mode !== "exercise" || active || isPaused} onClick={() => { saveCheckpoint(`before manual inject: ${p.label}`); triggerFailure(p); }}>
-                <ShieldAlert size={14} style={{ flexShrink: 0, opacity: 0.7, marginTop: 1 }} />
-                <div>
-                  <div>{p.label}</div>
-                  <div className="preset-note">{p.note}</div>
-                  {active && <div className="active-tag">ACTIVE</div>}
-                </div>
-              </button>
-            );
-          })}
-          <button className="reset-btn" onClick={reset} disabled={mode !== "exercise" || isPaused}>
-            <RotateCcw size={12} /> Reset to baseline
-          </button>
+          <div className="tab-switcher">
+            <button className={`tab-btn ${leftTab === "injects" ? "active" : ""}`} onClick={() => setLeftTab("injects")}>
+              <ShieldAlert size={12} /> Injects ({T.presets.length})
+            </button>
+            <button className={`tab-btn ${leftTab === "escalations" ? "active" : ""}`} onClick={() => setLeftTab("escalations")}>
+              <ArrowUpRight size={12} /> Escalations
+              {pendingEscalationsCount > 0 && <span className="badge-count">{pendingEscalationsCount}</span>}
+            </button>
+          </div>
 
-          {mode === "exercise" && (
-            <div className="resource-pool-card">
-              <div className="resource-pool-head">
-                <span>Notional Response Units</span>
-                <span className="mono">{resourcePool.available}/{resourcePool.total}</span>
+          {leftTab === "injects" ? (
+            <div>
+              <div className="panel-title">Inject Failure</div>
+              {T.presets.map((p) => {
+                const active = activePresets.includes(p.id);
+                return (
+                  <button key={p.id} className={`preset-btn ${active ? "is-active" : ""}`} disabled={mode !== "exercise" || active || isPaused} onClick={() => { saveCheckpoint(`before inject: ${p.label}`); triggerFailure(p); }}>
+                    <ShieldAlert size={14} style={{ flexShrink: 0, color: active ? "var(--crit)" : "var(--text-dim)", marginTop: 1 }} />
+                    <div>
+                      <div>{p.label}</div>
+                      <div className="preset-note">{p.note}</div>
+                      {active && <div className="active-tag">ACTIVE</div>}
+                    </div>
+                  </button>
+                );
+              })}
+              <button className="reset-btn" onClick={reset} disabled={mode !== "exercise" || isPaused}>
+                <RotateCcw size={12} /> Reset to baseline
+              </button>
+
+              {mode === "exercise" && (
+                <div className="resource-pool-card">
+                  <div className="resource-pool-head">
+                    <span>Notional Response Units</span>
+                    <span className="mono">{resourcePool.available}/{resourcePool.total}</span>
+                  </div>
+                  <div className="resource-pool-bar">
+                    {Array.from({ length: resourcePool.total }).map((_, i) => (
+                      <span key={i} className={`resource-pip ${i < resourcePool.available ? "on" : "off"}`} />
+                    ))}
+                  </div>
+                  <div className="resource-pool-caption">Simulated capacity — replenishes when higher-tier escalations are approved.</div>
+                </div>
+              )}
+
+              <div className="panel-title" style={{ marginTop: 22 }}>Leverage</div>
+              <div className="leverage-note">
+                <Star size={13} style={{ flexShrink: 0 }} />
+                Protecting <strong style={{ margin: "0 3px" }}>{T.nodes.find((n) => n.id === topLeverageId)?.label}</strong> prevents downstream propagation.
               </div>
-              <div className="resource-pool-bar">
-                {Array.from({ length: resourcePool.total }).map((_, i) => (
-                  <span key={i} className={`resource-pip ${i < resourcePool.available ? "on" : "off"}`} />
-                ))}
+              {T.geometry && <div className="geometry-note"><span className="dot" /> {T.geometry}</div>}
+            </div>
+          ) : (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--text-dim)" }}>
+                  Escalation Requests ({escalations.length})
+                </span>
+                <button
+                  onClick={handleRequestNewEscalation}
+                  style={{ fontSize: 10.5, fontWeight: 700, color: "var(--exercise)", background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}
+                >
+                  <Plus size={12} /> Request
+                </button>
               </div>
-              <div className="resource-pool-caption">Simulated only — no real teams or equipment committed. Depletes 1 per dispatch.</div>
+
+              {escalations.map((esc) => (
+                <div key={esc.id} className={`escalation-card ${esc.status}`}>
+                  <div className="esc-header">
+                    <span className="esc-title">{esc.title}</span>
+                    <span className={`esc-tag ${esc.status}`}>{esc.status}</span>
+                  </div>
+                  <div className="esc-desc">{esc.description}</div>
+                  <div className="esc-meta">
+                    <strong>{esc.agency}</strong> · {esc.tier} · Req: <span className="mono">{esc.requestedAt}</span>
+                  </div>
+                  {esc.status === "pending" ? (
+                    <div className="esc-actions">
+                      <button className="esc-btn approve" onClick={() => handleApproveEscalation(esc)}>
+                        <CheckCircle2 size={12} /> Approve (+{esc.grantUnits} Units)
+                      </button>
+                      <button className="esc-btn reject" onClick={() => handleRejectEscalation(esc)}>
+                        <XCircle size={12} /> Decline
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 10, fontWeight: 700, color: esc.status === "approved" ? "var(--good)" : "var(--text-dimmer)" }}>
+                      {esc.status === "approved" ? `Authorized at ${esc.approvedAt} (+${esc.grantUnits} Units Granted)` : "Declined by Incident Command"}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
-
-          <div className="panel-title" style={{ marginTop: 22 }}>Leverage</div>
-          <div className="leverage-note">
-            <Star size={13} style={{ flexShrink: 0 }} />
-            Protecting <strong style={{ margin: "0 3px" }}>{T.nodes.find((n) => n.id === topLeverageId).label}</strong> prevents the most downstream cascade right now.
-          </div>
-          {T.geometry && <div className="geometry-note"><span className="dot" /> {T.geometry}</div>}
         </div>
 
-        <div className="eoc-panel">
+        {/* Center Column: Graph Canvas */}
+        <div className="eoc-panel" style={{ display: "flex", flexDirection: "column" }}>
           <div className="overall-card">
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
@@ -1827,10 +1993,10 @@ export default function UnityEOC() {
               <span className={`confidence-tag ${confidence}`}>Confidence: {confidence}</span>
             </div>
             <div className="overall-label">{templateLabel} — {statusLabel(overall)} · severity {severity}/10</div>
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 8 }}>
               {critNodes.map((n) => (<span key={n.id} className="alert-chip crit"><AlertTriangle size={11} /> {n.label}</span>))}
               {warnNodes.map((n) => (<span key={n.id} className="alert-chip warn"><Activity size={11} /> {n.label}</span>))}
-              {critNodes.length === 0 && warnNodes.length === 0 && (<span style={{ fontSize: 11.5, color: "var(--text-dim)" }}>No active alerts.</span>)}
+              {critNodes.length === 0 && warnNodes.length === 0 && (<span style={{ fontSize: 11.5, color: "var(--text-dim)" }}>All capabilities nominal.</span>)}
             </div>
           </div>
 
@@ -1842,20 +2008,20 @@ export default function UnityEOC() {
               </div>
               <div className="containment-bar"><div className="containment-fill" style={{ width: `${containmentRadius}%` }} /></div>
               <div className="containment-caption">
-                {containmentRadius === 0 ? "Origin contained. Dependent nodes recovering on their normal function." : "Dispatch specialist teams to the origin node to shrink the exclusion radius."}
+                {containmentRadius === 0 ? "Origin contained. Downstream nodes recovering." : "Dispatch specialist teams to shrink containment radius."}
               </div>
             </div>
           )}
 
-          <div className="graph-wrap" style={{ position: "relative" }}>
+          <div className="graph-wrap">
             {showLegend && (
               <div className="graph-legend">
                 <button className="graph-legend-close" onClick={() => setShowLegend(false)} title="Hide legend"><X size={11} /></button>
                 <div className="graph-legend-title">How to read this</div>
-                <div className="graph-legend-row"><span className="legend-node-sample" style={{ borderColor: "var(--good)" }} /> Circle = capability, color = health (green/amber/red)</div>
-                <div className="graph-legend-row"><span className="legend-line-sample" /> Line = depends on. Arrow points from cause → effect</div>
-                <div className="graph-legend-row"><span className="legend-pulse-sample" /> Pulse = a failure or fix actively spreading right now</div>
-                <div className="graph-legend-row" style={{ opacity: 0.75 }}>Hover or tap any circle for details</div>
+                <div className="graph-legend-row"><span className="legend-node-sample" style={{ borderColor: "var(--good)" }} /> Circle = capability, color = health</div>
+                <div className="graph-legend-row"><span className="legend-line-sample" /> Line = depends on. Arrow = cause → effect</div>
+                <div className="graph-legend-row"><span className="legend-pulse-sample" /> Pulse = failure or relief cascade</div>
+                <div className="graph-legend-row" style={{ opacity: 0.75 }}>Hover or click circle to inspect</div>
               </div>
             )}
             {!showLegend && (
@@ -1863,14 +2029,14 @@ export default function UnityEOC() {
             )}
             {cascadeToast && (
               <div className={`cascade-toast ${cascadeToast.kind}`}>
-                {cascadeToast.kind === "good" ? <ShieldPlus size={12} /> : <AlertTriangle size={12} />}
+                {cascadeToast.kind === "good" ? <ShieldCheck size={13} /> : <AlertTriangle size={13} />}
                 {cascadeToast.text}
               </div>
             )}
             <svg viewBox="0 0 800 470" width="100%" style={{ maxWidth: 700 }}>
               <defs>
                 <marker id="arrow-line" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-                  <path d="M0,0 L8,4 L0,8 Z" fill="var(--line)" />
+                  <path d="M0,0 L8,4 L0,8 Z" fill="#cbd5e1" />
                 </marker>
                 <marker id="arrow-crit" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
                   <path d="M0,0 L8,4 L0,8 Z" fill="var(--crit)" />
@@ -1882,9 +2048,10 @@ export default function UnityEOC() {
               {T.edges.map((e) => {
                 const a = T.nodes.find((n) => n.id === e.from);
                 const b = T.nodes.find((n) => n.id === e.to);
+                if (!a || !b) return null;
                 const key = `${e.from}-${e.to}`;
                 const active = pulsingEdges.includes(key);
-                const stroke = active ? (pulseKind === "good" ? "var(--good)" : "var(--crit)") : "var(--line)";
+                const stroke = active ? (pulseKind === "good" ? "var(--good)" : "var(--crit)") : "#cbd5e1";
                 const marker = active ? (pulseKind === "good" ? "url(#arrow-good)" : "url(#arrow-crit)") : "url(#arrow-line)";
                 const dx = b.x - a.x, dy = b.y - a.y;
                 const dist = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -1893,7 +2060,7 @@ export default function UnityEOC() {
                 return <line key={key} x1={a.x} y1={a.y} x2={ex} y2={ey} stroke={stroke} strokeWidth={active ? 2.5 : 1.5} markerEnd={marker} style={{ transition: "stroke 0.3s ease, stroke-width 0.3s ease" }} />;
               })}
               {T.nodes.map((n) => {
-                const s = scores[n.id];
+                const s = scores[n.id] || { value: 7, updatedAt: 0, source: "baseline" };
                 const color = statusColor(s.value);
                 const Icon = n.icon;
                 const age = clockRef.current - s.updatedAt;
@@ -1909,11 +2076,11 @@ export default function UnityEOC() {
                     style={{ transition: "opacity 0.6s ease", cursor: "pointer" }}
                     onMouseEnter={() => setHoveredNode(n.id)}
                     onMouseLeave={() => setHoveredNode((cur) => (cur === n.id ? null : cur))}
-                    onClick={() => setHoveredNode((cur) => (cur === n.id ? null : n.id))}
+                    onClick={() => dispatch(n.id)}
                   >
-                    {isTop && <circle r={46} fill="none" stroke="#e9c85e" strokeWidth={1.2} strokeDasharray="3 4" opacity={0.7} />}
+                    {isTop && <circle r={46} fill="none" stroke="#d97706" strokeWidth={1.2} strokeDasharray="3 4" opacity={0.7} />}
                     {isOrigin && containmentRadius > 0 && <circle r={52} fill="none" stroke="var(--crit)" strokeWidth={1} strokeDasharray="2 5" opacity={0.5} />}
-                    <circle r={38} fill="var(--panel)" stroke={color} strokeWidth={isHovered ? 3.5 : 2.5} style={{ transition: "stroke 0.4s ease, stroke-width 0.2s ease" }} />
+                    <circle r={38} fill="#ffffff" stroke={color} strokeWidth={isHovered ? 3.5 : 2.5} style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.06))", transition: "stroke 0.4s ease, stroke-width 0.2s ease" }} />
                     {s.value < 4 && (
                       <circle r={38} fill="none" stroke={color} strokeWidth={2.5} opacity={0.4}>
                         <animate attributeName="r" values="38;50;38" dur="1.8s" repeatCount="indefinite" />
@@ -1926,7 +2093,7 @@ export default function UnityEOC() {
                       </div>
                     </foreignObject>
                     <text textAnchor="middle" y={6} fontSize="15" fontWeight="800" fill={color} fontFamily="JetBrains Mono, monospace">{s.value}</text>
-                    <text textAnchor="middle" y={58} fontSize="10.5" fontWeight="700" fill="var(--text-dim)" letterSpacing="0.02em">{n.label}</text>
+                    <text textAnchor="middle" y={58} fontSize="10.5" fontWeight="700" fill="var(--text)" letterSpacing="0.02em">{n.label}</text>
                     <text textAnchor="middle" y={71} fontSize="8.5" fill="var(--text-dimmer)" letterSpacing="0.03em">{fr.label} · {s.source}</text>
                     {isHovered && (
                       <foreignObject x={-100} y={-135} width={200} height={100} style={{ overflow: "visible" }}>
@@ -1948,24 +2115,26 @@ export default function UnityEOC() {
               {T.geometry && <div className="graph-context-geometry">{T.geometry}</div>}
             </div>
             <div className="graph-context-copy">
-              Prioritize <strong>{T.nodes.find((n) => n.id === topLeverageId).label}</strong>: it currently has the strongest downstream influence in this scenario.
+              Prioritize <strong>{T.nodes.find((n) => n.id === topLeverageId)?.label}</strong>: strongest downstream influence.
             </div>
             <div className="graph-paths">
               {focusPaths.map((edge) => {
                 const from = T.nodes.find((n) => n.id === edge.from);
                 const to = T.nodes.find((n) => n.id === edge.to);
+                if (!from || !to) return null;
                 return <div key={`${edge.from}-${edge.to}`} className="graph-path"><strong>{from.label}</strong> <span style={{ color: "var(--text-dimmer)" }}>→</span> {to.label}</div>;
               })}
             </div>
           </div>
         </div>
 
+        {/* Right Column: Capabilities & Event Log */}
         <div className="eoc-panel">
-          <div className="panel-title">Capabilities</div>
+          <div className="panel-title">Capabilities ({T.nodes.length})</div>
           {T.nodes.map((n) => {
-            const s = scores[n.id];
+            const s = scores[n.id] || { value: 7, source: "baseline" };
             const color = statusColor(s.value);
-            const age = clockRef.current - s.updatedAt;
+            const age = clockRef.current - (s.updatedAt || 0);
             const fr = freshness(age);
             const isOrigin = T.containment && n.id === "origin";
             return (
@@ -1981,7 +2150,7 @@ export default function UnityEOC() {
                     className="dispatch-btn"
                     disabled={isPaused || (mode === "exercise" && resourcePool.available <= 0)}
                     onClick={() => { saveCheckpoint(`before dispatch: ${n.label}`); dispatch(n.id); }}
-                    title={isOrigin ? "Dispatch specialist team to origin — shrinks containment radius" : "Dispatch response to reinforce this capability"}
+                    title={isOrigin ? "Dispatch specialist team to origin" : "Dispatch response unit to reinforce"}
                   >
                     <ShieldPlus size={11} /> {isOrigin ? "Contain" : "Dispatch"}
                   </button>

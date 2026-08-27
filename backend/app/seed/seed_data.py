@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from ..models import User, Site, Task, Resource, MutualAidCompact, Incident, CitizenSOS
+from ..models import User, Site, Task, Resource, MutualAidCompact, Incident, CitizenSOS, Escalation
 from ..core.security import hash_password
 
 SEEDED_USERS = [
@@ -225,5 +225,45 @@ def seed_database(db: Session):
     for inc_data in default_incidents:
         if not db.query(Incident).filter(Incident.id == inc_data["id"]).first():
             db.add(Incident(**inc_data))
+
+    # Seed Initial Escalations
+    default_escalations = [
+        {
+            "id": "ESC-1001",
+            "origin_credential_id": "NDMA-AUTH-04",
+            "origin_role": "T4",
+            "routed_to_tier": "T2",
+            "region": "Odisha",
+            "site": "Bhadrak / Dhamra",
+            "kind": "resource",
+            "reason": "Requesting immediate air-lifting support & heavy winch machinery for 200 stranded civilians at Dhamra jetty.",
+            "status": "pending"
+        },
+        {
+            "id": "ESC-1002",
+            "origin_credential_id": "NDMA-AUTH-03",
+            "origin_role": "T3",
+            "routed_to_tier": "T2",
+            "region": "Odisha",
+            "site": "Kendrapara / Rajnagar",
+            "kind": "backup_request",
+            "reason": "High-capacity dewatering pumps depleted in Rajnagar sub-division; requesting inter-state mutual aid deployment.",
+            "status": "pending"
+        },
+        {
+            "id": "ESC-1003",
+            "origin_credential_id": "NDMA-AUTH-05",
+            "origin_role": "T5",
+            "routed_to_tier": "T3",
+            "region": "West Bengal",
+            "site": "Kolkata / Sunderbans",
+            "kind": "general",
+            "reason": "Sunderbans Gosaba shelter capacity reached 95%; requesting emergency allotment of high-capacity water purification units.",
+            "status": "approved"
+        }
+    ]
+    for esc_data in default_escalations:
+        if not db.query(Escalation).filter(Escalation.id == esc_data["id"]).first():
+            db.add(Escalation(**esc_data))
 
     db.commit()
