@@ -14,7 +14,7 @@ DEFAULT_VIEW: Dict[str, str] = {
     'T1': 'command',
     'T2': 'command',
     'T3': 'command',
-    'T4': 'command',
+    'T4': 'field',
     'T5': 'landing'
 }
 
